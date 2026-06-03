@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestión de Usuarios — Grupo Santacruz</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/design-system.css?v=3" />
+  <style>
+    /* Page-specific overrides for usuarios.html */
+
+    /* Centrar el contenido de los paneles y la barra de tabs (igual que agro) */
+    .tab-panel {
+      max-width: 1100px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .tabs {
+      max-width: 1100px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    /* La pestaña "Lista" ocupa todo el ancho de la tabla */
+    #tab-lista { max-width: 100%; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="top-bar">
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <a href="/dashboard.html" class="brand-block" title="Volver al Dashboard" style="display:flex;align-items:center;gap:0.6rem;text-decoration:none;cursor:pointer;transition:opacity 150ms;" onmouseover="this.style.opacity='0.75'" onmouseout="this.style.opacity='1'">
+        <img src="/logo.jpg" alt="Grupo Santacruz" style="width:36px;height:36px;object-fit:contain;border-radius:8px;" />
+        <div style="display:flex;flex-direction:column;line-height:1.15;">
+          <strong style="font-size:0.95rem;color:var(--foreground);">Grupo Santacruz</strong>
+          <span style="font-size:0.72rem;color:var(--muted-foreground);">Sistema de Gestión</span>
+        </div>
+      </a>
+      <h1 style="font-size:1.05rem;font-weight:600;color:var(--muted-foreground);">Gestión de Usuarios</h1>
+    </div>
+    <div class="actions">
+      <div style="position:relative;">
+        <button class="btn btn-secondary" id="btnAjustesColor" title="Color de fondo" style="padding:0.5rem 0.7rem;font-size:1rem;">⚙️</button>
+        <div id="popoverColor" style="display:none;position:absolute;top:100%;right:0;margin-top:8px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:0.85rem;min-width:260px;box-shadow:0 10px 30px rgba(0,0,0,0.5);z-index:300;">
+          <div style="font-size:0.78rem;color:var(--muted-foreground);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.55rem;">Color de fondo</div>
+          <div id="swatches" style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:0.7rem;"></div>
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.9rem;">
+            <input type="color" id="inputColorBg" style="width:38px;height:34px;border:none;background:transparent;cursor:pointer;padding:0;" />
+            <input type="text" id="inputColorBgHex" maxlength="7" style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--foreground);padding:0.4rem 0.55rem;font-family:monospace;font-size:0.85rem;" />
+            <button class="btn btn-secondary btn-sm" id="btnResetColor" title="Restablecer">↻</button>
+          </div>
+          <div style="font-size:0.78rem;color:var(--muted-foreground);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.55rem;border-top:1px solid var(--border);padding-top:0.7rem;">Color de paneles</div>
+          <div id="swatchesPanel" style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:0.7rem;"></div>
+          <div style="display:flex;align-items:center;gap:0.5rem;">
+            <input type="color" id="inputColorPanel" style="width:38px;height:34px;border:none;background:transparent;cursor:pointer;padding:0;" />
+            <input type="text" id="inputColorPanelHex" maxlength="7" style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--foreground);padding:0.4rem 0.55rem;font-family:monospace;font-size:0.85rem;" />
+            <button class="btn btn-secondary btn-sm" id="btnResetPanel" title="Restablecer">↻</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bloque de usuario flotante (abajo-izquierda) -->
+  <div class="user-bottom-left">
+    <div class="avatar" id="topUserAvatar">U</div>
+    <div class="user-info">
+      <div class="user-name" id="topUserName">Usuario</div>
+      <div class="user-role" id="topUserRole">Usuario</div>
+    </div>
+    <button class="btn-logout" id="btnLogout" title="Cerrar sesión">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+    </button>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <div class="container">
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" data-tab="form">Crear / Editar Usuario</button>
+      <button class="tab" data-tab="lista">Lista de Usuarios</button>
+    </div>
+
+    <!-- ==================== TAB: FORM ==================== -->
+    <div class="tab-panel active" id="tab-form">
+      <div class="card">
+        <h2>Crear / Editar Usuario</h2>
+        <p class="subtitle">Define credenciales, perfil y permisos de menú</p>
+
+        <form id="formUsuario">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nuevoUsername">Usuario</label>
+              <input type="text" id="nuevoUsername" placeholder="Nombre de usuario" required />
+            </div>
+            <div class="form-group">
+              <label for="nuevoPassword">Contraseña</label>
+              <input type="password" id="nuevoPassword" placeholder="Contraseña" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="nuevoRol">Perfil</label>
+            <select id="nuevoRol">
+              <option value="usuario">Usuario Estándar</option>
+              <option value="administrador">Administrador</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Módulos accesibles <span style="color:#f87171;font-weight:400;text-transform:none;letter-spacing:0">(obligatorio al menos uno)</span></label>
+            <div id="modulosCheckboxes" class="permisos-grid">
+              <label class="permiso-chk"><input type="checkbox" value="bono" checked /> Bono</label>
+              <label class="permiso-chk"><input type="checkbox" value="pedidos" checked /> Toma de Pedidos</label>
+              <label class="permiso-chk"><input type="checkbox" value="agropecuaria" checked /> Distribución Agropecuaria</label>
+              <label class="permiso-chk"><input type="checkbox" value="run-errands" checked /> Run Errands</label>
+            </div>
+          </div>
+
+          <div class="form-group" id="subBonoWrap" style="display:none;background:var(--brand-soft);border:1px dashed var(--brand);border-radius:10px;padding:0.85rem 1rem;">
+            <label style="color:var(--brand);">Secciones de Bono <span style="color:var(--muted-foreground);font-weight:400;text-transform:none;letter-spacing:0">(deja vacío para todas)</span></label>
+            <div id="permisosCheckboxes" class="permisos-grid">
+              <label class="permiso-chk"><input type="checkbox" value="canjear" checked /> Canjear</label>
+              <label class="permiso-chk"><input type="checkbox" value="generar" checked /> Generar</label>
+              <label class="permiso-chk"><input type="checkbox" value="informes" checked /> Informes</label>
+              <label class="permiso-chk"><input type="checkbox" value="reimprimir" checked /> Reimprimir</label>
+              <label class="permiso-chk"><input type="checkbox" value="validar" checked /> Validar</label>
+            </div>
+          </div>
+
+          <div class="form-group" id="subAgroWrap" style="display:none;background:var(--brand-soft);border:1px dashed var(--brand);border-radius:10px;padding:0.85rem 1rem;">
+            <label style="color:var(--brand);">Secciones de Distribución Agropecuaria <span style="color:var(--muted-foreground);font-weight:400;text-transform:none;letter-spacing:0">(deja vacío para todas)</span></label>
+            <div id="subAgroCheckboxes" class="permisos-grid">
+              <label class="permiso-chk"><input type="checkbox" value="agro.vehiculos" checked /> Vehículos</label>
+              <label class="permiso-chk"><input type="checkbox" value="agro.ordenes" checked /> Órdenes</label>
+              <label class="permiso-chk"><input type="checkbox" value="agro.asignaciones" checked /> Asignaciones</label>
+              <label class="permiso-chk"><input type="checkbox" value="agro.planificacion-dl" checked /> Planificación D.L.</label>
+              <label class="permiso-chk"><input type="checkbox" value="agro.nivel-servicio" checked /> Nivel de Servicio</label>
+              <label class="permiso-chk"><input type="checkbox" value="agro.clientes" checked /> Clientes</label>
+              <label class="permiso-chk"><input type="checkbox" value="agro.productos" checked /> Productos</label>
+              <label class="permiso-chk"><input type="checkbox" value="agro.tripulacion" checked /> Tripulación</label>
+            </div>
+          </div>
+
+          <div class="form-group" id="subErrandsWrap" style="display:none;background:var(--brand-soft);border:1px dashed var(--brand);border-radius:10px;padding:0.85rem 1rem;">
+            <label style="color:var(--brand);">Secciones de Run Errands <span style="color:var(--muted-foreground);font-weight:400;text-transform:none;letter-spacing:0">(deja vacío para todas)</span></label>
+            <div id="subErrandsCheckboxes" class="permisos-grid">
+              <label class="permiso-chk"><input type="checkbox" value="errands.pedidos" checked /> Pedidos</label>
+              <label class="permiso-chk"><input type="checkbox" value="errands.clientes" checked /> Clientes</label>
+              <label class="permiso-chk"><input type="checkbox" value="errands.puntos-venta" checked /> Puntos de Venta</label>
+            </div>
+          </div>
+
+          <input type="hidden" id="editandoUsuarioId" value="" />
+          <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+            <button type="submit" class="btn btn-primary" id="btnCrearUsuario" style="flex:1;">Crear Usuario</button>
+            <button type="button" class="btn btn-secondary" id="btnCancelarEdicion" style="display:none" onclick="cancelarEdicionUsuario()">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ==================== TAB: LISTA ==================== -->
+    <div class="tab-panel" id="tab-lista">
+      <div class="card">
+        <h3 class="section-title" style="margin-top:0;">Usuarios registrados</h3>
+        <div class="table-wrapper" id="tablaUsuarios"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: ELIMINAR USUARIO ==================== -->
+  <div class="modal-overlay" id="modalEliminarUsuario">
+    <div class="modal" style="max-width:450px;">
+      <h3 style="color:#e74c3c;">⚠️ Eliminar Usuario</h3>
+      <p style="color:var(--foreground);font-size:0.88rem;margin-bottom:1.25rem;">
+        Vas a eliminar al usuario <strong id="modalDelUsername"></strong>. Esta acción no se puede deshacer.
+      </p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="cerrarModalEliminar()">Cancelar</button>
+        <button class="btn btn-danger" id="btnConfirmarEliminar">Eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ========== ACCESO ========== */
+    const userRol = localStorage.getItem('userRol') || 'usuario';
+    const username = localStorage.getItem('username') || '';
+
+    if (userRol !== 'administrador') {
+      alert('Acceso denegado. Solo administradores.');
+      window.location.href = '/dashboard.html';
+    }
+
+    document.getElementById('topUserName').textContent = username;
+    const elAvatar = document.getElementById('topUserAvatar');
+    if (elAvatar) elAvatar.textContent = (username || 'U').charAt(0).toUpperCase();
+    const elRole = document.getElementById('topUserRole');
+    if (elRole) elRole.textContent = userRol === 'administrador' ? 'Administrador' : 'Usuario Estándar';
+
+    document.getElementById('btnLogout').addEventListener('click', () => {
+      ['username','userRol','userPermisos','userModulos','userSubmodulos'].forEach(k => localStorage.removeItem(k));
+      window.location.href = '/login.html';
+    });
+
+    /* ========== COLOR PICKER (mismo patrón que agro) ========== */
+    (function () {
+      const DEFAULT_BG = '#0f1923';
+      const DEFAULT_PANEL = '#ffffff';
+      const KEY_BG = 'usuariosBgColor';
+      const KEY_PANEL = 'usuariosPanelColor';
+      const presets = ['#0f1923', '#1a2332', '#1e293b', '#243447', '#2c3e50', '#34495e',
+                       '#1f2937', '#111827', '#0b1220', '#16213e', '#0d2818', '#1e1e2e'];
+      const presetsPanel = ['#132238', '#1a2942', '#1e293b', '#22304a', '#2c3e50', '#374151',
+                            '#1f2937', '#0b1220', '#16213e', '#1e1e2e', '#ffffff', '#f5f5f5'];
+
+      function luminancia(c) {
+        const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(c);
+        if (!m) return 0;
+        const r = parseInt(m[1], 16), g = parseInt(m[2], 16), b = parseInt(m[3], 16);
+        return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      }
+      function aplicarColor(c) {
+        document.documentElement.style.setProperty('--bg-color', c);
+        document.documentElement.classList.toggle('light-bg', luminancia(c) > 0.6);
+        const inp = document.getElementById('inputColorBg');
+        const hex = document.getElementById('inputColorBgHex');
+        if (inp) inp.value = c;
+        if (hex) hex.value = c;
+      }
+      function aplicarPanel(c) {
+        document.documentElement.style.setProperty('--panel-color', c);
+        document.documentElement.classList.toggle('light-panel', luminancia(c) > 0.6);
+        const inp = document.getElementById('inputColorPanel');
+        const hex = document.getElementById('inputColorPanelHex');
+        if (inp) inp.value = c;
+        if (hex) hex.value = c;
+      }
+      function pintarSwatches(contId, lista, onPick) {
+        const cont = document.getElementById(contId);
+        if (!cont) return;
+        cont.innerHTML = lista.map(c =>
+          `<button type="button" data-c="${c}" title="${c}" style="width:30px;height:30px;border-radius:6px;border:2px solid var(--border);cursor:pointer;background:${c};"></button>`
+        ).join('');
+        cont.querySelectorAll('button').forEach(b => {
+          b.addEventListener('click', () => onPick(b.dataset.c));
+        });
+      }
+      function wireInput(idColor, idHex, current, onChange) {
+        const inp = document.getElementById(idColor);
+        const hex = document.getElementById(idHex);
+        if (inp) inp.addEventListener('input', () => onChange(inp.value));
+        if (hex) hex.addEventListener('change', () => {
+          let v = hex.value.trim();
+          if (!v.startsWith('#')) v = '#' + v;
+          if (/^#[0-9a-fA-F]{6}$/.test(v)) onChange(v);
+          else hex.value = current();
+        });
+      }
+      function init() {
+        const savedBg = localStorage.getItem(KEY_BG) || DEFAULT_BG;
+        const savedPanel = localStorage.getItem(KEY_PANEL) || DEFAULT_PANEL;
+        aplicarColor(savedBg);
+        aplicarPanel(savedPanel);
+
+        pintarSwatches('swatches', presets, (c) => {
+          aplicarColor(c);
+          localStorage.setItem(KEY_BG, c);
+        });
+        pintarSwatches('swatchesPanel', presetsPanel, (c) => {
+          aplicarPanel(c);
+          localStorage.setItem(KEY_PANEL, c);
+        });
+
+        const btn = document.getElementById('btnAjustesColor');
+        const pop = document.getElementById('popoverColor');
+        if (btn && pop) {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            pop.style.display = pop.style.display === 'none' ? 'block' : 'none';
+          });
+          document.addEventListener('click', (e) => {
+            if (!pop.contains(e.target) && e.target !== btn) pop.style.display = 'none';
+          });
+        }
+
+        wireInput('inputColorBg', 'inputColorBgHex',
+          () => localStorage.getItem(KEY_BG) || DEFAULT_BG,
+          (c) => { aplicarColor(c); localStorage.setItem(KEY_BG, c); });
+        wireInput('inputColorPanel', 'inputColorPanelHex',
+          () => localStorage.getItem(KEY_PANEL) || DEFAULT_PANEL,
+          (c) => { aplicarPanel(c); localStorage.setItem(KEY_PANEL, c); });
+
+        const btnReset = document.getElementById('btnResetColor');
+        if (btnReset) btnReset.addEventListener('click', () => {
+          aplicarColor(DEFAULT_BG);
+          localStorage.removeItem(KEY_BG);
+        });
+        const btnResetP = document.getElementById('btnResetPanel');
+        if (btnResetP) btnResetP.addEventListener('click', () => {
+          aplicarPanel(DEFAULT_PANEL);
+          localStorage.removeItem(KEY_PANEL);
+        });
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+      else init();
+    })();
+
+    /* ========== TOAST ========== */
+    function toast(msg, tipo = "success") {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.className = "toast toast-" + tipo + " show";
+      setTimeout(() => t.classList.remove("show"), 3000);
+    }
+
+    /* ========== TABS ========== */
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById("tab-" + tab.dataset.tab).classList.add("active");
+        if (tab.dataset.tab === "lista") cargarUsuarios();
+      });
+    });
+
+    /* ========== GESTIÓN DE USUARIOS ========== */
+    const permisosLabels = { canjear: 'Canjear', generar: 'Generar', informes: 'Informes', reimprimir: 'Reimprimir', validar: 'Validar' };
+    const modulosLabels = { bono: 'Bono', pedidos: 'Pedidos', agropecuaria: 'Agropecuaria', 'run-errands': 'Run Errands' };
+    const subAgroLabels = {
+      'agro.vehiculos': 'Vehículos',
+      'agro.ordenes': 'Órdenes',
+      'agro.asignaciones': 'Asignaciones',
+      'agro.planificacion-dl': 'Planif. D.L.',
+      'agro.nivel-servicio': 'Nivel Serv.',
+      'agro.clientes': 'Clientes',
+      'agro.productos': 'Productos',
+      'agro.tripulacion': 'Tripulación'
+    };
+    const subErrandsLabels = {
+      'errands.pedidos': 'Pedidos',
+      'errands.clientes': 'Clientes',
+      'errands.puntos-venta': 'Puntos de Venta'
+    };
+
+    function toggleSubBono() {
+      const rol = document.getElementById('nuevoRol').value;
+      const bonoCb = document.querySelector('#modulosCheckboxes input[value="bono"]');
+      const wrap = document.getElementById('subBonoWrap');
+      wrap.style.display = (rol !== 'administrador' && bonoCb && bonoCb.checked) ? '' : 'none';
+    }
+    function toggleSubAgro() {
+      const rol = document.getElementById('nuevoRol').value;
+      const agroCb = document.querySelector('#modulosCheckboxes input[value="agropecuaria"]');
+      const wrap = document.getElementById('subAgroWrap');
+      wrap.style.display = (rol !== 'administrador' && agroCb && agroCb.checked) ? '' : 'none';
+    }
+    function toggleSubErrands() {
+      const rol = document.getElementById('nuevoRol').value;
+      const errCb = document.querySelector('#modulosCheckboxes input[value="run-errands"]');
+      const wrap = document.getElementById('subErrandsWrap');
+      wrap.style.display = (rol !== 'administrador' && errCb && errCb.checked) ? '' : 'none';
+    }
+    document.querySelector('#modulosCheckboxes input[value="bono"]').addEventListener('change', toggleSubBono);
+    document.querySelector('#modulosCheckboxes input[value="agropecuaria"]').addEventListener('change', toggleSubAgro);
+    document.querySelector('#modulosCheckboxes input[value="run-errands"]').addEventListener('change', toggleSubErrands);
+
+    document.getElementById('nuevoRol').addEventListener('change', function () {
+      if (this.value === 'administrador') {
+        document.querySelectorAll('#permisosCheckboxes input[type=checkbox]').forEach(cb => cb.checked = true);
+        document.querySelectorAll('#modulosCheckboxes input[type=checkbox]').forEach(cb => cb.checked = true);
+        document.querySelectorAll('#subAgroCheckboxes input[type=checkbox]').forEach(cb => cb.checked = true);
+        document.querySelectorAll('#subErrandsCheckboxes input[type=checkbox]').forEach(cb => cb.checked = true);
+      }
+      toggleSubBono();
+      toggleSubAgro();
+      toggleSubErrands();
+    });
+
+    async function cargarUsuarios() {
+      try {
+        const res = await fetch('/usuarios');
+        if (!res.ok) return;
+        const users = await res.json();
+
+        let html = '<table><thead><tr>';
+        html += '<th>Usuario</th><th>Perfil</th><th>Módulos</th><th>Secc. Agro</th><th>Secc. Errands</th><th>Permisos</th><th style="text-align:center;">Acciones</th>';
+        html += '</tr></thead><tbody>';
+
+        users.forEach(u => {
+          const permisos = (u.permisos || '').split(',').filter(Boolean);
+          const badges = permisos.map(p => '<span class="badge badge-perm">' + (permisosLabels[p] || p) + '</span>').join(' ');
+          const modulos = (u.modulos || '').split(',').filter(Boolean);
+          const modulosBadges = modulos.map(m => '<span class="badge" style="background:rgba(167,139,250,0.12);color:#a78bfa;margin:2px;padding:2px 8px;font-size:0.72rem">' + (modulosLabels[m] || m) + '</span>').join(' ');
+          const subs = (u.submodulos || '').split(',').filter(Boolean);
+          const agroSubs = subs.filter(s => s.startsWith('agro.'));
+          const errSubs = subs.filter(s => s.startsWith('errands.'));
+          const agroBadges = agroSubs.map(s => '<span class="badge" style="background:var(--brand-soft);color:var(--brand);margin:2px;padding:2px 8px;font-size:0.7rem">' + (subAgroLabels[s] || s.replace('agro.','')) + '</span>').join(' ');
+          const errBadges = errSubs.map(s => '<span class="badge" style="background:var(--brand-soft);color:var(--brand);margin:2px;padding:2px 8px;font-size:0.7rem">' + (subErrandsLabels[s] || s.replace('errands.','')) + '</span>').join(' ');
+          const rolBadge = u.rol === 'administrador'
+            ? '<span class="badge badge-admin">Admin</span>'
+            : '<span class="badge badge-user">Estándar</span>';
+          const tieneAgro = u.rol === 'administrador' || modulos.includes('agropecuaria');
+          const tieneErr = u.rol === 'administrador' || modulos.includes('run-errands');
+          const muted = (txt) => '<span style="font-size:0.8rem;color:var(--muted-foreground)">' + txt + '</span>';
+          const agroCell = u.rol === 'administrador' ? muted('Todas')
+            : (!tieneAgro ? muted('—') : (agroBadges || muted('Todas')));
+          const errCell = u.rol === 'administrador' ? muted('Todas')
+            : (!tieneErr ? muted('—') : (errBadges || muted('Todas')));
+
+          html += '<tr>';
+          html += '<td>' + u.username + '</td>';
+          html += '<td>' + rolBadge + '</td>';
+          html += '<td>' + (u.rol === 'administrador' ? muted('Todos') : modulosBadges) + '</td>';
+          html += '<td>' + agroCell + '</td>';
+          html += '<td>' + errCell + '</td>';
+          html += '<td>' + (u.rol === 'administrador' ? muted('Todos') : badges) + '</td>';
+          html += '<td style="text-align:center">';
+          html += '<button class="btn-action" onclick="editarUsuario(' + u.id + ',\'' + u.username.replace(/'/g, "\\'") + '\',\'' + u.rol + '\',\'' + (u.permisos || '') + '\',\'' + (u.modulos || '') + '\',\'' + (u.submodulos || '') + '\')">✏️ Editar</button>';
+          html += '<button class="btn-action danger" onclick="abrirModalEliminar(' + u.id + ',\'' + u.username.replace(/'/g, "\\'") + '\')">🗑️ Eliminar</button>';
+          html += '</td></tr>';
+        });
+
+        html += '</tbody></table>';
+        document.getElementById('tablaUsuarios').innerHTML = html;
+      } catch (e) {
+        document.getElementById('tablaUsuarios').innerHTML = '<p style="color:var(--muted-foreground)">Error al cargar usuarios</p>';
+      }
+    }
+
+    document.getElementById('formUsuario').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const editId = document.getElementById('editandoUsuarioId').value;
+      const username = document.getElementById('nuevoUsername').value.trim();
+      const password = document.getElementById('nuevoPassword').value;
+      const rol = document.getElementById('nuevoRol').value;
+
+      const permisosChecked = [];
+      document.querySelectorAll('#permisosCheckboxes input[type=checkbox]:checked').forEach(cb => {
+        permisosChecked.push(cb.value);
+      });
+
+      const modulosChecked = [];
+      document.querySelectorAll('#modulosCheckboxes input[type=checkbox]:checked').forEach(cb => {
+        modulosChecked.push(cb.value);
+      });
+      const modulos = rol === 'administrador' ? 'bono,pedidos,agropecuaria,run-errands' : modulosChecked.join(',');
+
+      // Permisos de Bono: solo aplican si el módulo bono está activo (o es admin)
+      let permisos;
+      if (rol === 'administrador') {
+        permisos = 'canjear,generar,informes,reimprimir,validar';
+      } else if (modulosChecked.includes('bono')) {
+        if (permisosChecked.length === 0) {
+          toast('Selecciona al menos una sección de Bono o desmarca el módulo.', 'error');
+          return;
+        }
+        permisos = permisosChecked.join(',');
+      } else {
+        permisos = '';
+      }
+
+      const subChecked = [];
+      document.querySelectorAll('#subAgroCheckboxes input[type=checkbox]:checked').forEach(cb => {
+        subChecked.push(cb.value);
+      });
+      const subErrChecked = [];
+      document.querySelectorAll('#subErrandsCheckboxes input[type=checkbox]:checked').forEach(cb => {
+        subErrChecked.push(cb.value);
+      });
+      const submodulosParts = [];
+      if (rol !== 'administrador' && modulosChecked.includes('agropecuaria')) {
+        const totalAgro = document.querySelectorAll('#subAgroCheckboxes input[type=checkbox]').length;
+        if (subChecked.length === 0) {
+          toast('Selecciona al menos una sección de Agropecuaria o desmarca el módulo.', 'error');
+          return;
+        }
+        // Si están todas marcadas, no incluir nada => "Todas"
+        if (subChecked.length !== totalAgro) submodulosParts.push(...subChecked);
+      }
+      if (rol !== 'administrador' && modulosChecked.includes('run-errands')) {
+        const totalErr = document.querySelectorAll('#subErrandsCheckboxes input[type=checkbox]').length;
+        if (subErrChecked.length === 0) {
+          toast('Selecciona al menos una sección de Run Errands o desmarca el módulo.', 'error');
+          return;
+        }
+        if (subErrChecked.length !== totalErr) submodulosParts.push(...subErrChecked);
+      }
+      const submodulos = submodulosParts.join(',');
+
+      if (!username) {
+        toast('Ingresa un nombre de usuario.', 'error');
+        return;
+      }
+
+      if (rol !== 'administrador' && !modulos) {
+        toast('Debes seleccionar al menos un módulo para el usuario.', 'error');
+        return;
+      }
+
+      try {
+        let res;
+        if (editId) {
+          const body = { username, rol, permisos, modulos, submodulos };
+          if (password) body.password = password;
+          res = await fetch('/usuarios/' + editId, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          });
+        } else {
+          if (!password) {
+            toast('Ingresa una contraseña.', 'error');
+            return;
+          }
+          res = await fetch('/usuarios', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password, rol, permisos, modulos, submodulos })
+          });
+        }
+
+        const data = await res.json();
+        if (!res.ok) {
+          toast(data.error || 'Error al guardar usuario.', 'error');
+          return;
+        }
+
+        toast(editId ? 'Usuario actualizado.' : 'Usuario creado.');
+        cancelarEdicionUsuario();
+        cargarUsuarios();
+        // tras guardar, salta a la pestaña de lista
+        document.querySelector('[data-tab="lista"]').click();
+      } catch (err) {
+        toast('Error de conexión.', 'error');
+      }
+    });
+
+    function editarUsuario(id, username, rol, permisos, modulos, submodulos) {
+      document.getElementById('editandoUsuarioId').value = id;
+      document.getElementById('nuevoUsername').value = username;
+      document.getElementById('nuevoPassword').value = '';
+      document.getElementById('nuevoPassword').placeholder = 'Dejar vacío para no cambiar';
+      document.getElementById('nuevoPassword').removeAttribute('required');
+      document.getElementById('nuevoRol').value = rol;
+
+      const permsArr = permisos.split(',');
+      document.querySelectorAll('#permisosCheckboxes input[type=checkbox]').forEach(cb => {
+        cb.checked = permsArr.includes(cb.value);
+      });
+
+      const modsArr = (modulos || '').split(',');
+      document.querySelectorAll('#modulosCheckboxes input[type=checkbox]').forEach(cb => {
+        cb.checked = modsArr.includes(cb.value);
+      });
+
+      const subsArr = (submodulos || '').split(',').filter(Boolean);
+      const agroSubsArr = subsArr.filter(s => s.startsWith('agro.'));
+      const errSubsArr = subsArr.filter(s => s.startsWith('errands.'));
+      // Si no hay ninguno del prefijo => "Todas" (marcar todo)
+      document.querySelectorAll('#subAgroCheckboxes input[type=checkbox]').forEach(cb => {
+        cb.checked = agroSubsArr.length === 0 ? true : agroSubsArr.includes(cb.value);
+      });
+      document.querySelectorAll('#subErrandsCheckboxes input[type=checkbox]').forEach(cb => {
+        cb.checked = errSubsArr.length === 0 ? true : errSubsArr.includes(cb.value);
+      });
+      toggleSubBono();
+      toggleSubAgro();
+      toggleSubErrands();
+
+      document.getElementById('btnCrearUsuario').textContent = 'Guardar Cambios';
+      document.getElementById('btnCancelarEdicion').style.display = '';
+
+      // Cambiar a pestaña de formulario
+      document.querySelector('[data-tab="form"]').click();
+      document.getElementById('nuevoUsername').focus();
+    }
+
+    function cancelarEdicionUsuario() {
+      document.getElementById('editandoUsuarioId').value = '';
+      document.getElementById('formUsuario').reset();
+      document.getElementById('nuevoPassword').placeholder = 'Contraseña';
+      document.getElementById('nuevoPassword').setAttribute('required', '');
+      document.getElementById('btnCrearUsuario').textContent = 'Crear Usuario';
+      document.getElementById('btnCancelarEdicion').style.display = 'none';
+      document.querySelectorAll('#permisosCheckboxes input[type=checkbox]').forEach(cb => cb.checked = true);
+      document.querySelectorAll('#modulosCheckboxes input[type=checkbox]').forEach(cb => cb.checked = true);
+      document.querySelectorAll('#subAgroCheckboxes input[type=checkbox]').forEach(cb => cb.checked = true);
+      document.querySelectorAll('#subErrandsCheckboxes input[type=checkbox]').forEach(cb => cb.checked = true);
+      toggleSubBono();
+      toggleSubAgro();
+      toggleSubErrands();
+    }
+
+    /* ========== ELIMINAR (modal) ========== */
+    let _delUserId = null;
+    function abrirModalEliminar(id, username) {
+      _delUserId = id;
+      document.getElementById('modalDelUsername').textContent = username;
+      document.getElementById('modalEliminarUsuario').classList.add('active');
+    }
+    function cerrarModalEliminar() {
+      _delUserId = null;
+      document.getElementById('modalEliminarUsuario').classList.remove('active');
+    }
+    document.getElementById('btnConfirmarEliminar').addEventListener('click', async () => {
+      if (!_delUserId) return;
+      const id = _delUserId;
+      cerrarModalEliminar();
+      try {
+        const res = await fetch('/usuarios/' + id, { method: 'DELETE' });
+        const data = await res.json();
+        if (!res.ok) {
+          toast(data.error || 'Error al eliminar.', 'error');
+          return;
+        }
+        toast('Usuario eliminado.');
+        cargarUsuarios();
+      } catch (e) {
+        toast('Error de conexión.', 'error');
+      }
+    });
+
+    // Carga inicial de la lista (aunque el tab activo sea formulario, así estará lista)
+    cargarUsuarios();
+    // Mostrar sub-bloques iniciales según el estado por defecto
+    toggleSubBono();
+    toggleSubAgro();
+    toggleSubErrands();
+  </script>
+</body>
+</html>

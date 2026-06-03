@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Iniciar Sesión — SIGLOG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/design-system.css?v=3" />
+  <style>
+    body {
+      min-height: 100vh;
+      margin: 0;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 100vh;
+    }
+    /* ===== Panel izquierdo: marca ===== */
+    .brand-panel {
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 30%, rgba(83,172,48,0.10), transparent 70%),
+        linear-gradient(135deg, #f7faf6 0%, #ffffff 70%);
+      border-right: 1px solid var(--border);
+    }
+    .brand-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(83,172,48,0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(83,172,48,0.07) 1px, transparent 1px);
+      background-size: 84px 84px;
+      -webkit-mask-image: radial-gradient(ellipse 75% 75% at 50% 40%, #000 25%, transparent 80%);
+      mask-image: radial-gradient(ellipse 75% 75% at 50% 40%, #000 25%, transparent 80%);
+      pointer-events: none;
+    }
+    .brand {
+      position: relative;
+      text-align: center;
+      max-width: 440px;
+    }
+    .brand .logo {
+      width: 124px; height: 124px;
+      margin: 0 auto 32px;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 14px 36px rgba(196,30,30,0.24);
+      background: #fff;
+    }
+    .brand .logo img { width: 100%; height: 100%; object-fit: contain; }
+    .brand .app-name {
+      font-size: 72px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      color: var(--foreground);
+    }
+    .brand .por {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin: 18px 0 22px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.35em;
+      color: var(--muted-foreground);
+    }
+    .brand .por::before,
+    .brand .por::after {
+      content: "";
+      width: 48px;
+      height: 1px;
+      background: var(--border);
+    }
+    .brand .company {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--foreground);
+      line-height: 1.25;
+    }
+    .brand .company strong {
+      display: block;
+      font-size: 38px;
+      font-weight: 800;
+      color: var(--brand, #2e9b1e);
+      letter-spacing: 0.01em;
+    }
+    .brand .accent-bar {
+      width: 80px;
+      height: 5px;
+      border-radius: 5px;
+      background: var(--brand, #53ac30);
+      margin: 28px auto 22px;
+    }
+    .brand .tagline {
+      font-size: 18px;
+      color: var(--muted-foreground);
+      max-width: 380px;
+      margin: 0 auto;
+      line-height: 1.55;
+    }
+    .brand .credit {
+      margin-top: 48px;
+      padding-top: 26px;
+      border-top: 1px solid var(--border);
+    }
+    .brand .credit .credit-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted-foreground);
+    }
+    .brand .credit .credit-name {
+      margin-top: 7px;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--foreground);
+    }
+    .brand .credit .credit-dept {
+      margin-top: 3px;
+      font-size: 14px;
+      color: var(--muted-foreground);
+    }
+    /* ===== Panel derecho: formulario ===== */
+    .form-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+      background: #fbfcfb;
+    }
+    .login-card {
+      width: 100%;
+      max-width: 560px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 18px 50px rgba(10,10,10,0.08);
+      padding: 52px 48px;
+    }
+    .login-card h1 {
+      font-size: 40px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--foreground);
+    }
+    .login-card .subtitle {
+      margin-top: 10px;
+      margin-bottom: 36px;
+      font-size: 18px;
+      color: var(--muted-foreground);
+    }
+    /* Contenido interno más grande */
+    .login-card .label {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .login-card .input {
+      height: 56px;
+      font-size: 17px;
+      padding-left: 46px;
+      padding-right: 46px;
+    }
+    .login-card .input-wrapper > svg {
+      width: 22px;
+      height: 22px;
+      left: 14px;
+    }
+    .login-card .form-group { margin-bottom: 4px; }
+    .login-card .btn-primary {
+      height: 58px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .form-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 4px;
+      margin-bottom: 4px;
+    }
+    .remember {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 16px;
+      color: var(--foreground);
+      cursor: pointer;
+    }
+    .remember input { accent-color: var(--brand, #53ac30); width: 18px; height: 18px; }
+    .link {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--brand, #2e9b1e);
+      text-decoration: none;
+    }
+    .link:hover { text-decoration: underline; }
+    .card-divider {
+      margin: 24px 0 16px;
+      height: 1px;
+      background: var(--border);
+    }
+    .help-text {
+      text-align: center;
+      font-size: 16px;
+      color: var(--muted-foreground);
+    }
+    .help-text a { color: var(--brand, #2e9b1e); font-weight: 600; text-decoration: none; }
+    .help-text a:hover { text-decoration: underline; }
+    .version {
+      margin-top: 22px;
+      font-size: 14px;
+      color: var(--muted-foreground);
+      text-align: center;
+    }
+    .input-wrapper { position: relative; }
+    .toggle-pass {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted-foreground);
+      display: flex;
+      padding: 4px;
+    }
+    .alert { display: none; margin-bottom: 12px; }
+    .alert.show { display: flex; }
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+      .brand-panel { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="layout">
+
+    <!-- Panel izquierdo: marca -->
+    <div class="brand-panel">
+      <div class="brand">
+        <div class="logo"><img src="/logosiglog.png" alt="SIGLOG" /></div>
+        <div class="app-name">SIGLOG</div>
+        <div class="por">POR</div>
+        <div class="company">Grupo <strong>SANTACRUZ</strong></div>
+        <div class="accent-bar"></div>
+        <p class="tagline">Plataforma integral de trazabilidad y gestión de canastillas</p>
+
+        <div class="credit">
+          <div class="credit-label">Creado por</div>
+          <div class="credit-name">Isaac Tovar</div>
+          <div class="credit-dept">Departamento de Tecnología</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel derecho: formulario -->
+    <div class="form-panel">
+      <div class="login-card">
+        <h1>Bienvenido</h1>
+        <p class="subtitle">Ingresa tus credenciales para continuar</p>
+
+        <div id="alert" class="alert" role="alert"></div>
+
+        <form id="loginForm" class="stack" novalidate>
+          <div class="form-group">
+            <label class="label" for="username">Usuario</label>
+            <div class="input-wrapper">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                class="input"
+                placeholder="Escribe tu usuario"
+                autocomplete="username"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="label" for="password">Contraseña</label>
+            <div class="input-wrapper">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                class="input"
+                placeholder="Escribe tu contraseña"
+                autocomplete="current-password"
+                required
+              />
+              <button type="button" class="toggle-pass" id="togglePass" aria-label="Mostrar contraseña">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label class="remember">
+              <input type="checkbox" id="remember" />
+              Recordarme
+            </label>
+            <a href="#" class="link">¿Olvidaste tu contraseña?</a>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-full mt-2" id="btnLogin">
+            Iniciar Sesión
+          </button>
+        </form>
+
+        <div class="card-divider"></div>
+
+        <p class="help-text">¿Necesitas ayuda? <a href="#">Contactar soporte</a></p>
+      </div>
+
+      <p class="version">Versión 1.0.0 · © 2026 Grupo Santacruz</p>
+    </div>
+
+  </div>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const alertBox = document.getElementById('alert');
+    const btnLogin = document.getElementById('btnLogin');
+    const togglePass = document.getElementById('togglePass');
+    const passInput = document.getElementById('password');
+
+    togglePass.addEventListener('click', () => {
+      const isPass = passInput.type === 'password';
+      passInput.type = isPass ? 'text' : 'password';
+      togglePass.setAttribute('aria-label', isPass ? 'Ocultar contraseña' : 'Mostrar contraseña');
+    });
+
+    function showAlert(message, type) {
+      alertBox.textContent = message;
+      alertBox.className = 'alert alert-' + (type === 'error' ? 'error' : 'success') + ' show';
+    }
+
+    function hideAlert() {
+      alertBox.className = 'alert';
+      alertBox.textContent = '';
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert();
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (!username || !password) {
+        showAlert('Por favor completa todos los campos.', 'error');
+        return;
+      }
+
+      btnLogin.disabled = true;
+      btnLogin.innerHTML = '<span class="spinner"></span> Ingresando...';
+
+      try {
+        const res = await fetch('/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showAlert(data.error || 'Error al iniciar sesión.', 'error');
+          return;
+        }
+
+        showAlert('¡Bienvenido, ' + data.user.username + '!', 'success');
+        localStorage.setItem('username', data.user.username);
+        localStorage.setItem('userRol', data.user.rol);
+        localStorage.setItem('userPermisos', data.user.permisos);
+        localStorage.setItem('userModulos', data.user.modulos || '');
+        localStorage.setItem('userSubmodulos', data.user.submodulos || '');
+
+        setTimeout(() => {
+          window.location.href = '/dashboard.html';
+        }, 800);
+
+      } catch (err) {
+        showAlert('No se pudo conectar con el servidor.', 'error');
+      } finally {
+        btnLogin.disabled = false;
+        btnLogin.innerHTML = 'Iniciar Sesión';
+      }
+    });
+  </script>
+</body>
+</html>

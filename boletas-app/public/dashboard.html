@@ -1,0 +1,1504 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Boletas App</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/design-system.css?v=3" />
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <style>
+/* Page-specific overrides for dashboard.html */
+/* Todo viene de /assets/design-system.css */
+
+  </style>
+</head>
+<body>
+
+  <!-- ========== PANTALLA DE MÓDULOS ========== -->
+  <div id="pantallaModulos" class="modulos-screen">
+    <div class="modulos-header">
+      <div style="display:flex;align-items:center;gap:1rem">
+        <div class="logo" style="width:56px;height:56px;border-radius:14px;overflow:hidden;flex-shrink:0"><img src="/logo.jpg" alt="Grupo Santacruz" style="width:100%;height:100%;object-fit:contain" /></div>
+        <div>
+          <h1 style="font-size:1.5rem;font-weight:700;letter-spacing:-0.5px">Grupo Santacruz</h1>
+          <p style="font-size:0.82rem;color:var(--muted-foreground);margin-top:2px">Sistema de Gestión</p>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span style="font-size:0.85rem;color:var(--muted-foreground)" id="moduloUser"></span>
+        <button onclick="localStorage.removeItem('username');localStorage.removeItem('userRol');localStorage.removeItem('userPermisos');window.location.href='/login.html'" style="background:var(--card);border:1px solid var(--border);color:var(--foreground);padding:0.5rem 1rem;border-radius:8px;cursor:pointer;font-size:0.82rem;transition:all 0.2s">Cerrar sesión</button>
+      </div>
+    </div>
+
+    <div class="modulos-body">
+      <h2 style="font-size:1.1rem;font-weight:600;color:var(--muted-foreground);margin-bottom:1.5rem">Selecciona un módulo</h2>
+
+      <div class="modulos-grid">
+        <div class="modulo-card" onclick="abrirModulo('bono')">
+          <div class="modulo-icon" style="background:var(--brand)">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width:40px;height:40px;fill:#fff"><path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z"/></svg>
+          </div>
+          <h3>Bono</h3>
+          <p>Generar, canjear, validar e imprimir bonos</p>
+        </div>
+
+        <div class="modulo-card" onclick="window.location.href='/pedidos.html'">
+          <div class="modulo-icon" style="background:linear-gradient(135deg,#f39c12,#e67e22)">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width:40px;height:40px;fill:#fff"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+          </div>
+          <h3>Toma de Pedidos</h3>
+          <p>Crear, gestionar pedidos y catálogo de productos</p>
+        </div>
+
+        <div class="modulo-card" onclick="window.location.href='/distribucion-agropecuaria.html'">
+          <div class="modulo-icon" style="background:linear-gradient(135deg,#27ae60,#2ecc71)">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width:40px;height:40px;fill:#fff"><path d="M12 22c4.97 0 9-4.03 9-9-4.97 0-9 4.03-9 9zM5.6 10.25c0 1.38 1.12 2.5 2.5 2.5.53 0 1.01-.16 1.42-.44l-.02.19c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5l-.02-.19c.4.28.89.44 1.42.44 1.38 0 2.5-1.12 2.5-2.5 0-1-.59-1.85-1.43-2.25.84-.4 1.43-1.25 1.43-2.25 0-1.38-1.12-2.5-2.5-2.5-.53 0-1.01.16-1.42.44l.02-.19C14.5 2.12 13.38 1 12 1S9.5 2.12 9.5 3.5l.02.19c-.4-.28-.89-.44-1.42-.44-1.38 0-2.5 1.12-2.5 2.5 0 1 .59 1.85 1.43 2.25-.84.4-1.43 1.25-1.43 2.25zM12 5.5c1.38 0 2.5 1.12 2.5 2.5s-1.12 2.5-2.5 2.5S9.5 9.38 9.5 8s1.12-2.5 2.5-2.5zM3 13c0 4.97 4.03 9 9 9-4.97 0-9-4.03-9-9z"/></svg>
+          </div>
+          <h3>Distribución Agropecuaria</h3>
+          <p>Órdenes de distribución, productos y distribuidores</p>
+        </div>
+
+        <div class="modulo-card" onclick="window.location.href='/run-errands.html'">
+          <div class="modulo-icon" style="background:linear-gradient(135deg,#3498db,#2980b9)">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width:40px;height:40px;fill:#fff"><path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 7 1.4z"/></svg>
+          </div>
+          <h3>Run Errands</h3>
+          <p>Gestión de mandados y encargos</p>
+        </div>
+
+        <div class="modulo-card modulo-admin-only" onclick="window.location.href='/usuarios.html'" style="display:none">
+          <div class="modulo-icon" style="background:linear-gradient(135deg,#a78bfa,#7c3aed)">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width:40px;height:40px;fill:#fff"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          </div>
+          <h3>Usuarios</h3>
+          <p>Crear, editar y asignar permisos a los usuarios del sistema</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== CONTENEDOR DEL MÓDULO BONO (oculto por defecto) ========== -->
+  <div id="moduloBono" style="display:none;min-height:100vh;width:100%">
+
+  <!-- Boleta para impresión -->
+  <div id="printBoleta">
+    <div class="boleta-ticket">
+      <div class="ticket-header">
+        <img src="/logo.jpg" alt="Grupo Santacruz" style="width:60px;height:60px;object-fit:contain;margin-bottom:6px" />
+        <h2>BONO SANTACRUZ</h2>
+        <p>Grupo Santacruz</p>
+      </div>
+      <div class="ticket-body">
+        <div class="t-row"><span class="t-label">Fecha:</span><span class="t-value" id="printFecha"></span></div>
+        <div class="t-row"><span class="t-label">Nombre:</span><span class="t-value" id="printNombre"></span></div>
+        <div class="t-row"><span class="t-label">Cédula:</span><span class="t-value" id="printCedula"></span></div>
+        <div class="t-row"><span class="t-label">Vence:</span><span class="t-value" id="printVencimiento"></span></div>
+        <hr class="t-divider" />
+      </div>
+      <div class="ticket-total" id="printMonto"></div>
+      <div class="ticket-barcode">
+        <svg id="printBarcode"></svg>
+      </div>
+      <div class="ticket-code" id="printCodigo"></div>
+      <div class="ticket-footer">
+        <p>Conserve este bono como comprobante</p>
+        <p>Gracias por su pago</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recibo de canje para impresión -->
+  <div id="printCanje">
+    <div class="boleta-ticket">
+      <div class="ticket-header">
+        <img src="/logo.jpg" alt="Grupo Santacruz" style="width:60px;height:60px;object-fit:contain;margin-bottom:6px" />
+        <h2>BONO CANJEADO</h2>
+        <p>Grupo Santacruz</p>
+      </div>
+      <div class="ticket-body">
+        <div class="t-row"><span class="t-label">Consecutivo:</span><span class="t-value" id="printCanjeConsecutivo" style="font-size:1.1rem;font-weight:900"></span></div>
+        <hr class="t-divider" />
+        <div class="t-row"><span class="t-label">Fecha canje:</span><span class="t-value" id="printCanjeFecha"></span></div>
+        <div class="t-row"><span class="t-label">Nombre:</span><span class="t-value" id="printCanjeNombre"></span></div>
+        <div class="t-row"><span class="t-label">Cédula:</span><span class="t-value" id="printCanjeCedula"></span></div>
+        <hr class="t-divider" />
+      </div>
+      <div class="ticket-total" id="printCanjeMonto"></div>
+      <div class="ticket-code" id="printCanjeCodigo"></div>
+      <div class="ticket-footer">
+        <p>Bono canjeado exitosamente</p>
+        <p>Gracias por su preferencia</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay mobile -->
+  <div class="sidebar-overlay" id="overlay"></div>
+
+  <!-- ========== SIDEBAR ========== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand" onclick="volverAModulos()" title="Volver a Módulos" style="cursor:pointer;transition:opacity 150ms;" onmouseover="this.style.opacity='0.75'" onmouseout="this.style.opacity='1'">
+      <div class="logo"><img src="/logo.jpg" alt="Grupo Santacruz" /></div>
+      <div>
+        <h2>Grupo Santacruz</h2>
+        <span>Panel de gestión</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Menú principal</div>
+
+      <button class="nav-item active" data-section="inicio">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+        Inicio
+      </button>
+
+      <button class="nav-item" data-section="canjear">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z"/></svg>
+        Canjear
+      </button>
+
+      <button class="nav-item" data-section="crear">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        Generar
+      </button>
+
+      <button class="nav-item" data-section="cargamasiva">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+        Carga Masiva
+      </button>
+
+      <button class="nav-item" data-section="informes">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+        Informes
+      </button>
+
+      <button class="nav-item" data-section="reimprimir">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>
+        Reimprimir
+      </button>
+
+      <button class="nav-item" data-section="validar">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+        Validar
+      </button>
+
+      <div class="nav-section-title">Soporte</div>
+
+      <button class="nav-item" data-section="ayuda">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+        Ayuda
+      </button>
+
+    </nav>
+
+    <div class="sidebar-footer">
+      <div style="display:flex;align-items:center;gap:0.75rem;width:100%">
+        <div class="avatar" id="userAvatar">U</div>
+        <div class="user-info">
+          <div class="user-name" id="userName">Usuario</div>
+          <div class="user-role" id="userRole">Operador</div>
+        </div>
+        <button class="btn-logout" id="btnLogout" title="Cerrar sesión">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ========== MAIN ========== -->
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <button class="hamburger" id="btnHamburger">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+        </button>
+        <h1 id="pageTitle">Inicio</h1>
+      </div>
+      <span class="topbar-date" id="currentDate"></span>
+    </header>
+
+    <div class="content">
+
+      <!-- ===== SECCIÓN: INICIO / DASHBOARD ===== -->
+      <div class="section active" id="sec-inicio">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem">
+
+          <div class="card" style="text-align:center;padding:1.5rem">
+            <div style="font-size:2.5rem;font-weight:800;color:var(--brand)" id="statTotal">-</div>
+            <div style="font-size:0.85rem;color:var(--muted-foreground);margin-top:0.3rem">Total Bonos</div>
+          </div>
+
+          <div class="card" style="text-align:center;padding:1.5rem">
+            <div style="font-size:2.5rem;font-weight:800;color:#4ade80" id="statActivas">-</div>
+            <div style="font-size:0.85rem;color:var(--muted-foreground);margin-top:0.3rem">Pendientes</div>
+          </div>
+
+          <div class="card" style="text-align:center;padding:1.5rem">
+            <div style="font-size:2.5rem;font-weight:800;color:#a78bfa" id="statCanjeadas">-</div>
+            <div style="font-size:0.85rem;color:var(--muted-foreground);margin-top:0.3rem">Canjeados</div>
+          </div>
+
+          <div class="card" style="text-align:center;padding:1.5rem">
+            <div style="font-size:2.5rem;font-weight:800;color:#f87171" id="statVencidas">-</div>
+            <div style="font-size:0.85rem;color:var(--muted-foreground);margin-top:0.3rem">Vencidos</div>
+          </div>
+
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+          <div class="card" style="padding:1.5rem">
+            <h2 style="font-size:1rem;margin-bottom:1rem;font-weight:600">Distribución por Estado</h2>
+            <div style="max-width:280px;margin:0 auto">
+              <canvas id="chartTorta"></canvas>
+            </div>
+          </div>
+          <div class="card" style="padding:1.5rem">
+            <h2 style="font-size:1rem;margin-bottom:1rem;font-weight:600">Resumen General</h2>
+            <canvas id="chartBarras"></canvas>
+          </div>
+        </div>
+
+        <!-- Resumen monetario -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-top:1.5rem">
+          <div class="card" style="text-align:center;padding:1.5rem">
+            <div style="font-size:1.8rem;font-weight:800;color:var(--brand)" id="montoGenerado">$ 0</div>
+            <div style="font-size:0.82rem;color:var(--muted-foreground);margin-top:0.3rem">💰 Total Generado</div>
+          </div>
+          <div class="card" style="text-align:center;padding:1.5rem">
+            <div style="font-size:1.8rem;font-weight:800;color:#a78bfa" id="montoCanjeado">$ 0</div>
+            <div style="font-size:0.82rem;color:var(--muted-foreground);margin-top:0.3rem">💸 Total Canjeado</div>
+          </div>
+          <div class="card" style="text-align:center;padding:1.5rem">
+            <div style="font-size:1.8rem;font-weight:800;color:#4ade80" id="montoPendiente">$ 0</div>
+            <div style="font-size:0.82rem;color:var(--muted-foreground);margin-top:0.3rem">⏳ Monto Pendiente</div>
+          </div>
+        </div>
+
+        <!-- Bonos próximos a vencer -->
+        <div class="card" style="margin-top:1.5rem;padding:1.5rem">
+          <h2 style="font-size:1rem;margin-bottom:1rem;font-weight:600">⚠️ Bonos Próximos a Vencer <span style="font-size:0.78rem;color:var(--muted-foreground);font-weight:400">(próximos 7 días)</span></h2>
+          <div id="tablaPorVencer" style="overflow-x:auto"><p style="color:var(--muted-foreground);font-size:0.88rem">Cargando...</p></div>
+        </div>
+
+        <!-- Últimos bonos y Últimos canjes -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1.5rem">
+          <div class="card" style="padding:1.5rem">
+            <h2 style="font-size:1rem;margin-bottom:1rem;font-weight:600">📄 Últimos Bonos Generados</h2>
+            <div id="tablaUltimos" style="overflow-x:auto;max-height:320px;overflow-y:auto"><p style="color:var(--muted-foreground);font-size:0.88rem">Cargando...</p></div>
+          </div>
+          <div class="card" style="padding:1.5rem">
+            <h2 style="font-size:1rem;margin-bottom:1rem;font-weight:600">🎁 Últimos Canjes</h2>
+            <div id="tablaUltimosCanjes" style="overflow-x:auto;max-height:320px;overflow-y:auto"><p style="color:var(--muted-foreground);font-size:0.88rem">Cargando...</p></div>
+          </div>
+        </div>
+
+        <!-- Top beneficiarios -->
+        <div class="card" style="margin-top:1.5rem;padding:1.5rem">
+          <h2 style="font-size:1rem;margin-bottom:1rem;font-weight:600">🏆 Top Beneficiarios</h2>
+          <div id="tablaTopBeneficiarios" style="overflow-x:auto"><p style="color:var(--muted-foreground);font-size:0.88rem">Cargando...</p></div>
+        </div>
+
+      </div>
+
+      <!-- ===== SECCIÓN: CANJEAR BONO ===== -->
+      <div class="section" id="sec-canjear">
+        <div class="card">
+          <h2>Canjear Bono</h2>
+          <p class="subtitle">Digita o escanea el código de barras del bono</p>
+
+          <div id="alertCanjear" class="alert"></div>
+
+          <form id="formCanjear">
+            <div class="form-group">
+              <label for="codigoCanjear">Código de bono (digitar o pistola de barras)</label>
+              <div class="input-wrapper" style="position:relative">
+                <input type="text" id="codigoCanjear" placeholder="Escanea o digita el código aquí..." required autofocus style="padding-left:2.8rem;font-size:1.05rem;padding-top:0.85rem;padding-bottom:0.85rem" />
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);width:20px;height:20px;fill:var(--muted-foreground);pointer-events:none">
+                  <path d="M2 4h2v16H2V4zm4 0h1v16H6V4zm2 0h2v16H8V4zm3 0h2v16h-2V4zm3 0h2v16h-2V4zm3 0h1v16h-1V4zm2 0h2v16h-2V4z"/>
+                </svg>
+              </div>
+            </div>
+            <button type="submit" class="btn-primary" id="btnCanjear" style="width:100%;padding:0.9rem;font-size:1rem">Canjear Bono</button>
+          </form>
+
+          <!-- Resultado AUTORIZADO / DENEGADO -->
+          <div id="resultCanjear" style="display:none;margin-top:1.5rem;text-align:center;animation:fadeIn 0.4s ease">
+            <div id="canjearStatus" style="font-size:2.2rem;font-weight:800;letter-spacing:3px;padding:1.2rem;border-radius:14px;margin-bottom:1rem"></div>
+            <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem;text-align:left">
+              <div class="result-row"><span class="label">Nombre</span><span class="value" id="canNombre"></span></div>
+              <div class="result-row"><span class="label">Cédula</span><span class="value" id="canCedula"></span></div>
+              <div class="result-row"><span class="label">Monto</span><span class="value" id="canMonto"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SECCIÓN: CREAR BOLETA ===== -->
+      <div class="section" id="sec-crear">
+        <div class="card">
+          <h2>Nuevo Bono</h2>
+          <p class="subtitle">Completa los datos para generar un nuevo bono</p>
+
+          <div id="alertCrear" class="alert"></div>
+
+          <form id="formCrear">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="nombre">Nombre completo</label>
+                <input type="text" id="nombre" placeholder="Ej: Juan Pérez" required />
+              </div>
+              <div class="form-group">
+                <label for="cedula">Cédula</label>
+                <input type="text" id="cedula" placeholder="Ej: V-12345678" required />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="monto">Monto ($)</label>
+              <input type="number" id="monto" placeholder="0" step="1" min="0" required />
+            </div>
+            <div class="form-group">
+              <label for="diasVenc">Días de vigencia</label>
+              <input type="number" id="diasVenc" placeholder="30" value="30" min="1" max="365" required />
+            </div>
+            <button type="submit" class="btn-primary" id="btnCrear">Generar Bono</button>
+          </form>
+
+          <div class="result-card" id="resultCrear">
+            <div class="result-row"><span class="label">Nombre</span><span class="value" id="resNombre"></span></div>
+            <div class="result-row"><span class="label">Cédula</span><span class="value" id="resCedula"></span></div>
+            <div class="result-row"><span class="label">Monto</span><span class="value" id="resMonto"></span></div>
+            <div class="result-row"><span class="label">Vencimiento</span><span class="value" id="resVencimiento"></span></div>
+            <div class="result-row"><span class="label">Código</span><span class="value code" id="resCodigo"></span></div>
+            <button type="button" class="btn-primary" style="margin-top:1rem;width:100%" onclick="imprimirBoleta()">
+              🖨️ Imprimir Bono
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SECCIÓN: VALIDAR BOLETA ===== -->
+      <div class="section" id="sec-validar">
+        <div class="card">
+          <h2>Validar Bono</h2>
+          <p class="subtitle">Ingresa el código único para verificar el estado de un bono</p>
+
+          <div id="alertValidar" class="alert"></div>
+
+          <form id="formValidar">
+            <div class="form-group">
+              <label for="codigoValidar">Código de bono</label>
+              <input type="text" id="codigoValidar" placeholder="Ej: a1b2c3d4-e5f6-..." required />
+            </div>
+            <button type="submit" class="btn-primary" id="btnValidar">Validar</button>
+          </form>
+
+          <div class="result-card" id="resultValidar">
+            <div class="result-row"><span class="label">Nombre</span><span class="value" id="valNombre"></span></div>
+            <div class="result-row"><span class="label">Cédula</span><span class="value" id="valCedula"></span></div>
+            <div class="result-row"><span class="label">Monto</span><span class="value" id="valMonto"></span></div>
+            <div class="result-row"><span class="label">Fecha</span><span class="value" id="valFecha"></span></div>
+            <div class="result-row"><span class="label">Vencimiento</span><span class="value" id="valVencimiento"></span></div>
+            <div class="result-row"><span class="label">Estado</span><span class="value" id="valEstado"></span></div>
+            <div class="result-row"><span class="label">Impreso</span><span class="value" id="valImpreso"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SECCIÓN: CARGA MASIVA ===== -->
+      <div class="section" id="sec-cargamasiva">
+        <div class="card">
+          <h2>Carga Masiva desde Excel</h2>
+          <p class="subtitle">Sube un archivo Excel (.xlsx, .xls) con las columnas: <strong>nombre</strong>, <strong>cedula</strong> y <strong>bono</strong></p>
+
+          <div id="alertCarga" class="alert"></div>
+
+          <div style="margin:1.5rem 0">
+            <div style="background:var(--brand-soft);border:1px solid var(--brand);border-radius:12px;padding:1.2rem;font-size:0.85rem;color:var(--foreground)">
+              <strong style="color:var(--brand)">📋 Formato del archivo:</strong>
+              <table style="width:100%;margin-top:0.75rem;border-collapse:collapse;font-size:0.82rem">
+                <thead><tr>
+                  <th style="padding:0.4rem 0.6rem;text-align:left;border-bottom:1px solid var(--border);color:var(--muted-foreground)">nombre</th>
+                  <th style="padding:0.4rem 0.6rem;text-align:left;border-bottom:1px solid var(--border);color:var(--muted-foreground)">cedula</th>
+                  <th style="padding:0.4rem 0.6rem;text-align:left;border-bottom:1px solid var(--border);color:var(--muted-foreground)">bono</th>
+                </tr></thead>
+                <tbody>
+                  <tr><td style="padding:0.4rem 0.6rem">Juan Pérez</td><td style="padding:0.4rem 0.6rem">12345678</td><td style="padding:0.4rem 0.6rem">50000</td></tr>
+                  <tr><td style="padding:0.4rem 0.6rem">María López</td><td style="padding:0.4rem 0.6rem">87654321</td><td style="padding:0.4rem 0.6rem">30000</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <form id="formCargaMasiva">
+            <div class="form-group">
+              <label for="archivoCarga">Seleccionar archivo Excel</label>
+              <div style="position:relative">
+                <input type="file" id="archivoCarga" accept=".xlsx,.xls,.csv" required style="width:100%;padding:0.7rem;background:var(--card);border:1px solid var(--border);border-radius:10px;color:#fff;font-size:0.95rem;cursor:pointer" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="diasVencCarga">Días de vencimiento para todos los bonos</label>
+              <input type="number" id="diasVencCarga" value="30" min="1" max="365" style="width:100%" />
+            </div>
+
+            <!-- Vista previa -->
+            <div id="previewCarga" style="display:none;margin-bottom:1.5rem">
+              <h3 style="font-size:0.95rem;color:var(--foreground);margin-bottom:0.75rem">Vista previa <span id="previewCount" style="color:var(--brand)"></span></h3>
+              <div id="tablaPreview" style="overflow-x:auto;max-height:300px;overflow-y:auto"></div>
+            </div>
+
+            <button type="submit" class="btn-primary" id="btnCargaMasiva" style="width:100%;padding:0.9rem;font-size:1rem" disabled>
+              📤 Subir y Crear Bonos
+            </button>
+          </form>
+
+          <!-- Resultado de carga -->
+          <div id="resultCarga" style="display:none;margin-top:1.5rem">
+            <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.2rem">
+              <div class="result-row"><span class="label">Total filas</span><span class="value" id="cargaTotal"></span></div>
+              <div class="result-row"><span class="label">Insertados</span><span class="value" id="cargaInsertados" style="color:#4ade80"></span></div>
+              <div class="result-row"><span class="label">Errores</span><span class="value" id="cargaErrores" style="color:#f87171"></span></div>
+              <div id="cargaDetalleErrores" style="margin-top:0.75rem;display:none"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SECCIÓN: REIMPRIMIR BONO ===== -->
+      <div class="section" id="sec-reimprimir">
+        <div class="card">
+          <h2>Reimprimir Bono</h2>
+          <p class="subtitle">Busca los bonos de una persona por su cédula</p>
+
+          <div id="alertReimprimir" class="alert"></div>
+
+          <form id="formReimprimir">
+            <div class="form-group">
+              <label for="cedulaReimprimir">Cédula</label>
+              <input type="text" id="cedulaReimprimir" placeholder="Ej: V-12345678" required />
+            </div>
+            <button type="submit" class="btn-primary" id="btnReimprimir">Buscar Bonos</button>
+          </form>
+
+          <div id="listaReimprimir" style="margin-top:1.25rem"></div>
+        </div>
+      </div>
+
+      <!-- ===== SECCIÓN: INFORMES ===== -->
+      <div class="section" id="sec-informes">
+        <div class="card">
+          <h2>Informes</h2>
+          <p class="subtitle">Filtra y consulta los bonos generados</p>
+
+          <form id="formInformes" style="margin-bottom:1rem">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="filtroEstado">Estado</label>
+                <select id="filtroEstado" style="width:100%;padding:0.7rem 0.9rem;background:var(--card);border:1px solid var(--border);border-radius:10px;color:#fff;font-size:0.9rem;outline:none">
+                  <option value="TODOS">Todos</option>
+                  <option value="ACTIVA">Pendientes</option>
+                  <option value="CANJEADO">Canjeados</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="filtroDesde">Desde</label>
+                <input type="date" id="filtroDesde" style="color-scheme:dark" />
+              </div>
+              <div class="form-group">
+                <label for="filtroHasta">Hasta</label>
+                <input type="date" id="filtroHasta" style="color-scheme:dark" />
+              </div>
+            </div>
+            <button type="submit" class="btn-primary" id="btnInformes">Consultar</button>
+          </form>
+
+          <div id="informeResumen" style="display:none;margin-bottom:1rem;padding:0.75rem 1rem;background:var(--brand-soft);border:1px solid var(--brand);border-radius:10px;font-size:0.88rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem">
+            <span><strong id="informeTotal"></strong> bonos encontrados — Total: <strong id="informeMontoTotal"></strong></span>
+            <div id="botonesExportar" style="display:none;gap:0.5rem;display:flex">
+              <button type="button" onclick="exportarExcel()" style="padding:0.45rem 1rem;border:none;border-radius:8px;cursor:pointer;font-size:0.82rem;font-weight:600;background:rgba(34,197,94,0.15);color:#4ade80">📊 Excel</button>
+              <button type="button" onclick="exportarPDF()" style="padding:0.45rem 1rem;border:none;border-radius:8px;cursor:pointer;font-size:0.82rem;font-weight:600;background:rgba(239,68,68,0.15);color:#f87171">📄 PDF</button>
+            </div>
+          </div>
+
+          <div id="tablaInformes" style="overflow-x:auto"></div>
+        </div>
+      </div>
+
+      <!-- ===== SECCIÓN: AYUDA ===== -->
+      <div class="section" id="sec-ayuda">
+        <div class="card">
+          <h2>Centro de Ayuda</h2>
+          <p class="subtitle">Preguntas frecuentes y guía de uso</p>
+        </div>
+
+        <div class="help-item">
+          <h3>📄 ¿Cómo genero un bono?</h3>
+          <p>Ve a la sección <strong>Generar Bono</strong> en el menú izquierdo, completa el nombre, cédula y monto, y presiona el botón. Se generará un código único que podrás compartir.</p>
+        </div>
+
+        <div class="help-item">
+          <h3>🔍 ¿Cómo valido un bono?</h3>
+          <p>Dirígete a <strong>Validar Bono</strong>, ingresa el código único del bono y presiona Validar. Verás el estado actual y los datos asociados.</p>
+        </div>
+
+        <div class="help-item">
+          <h3>🔑 ¿Olvidé mi contraseña?</h3>
+          <p>Contacta al administrador del sistema para restablecer tu contraseña de acceso.</p>
+        </div>
+
+        <div class="help-item">
+          <h3>📞 Soporte técnico</h3>
+          <p>Si tienes problemas técnicos, contacta al equipo de soporte a través del correo <strong>soporte@boletasapp.com</strong> o al teléfono de atención.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  </div><!-- fin moduloBono -->
+
+  <script>
+    /* ========== MÓDULOS ========== */
+    const moduloUser = localStorage.getItem('username') || 'Usuario';
+    document.getElementById('moduloUser').textContent = moduloUser;
+
+    function abrirModulo(modulo) {
+      if (modulo === 'bono') {
+        document.getElementById('pantallaModulos').style.display = 'none';
+        document.getElementById('moduloBono').style.display = 'flex';
+      }
+    }
+
+    function volverAModulos() {
+      document.getElementById('moduloBono').style.display = 'none';
+      document.getElementById('pantallaModulos').style.display = '';
+    }
+
+    /* ========== NAVEGACIÓN ========== */
+    const navItems = document.querySelectorAll('.nav-item[data-section]');
+    const sections = document.querySelectorAll('.section');
+    const pageTitle = document.getElementById('pageTitle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    const btnHamburger = document.getElementById('btnHamburger');
+
+    const titles = {
+      inicio: 'Inicio',
+      crear: 'Generar',
+      cargamasiva: 'Carga Masiva',
+      validar: 'Validar',
+      canjear: 'Canjear',
+      informes: 'Informes',
+      reimprimir: 'Reimprimir',
+      ayuda: 'Ayuda'
+    };
+
+    navItems.forEach(item => {
+      item.addEventListener('click', () => {
+        const section = item.dataset.section;
+
+        navItems.forEach(n => n.classList.remove('active'));
+        item.classList.add('active');
+
+        sections.forEach(s => s.classList.remove('active'));
+        document.getElementById('sec-' + section).classList.add('active');
+
+        pageTitle.textContent = titles[section] || '';
+
+        // close mobile sidebar
+        sidebar.classList.remove('open');
+        overlay.classList.remove('open');
+      });
+    });
+
+    // Mobile sidebar toggle
+    btnHamburger.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+      overlay.classList.toggle('open');
+    });
+
+    overlay.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('open');
+    });
+
+    // Date
+    document.getElementById('currentDate').textContent = new Date().toLocaleDateString('es-ES', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+    /* ========== USER INFO & PERMISOS ========== */
+    const storedUser = localStorage.getItem('username');
+    const storedRol = localStorage.getItem('userRol') || 'usuario';
+    const storedPermisos = localStorage.getItem('userPermisos') || '';
+    const storedModulos = localStorage.getItem('userModulos') || '';
+
+    if (storedUser) {
+      document.getElementById('userName').textContent = storedUser;
+      document.getElementById('userAvatar').textContent = storedUser.charAt(0).toUpperCase();
+      document.getElementById('userRole').textContent = storedRol === 'administrador' ? 'Administrador' : 'Usuario Estándar';
+    }
+
+    // Aplicar permisos al menú
+    function aplicarPermisos() {
+      const permisos = storedPermisos.split(',').map(p => p.trim());
+      const isAdmin = storedRol === 'administrador';
+
+      // Mapeo sección -> permiso
+      const seccionPermiso = {
+        canjear: 'canjear',
+        crear: 'generar',
+        cargamasiva: 'generar',
+        informes: 'informes',
+        reimprimir: 'reimprimir',
+        validar: 'validar'
+      };
+
+      // Ocultar/mostrar botones según permisos (admin ve todo)
+      navItems.forEach(item => {
+        const sec = item.dataset.section;
+        if (seccionPermiso[sec]) {
+          if (!isAdmin && !permisos.includes(seccionPermiso[sec])) {
+            item.style.display = 'none';
+          }
+        }
+      });
+
+      // Mostrar/ocultar sección admin
+      document.querySelectorAll('.nav-admin-only').forEach(el => {
+        el.style.display = isAdmin ? '' : 'none';
+      });
+
+      // Mostrar/ocultar tarjetas de módulo solo-admin
+      document.querySelectorAll('.modulo-admin-only').forEach(el => {
+        el.style.display = isAdmin ? '' : 'none';
+      });
+
+      // Filtrar tarjetas de módulos según asignación del usuario
+      const userModulos = storedModulos.split(',').map(s => s.trim());
+      const moduloCardMap = [
+        { key: 'bono', selector: "[onclick=\"abrirModulo('bono')\"]" },
+        { key: 'pedidos', selector: "[onclick=\"window.location.href='/pedidos.html'\"]" },
+        { key: 'agropecuaria', selector: "[onclick=\"window.location.href='/distribucion-agropecuaria.html'\"]" },
+        { key: 'run-errands', selector: "[onclick=\"window.location.href='/run-errands.html'\"]" }
+      ];
+      if (!isAdmin) {
+        moduloCardMap.forEach(m => {
+          const card = document.querySelector('.modulo-card' + m.selector);
+          if (card && !userModulos.includes(m.key)) card.style.display = 'none';
+        });
+      }
+    }
+    aplicarPermisos();
+
+    /* ========== LOGOUT ========== */
+    document.getElementById('btnLogout').addEventListener('click', () => {
+      localStorage.removeItem('username');
+      localStorage.removeItem('userRol');
+      localStorage.removeItem('userPermisos');
+      window.location.href = '/login.html';
+    });
+
+    /* ========== CARGAR STATS ========== */
+    let chartTorta = null;
+    let chartBarras = null;
+
+    async function cargarStats() {
+      try {
+        const res = await fetch('/stats');
+        if (!res.ok) throw new Error('Error');
+        const data = await res.json();
+
+        const total = data.total ?? 0;
+        const activas = data.activas ?? 0;
+        const canjeadas = data.canjeadas ?? 0;
+        const vencidas = data.vencidas ?? 0;
+
+        document.getElementById('statTotal').textContent = total;
+        document.getElementById('statActivas').textContent = activas;
+        document.getElementById('statCanjeadas').textContent = canjeadas;
+        document.getElementById('statVencidas').textContent = vencidas;
+
+        // Torta
+        if (chartTorta) chartTorta.destroy();
+        chartTorta = new Chart(document.getElementById('chartTorta'), {
+          type: 'doughnut',
+          data: {
+            labels: ['Pendientes', 'Canjeados', 'Vencidos'],
+            datasets: [{
+              data: [activas, canjeadas, vencidas],
+              backgroundColor: ['#4ade80', '#a78bfa', '#f87171'],
+              borderColor: 'transparent',
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { color: '#0a0a0a', padding: 16, font: { size: 12 } }
+              }
+            },
+            cutout: '65%'
+          }
+        });
+
+        // Barras
+        if (chartBarras) chartBarras.destroy();
+        chartBarras = new Chart(document.getElementById('chartBarras'), {
+          type: 'bar',
+          data: {
+            labels: ['Total', 'Pendientes', 'Canjeados', 'Vencidos'],
+            datasets: [{
+              label: 'Cantidad',
+              data: [total, activas, canjeadas, vencidas],
+              backgroundColor: ['#53ac30', '#4ade80', '#a78bfa', '#f87171'],
+              borderRadius: 8,
+              borderSkipped: false
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: { color: '#6b7280', stepSize: 1 },
+                grid: { color: '#e5e5e5' }
+              },
+              x: {
+                ticks: { color: '#6b7280' },
+                grid: { display: false }
+              }
+            },
+            plugins: {
+              legend: { display: false }
+            }
+          }
+        });
+
+      } catch (e) {
+        document.getElementById('statTotal').textContent = 0;
+        document.getElementById('statActivas').textContent = 0;
+        document.getElementById('statCanjeadas').textContent = 0;
+        document.getElementById('statVencidas').textContent = 0;
+      }
+    }
+    cargarStats();
+
+    /* ========== WIDGETS DASHBOARD ========== */
+    const widgetTableStyle = 'width:100%;border-collapse:collapse;font-size:0.82rem';
+    const widgetThStyle = 'padding:0.5rem;text-align:left;color:var(--muted-foreground);border-bottom:1px solid var(--border)';
+    const widgetTdStyle = 'padding:0.5rem;border-bottom:1px solid var(--border)';
+
+    async function cargarWidgets() {
+      // Resumen monetario
+      try {
+        const res = await fetch('/stats/montos');
+        const m = await res.json();
+        document.getElementById('montoGenerado').textContent = '$ ' + Math.round(m.totalGenerado).toLocaleString('es');
+        document.getElementById('montoCanjeado').textContent = '$ ' + Math.round(m.totalCanjeado).toLocaleString('es');
+        document.getElementById('montoPendiente').textContent = '$ ' + Math.round(m.totalPendiente).toLocaleString('es');
+      } catch(e) {}
+
+      // Bonos próximos a vencer
+      try {
+        const res = await fetch('/stats/por-vencer');
+        const bonos = await res.json();
+        if (bonos.length === 0) {
+          document.getElementById('tablaPorVencer').innerHTML = '<p style="color:#4ade80;font-size:0.88rem">✅ No hay bonos próximos a vencer</p>';
+        } else {
+          let h = '<table style="' + widgetTableStyle + '"><thead><tr>';
+          h += '<th style="' + widgetThStyle + '">Nombre</th>';
+          h += '<th style="' + widgetThStyle + '">Cédula</th>';
+          h += '<th style="' + widgetThStyle + '">Monto</th>';
+          h += '<th style="' + widgetThStyle + '">Vence</th>';
+          h += '</tr></thead><tbody>';
+          bonos.forEach(b => {
+            const dias = Math.ceil((new Date(b.vencimiento) - new Date()) / 86400000);
+            const color = dias <= 2 ? '#f87171' : dias <= 4 ? '#fbbf24' : '#4ade80';
+            h += '<tr>';
+            h += '<td style="' + widgetTdStyle + '">' + b.nombre + '</td>';
+            h += '<td style="' + widgetTdStyle + '">' + b.cedula + '</td>';
+            h += '<td style="' + widgetTdStyle + '">$ ' + Math.round(b.monto) + '</td>';
+            h += '<td style="' + widgetTdStyle + ';color:' + color + '">' + new Date(b.vencimiento).toLocaleDateString('es-ES') + ' (' + dias + 'd)</td>';
+            h += '</tr>';
+          });
+          h += '</tbody></table>';
+          document.getElementById('tablaPorVencer').innerHTML = h;
+        }
+      } catch(e) { document.getElementById('tablaPorVencer').innerHTML = '<p style="color:var(--muted-foreground)">Error al cargar</p>'; }
+
+      // Últimos bonos generados
+      try {
+        const res = await fetch('/stats/ultimos');
+        const bonos = await res.json();
+        if (bonos.length === 0) {
+          document.getElementById('tablaUltimos').innerHTML = '<p style="color:var(--muted-foreground);font-size:0.88rem">Sin bonos aún</p>';
+        } else {
+          let h = '<table style="' + widgetTableStyle + '"><thead><tr>';
+          h += '<th style="' + widgetThStyle + '">Nombre</th>';
+          h += '<th style="' + widgetThStyle + '">Monto</th>';
+          h += '<th style="' + widgetThStyle + '">Fecha</th>';
+          h += '<th style="' + widgetThStyle + '">Estado</th>';
+          h += '</tr></thead><tbody>';
+          bonos.forEach(b => {
+            const badge = b.estado === 'ACTIVA'
+              ? '<span class="status-badge activa">ACTIVA</span>'
+              : '<span class="status-badge inactiva">CANJEADO</span>';
+            h += '<tr>';
+            h += '<td style="' + widgetTdStyle + '">' + b.nombre + '</td>';
+            h += '<td style="' + widgetTdStyle + '">$ ' + Math.round(b.monto) + '</td>';
+            h += '<td style="' + widgetTdStyle + '">' + new Date(b.fecha).toLocaleDateString('es-ES') + '</td>';
+            h += '<td style="' + widgetTdStyle + '">' + badge + '</td>';
+            h += '</tr>';
+          });
+          h += '</tbody></table>';
+          document.getElementById('tablaUltimos').innerHTML = h;
+        }
+      } catch(e) { document.getElementById('tablaUltimos').innerHTML = '<p style="color:var(--muted-foreground)">Error al cargar</p>'; }
+
+      // Últimos canjes
+      try {
+        const res = await fetch('/stats/ultimos-canjes');
+        const canjes = await res.json();
+        if (canjes.length === 0) {
+          document.getElementById('tablaUltimosCanjes').innerHTML = '<p style="color:var(--muted-foreground);font-size:0.88rem">Sin canjes aún</p>';
+        } else {
+          let h = '<table style="' + widgetTableStyle + '"><thead><tr>';
+          h += '<th style="' + widgetThStyle + '">N°</th>';
+          h += '<th style="' + widgetThStyle + '">Nombre</th>';
+          h += '<th style="' + widgetThStyle + '">Monto</th>';
+          h += '<th style="' + widgetThStyle + '">Fecha Canje</th>';
+          h += '</tr></thead><tbody>';
+          canjes.forEach(c => {
+            const consec = c.consecutivo_canje ? String(c.consecutivo_canje).padStart(4, '0') : '-';
+            h += '<tr>';
+            h += '<td style="' + widgetTdStyle + ';font-weight:700;color:#a78bfa">' + consec + '</td>';
+            h += '<td style="' + widgetTdStyle + '">' + c.nombre + '</td>';
+            h += '<td style="' + widgetTdStyle + '">$ ' + Math.round(c.monto) + '</td>';
+            h += '<td style="' + widgetTdStyle + '">' + new Date(c.fecha_canje).toLocaleString('es-ES') + '</td>';
+            h += '</tr>';
+          });
+          h += '</tbody></table>';
+          document.getElementById('tablaUltimosCanjes').innerHTML = h;
+        }
+      } catch(e) { document.getElementById('tablaUltimosCanjes').innerHTML = '<p style="color:var(--muted-foreground)">Error al cargar</p>'; }
+
+      // Top beneficiarios
+      try {
+        const res = await fetch('/stats/top-beneficiarios');
+        const top = await res.json();
+        if (top.length === 0) {
+          document.getElementById('tablaTopBeneficiarios').innerHTML = '<p style="color:var(--muted-foreground);font-size:0.88rem">Sin datos</p>';
+        } else {
+          let h = '<table style="' + widgetTableStyle + '"><thead><tr>';
+          h += '<th style="' + widgetThStyle + '">#</th>';
+          h += '<th style="' + widgetThStyle + '">Nombre</th>';
+          h += '<th style="' + widgetThStyle + '">Cédula</th>';
+          h += '<th style="' + widgetThStyle + '">Bonos</th>';
+          h += '<th style="' + widgetThStyle + '">Monto Total</th>';
+          h += '</tr></thead><tbody>';
+          const medallas = ['🥇', '🥈', '🥉', '4°', '5°'];
+          top.forEach((t, i) => {
+            h += '<tr>';
+            h += '<td style="' + widgetTdStyle + ';font-size:1.1rem">' + medallas[i] + '</td>';
+            h += '<td style="' + widgetTdStyle + ';font-weight:600">' + t.nombre + '</td>';
+            h += '<td style="' + widgetTdStyle + '">' + t.cedula + '</td>';
+            h += '<td style="' + widgetTdStyle + ';font-weight:700;color:var(--brand)">' + t.cantidad + '</td>';
+            h += '<td style="' + widgetTdStyle + '">$ ' + Math.round(t.montoTotal).toLocaleString('es') + '</td>';
+            h += '</tr>';
+          });
+          h += '</tbody></table>';
+          document.getElementById('tablaTopBeneficiarios').innerHTML = h;
+        }
+      } catch(e) { document.getElementById('tablaTopBeneficiarios').innerHTML = '<p style="color:var(--muted-foreground)">Error al cargar</p>'; }
+    }
+    cargarWidgets();
+
+    // Recargar stats y widgets al volver a Inicio
+    navItems.forEach(item => {
+      item.addEventListener('click', () => {
+        if (item.dataset.section === 'inicio') { cargarStats(); cargarWidgets(); }
+      });
+    });
+
+    /* ========== HELPERS ========== */
+    function showAlert(id, msg, type) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.className = 'alert alert-' + type;
+      el.style.display = 'block';
+    }
+
+    function hideAlert(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+
+    /* ========== CREAR BOLETA ========== */
+    document.getElementById('formCrear').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert('alertCrear');
+
+      const nombre = document.getElementById('nombre').value.trim();
+      const cedula = document.getElementById('cedula').value.trim();
+      const monto = parseFloat(document.getElementById('monto').value);
+      const diasVencimiento = parseInt(document.getElementById('diasVenc').value) || 30;
+
+      if (!nombre || !cedula || isNaN(monto) || monto <= 0) {
+        showAlert('alertCrear', 'Completa todos los campos correctamente.', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('btnCrear');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Generando...';
+
+      try {
+        const res = await fetch('/boletas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre, cedula, monto, diasVencimiento })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showAlert('alertCrear', data.error || 'Error al crear bono.', 'error');
+          return;
+        }
+
+        showAlert('alertCrear', 'Bono generado exitosamente.', 'success');
+
+        document.getElementById('resNombre').textContent = nombre;
+        document.getElementById('resCedula').textContent = cedula;
+        document.getElementById('resMonto').textContent = '$ ' + Math.round(monto);
+        document.getElementById('resVencimiento').textContent = new Date(data.vencimiento).toLocaleDateString('es-ES');
+        document.getElementById('resCodigo').textContent = data.codigo;
+        document.getElementById('resultCrear').style.display = 'block';
+
+        document.getElementById('formCrear').reset();
+
+      } catch (err) {
+        showAlert('alertCrear', 'No se pudo conectar con el servidor.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Generar Bono';
+      }
+    });
+
+    /* ========== IMPRIMIR BOLETA ========== */
+    function imprimirBoleta() {
+      const codigo = document.getElementById('resCodigo').textContent;
+      document.getElementById('printNombre').textContent = document.getElementById('resNombre').textContent;
+      document.getElementById('printCedula').textContent = document.getElementById('resCedula').textContent;
+      document.getElementById('printMonto').textContent = document.getElementById('resMonto').textContent;
+      document.getElementById('printVencimiento').textContent = document.getElementById('resVencimiento').textContent;
+      document.getElementById('printCodigo').textContent = 'Código: ' + codigo;
+      document.getElementById('printFecha').textContent = new Date().toLocaleDateString('es-ES');
+
+      JsBarcode('#printBarcode', codigo, {
+        format: 'CODE128',
+        width: 1.5,
+        height: 50,
+        displayValue: false,
+        margin: 0
+      });
+
+      document.getElementById('printBoleta').style.display = 'block';
+      window.print();
+      document.getElementById('printBoleta').style.display = 'none';
+
+      // Marcar como impreso
+      fetch('/boletas/' + encodeURIComponent(codigo) + '/imprimir', { method: 'PUT' });
+    }
+
+    /* ========== VALIDAR BOLETA ========== */
+    document.getElementById('formValidar').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert('alertValidar');
+
+      const codigo = document.getElementById('codigoValidar').value.trim();
+      if (!codigo) {
+        showAlert('alertValidar', 'Ingresa un código de boleta.', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('btnValidar');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Validando...';
+
+      try {
+        const res = await fetch('/boletas/' + encodeURIComponent(codigo));
+        const data = await res.json();
+
+        if (!res.ok) {
+          showAlert('alertValidar', data.error || 'Bono no encontrado.', 'error');
+          document.getElementById('resultValidar').style.display = 'none';
+          return;
+        }
+
+        document.getElementById('valNombre').textContent = data.nombre;
+        document.getElementById('valCedula').textContent = data.cedula;
+        document.getElementById('valMonto').textContent = '$ ' + Math.round(parseFloat(data.monto));
+        document.getElementById('valFecha').textContent = new Date(data.fecha).toLocaleString('es-ES');
+
+        const vencText = data.vencimiento ? new Date(data.vencimiento).toLocaleDateString('es-ES') : 'Sin vencimiento';
+        const vencido = data.vencimiento && new Date(data.vencimiento) < new Date();
+        document.getElementById('valVencimiento').innerHTML = vencido
+          ? '<span style="color:#f87171">' + vencText + ' (VENCIDO)</span>'
+          : vencText;
+
+        const estadoEl = document.getElementById('valEstado');
+        estadoEl.innerHTML = '<span class="status-badge ' + (data.estado === 'ACTIVA' ? 'activa' : 'inactiva') + '">' + data.estado + '</span>';
+
+        // Impreso
+        const impreso = data.impreso ? true : false;
+        document.getElementById('valImpreso').innerHTML = impreso
+          ? '<span style="color:#4ade80">✅ Sí</span>'
+          : '<span style="color:var(--muted-foreground)">❌ No</span>';
+
+        document.getElementById('resultValidar').style.display = 'block';
+        hideAlert('alertValidar');
+
+      } catch (err) {
+        showAlert('alertValidar', 'No se pudo conectar con el servidor.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Validar';
+      }
+    });
+
+    /* ========== INFORMES ========== */
+    document.getElementById('formInformes').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const estado = document.getElementById('filtroEstado').value;
+      const desde = document.getElementById('filtroDesde').value;
+      const hasta = document.getElementById('filtroHasta').value;
+
+      const params = new URLSearchParams();
+      if (estado) params.append('estado', estado);
+      if (desde) params.append('desde', desde);
+      if (hasta) params.append('hasta', hasta);
+
+      const btn = document.getElementById('btnInformes');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Consultando...';
+
+      try {
+        const res = await fetch('/informes?' + params.toString());
+        const data = await res.json();
+
+        if (!res.ok || data.length === 0) {
+          document.getElementById('informeResumen').style.display = 'none';
+          document.getElementById('botonesExportar').style.display = 'none';
+          document.getElementById('tablaInformes').innerHTML = '<p style="color:var(--muted-foreground);text-align:center;padding:2rem">No se encontraron bonos con estos filtros.</p>';
+          return;
+        }
+
+        const montoTotal = data.reduce((sum, b) => sum + (parseFloat(b.monto) || 0), 0);
+        document.getElementById('informeTotal').textContent = data.length;
+        document.getElementById('informeMontoTotal').textContent = '$ ' + Math.round(montoTotal).toLocaleString('es-ES');
+        window._datosInforme = data;
+        document.getElementById('informeResumen').style.display = 'flex';
+        document.getElementById('botonesExportar').style.display = 'flex';
+
+        let html = '<table style="width:100%;border-collapse:collapse;font-size:0.82rem">';
+        html += '<thead><tr style="border-bottom:1px solid var(--border);text-align:left">';
+        html += '<th style="padding:0.6rem 0.5rem;color:var(--muted-foreground)">Nombre</th>';
+        html += '<th style="padding:0.6rem 0.5rem;color:var(--muted-foreground)">Cédula</th>';
+        html += '<th style="padding:0.6rem 0.5rem;color:var(--muted-foreground)">Monto</th>';
+        html += '<th style="padding:0.6rem 0.5rem;color:var(--muted-foreground)">Fecha</th>';
+        html += '<th style="padding:0.6rem 0.5rem;color:var(--muted-foreground)">Vence</th>';
+        html += '<th style="padding:0.6rem 0.5rem;color:var(--muted-foreground)">Estado</th>';
+        html += '</tr></thead><tbody>';
+
+        data.forEach(b => {
+          const estadoClass = b.estado === 'ACTIVA' ? 'activa' : 'inactiva';
+          const fecha = new Date(b.fecha).toLocaleDateString('es-ES');
+          const vence = b.vencimiento ? new Date(b.vencimiento).toLocaleDateString('es-ES') : '-';
+          html += '<tr style="border-bottom:1px solid var(--border)">';
+          html += '<td style="padding:0.55rem 0.5rem">' + (b.nombre || '-') + '</td>';
+          html += '<td style="padding:0.55rem 0.5rem">' + (b.cedula || '-') + '</td>';
+          html += '<td style="padding:0.55rem 0.5rem">$ ' + Math.round(parseFloat(b.monto) || 0) + '</td>';
+          html += '<td style="padding:0.55rem 0.5rem">' + fecha + '</td>';
+          html += '<td style="padding:0.55rem 0.5rem">' + vence + '</td>';
+          html += '<td style="padding:0.55rem 0.5rem"><span class="status-badge ' + estadoClass + '">' + b.estado + '</span></td>';
+          html += '</tr>';
+        });
+
+        html += '</tbody></table>';
+        document.getElementById('tablaInformes').innerHTML = html;
+
+      } catch (err) {
+        document.getElementById('tablaInformes').innerHTML = '<p style="color:#fca5a5;text-align:center;padding:1rem">Error al consultar informes.</p>';
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Consultar';
+      }
+    });
+
+    /* ========== EXPORTAR EXCEL ========== */
+    function exportarExcel() {
+      const data = window._datosInforme;
+      if (!data || data.length === 0) return;
+
+      const rows = data.map(b => ({
+        Nombre: b.nombre || '',
+        Cedula: b.cedula || '',
+        Monto: Math.round(parseFloat(b.monto) || 0),
+        Fecha: new Date(b.fecha).toLocaleDateString('es-ES'),
+        Vencimiento: b.vencimiento ? new Date(b.vencimiento).toLocaleDateString('es-ES') : '-',
+        Estado: b.estado
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Informe');
+
+      // Ancho de columnas
+      ws['!cols'] = [
+        { wch: 30 }, { wch: 15 }, { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 12 }
+      ];
+
+      XLSX.writeFile(wb, 'Informe_Bonos_' + new Date().toISOString().slice(0,10) + '.xlsx');
+    }
+
+    /* ========== EXPORTAR PDF ========== */
+    function exportarPDF() {
+      const data = window._datosInforme;
+      if (!data || data.length === 0) return;
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      // Título
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('INFORME DE BONOS', 105, 18, { align: 'center' });
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Grupo Santacruz', 105, 25, { align: 'center' });
+      doc.text('Fecha: ' + new Date().toLocaleDateString('es-ES'), 105, 31, { align: 'center' });
+
+      const montoTotal = data.reduce((s, b) => s + (parseFloat(b.monto) || 0), 0);
+      doc.text('Total: ' + data.length + ' bonos — $ ' + Math.round(montoTotal).toLocaleString('es-ES'), 105, 37, { align: 'center' });
+
+      // Tabla
+      const rows = data.map(b => [
+        b.nombre || '',
+        b.cedula || '',
+        '$ ' + Math.round(parseFloat(b.monto) || 0).toLocaleString('es-ES'),
+        new Date(b.fecha).toLocaleDateString('es-ES'),
+        b.vencimiento ? new Date(b.vencimiento).toLocaleDateString('es-ES') : '-',
+        b.estado
+      ]);
+
+      doc.autoTable({
+        startY: 42,
+        head: [['Nombre', 'Cédula', 'Monto', 'Fecha', 'Vence', 'Estado']],
+        body: rows,
+        styles: { fontSize: 8, cellPadding: 3 },
+        headStyles: { fillColor: [0, 119, 182], textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
+        columnStyles: {
+          2: { halign: 'right' },
+          3: { halign: 'center' },
+          4: { halign: 'center' },
+          5: { halign: 'center' }
+        }
+      });
+
+      doc.save('Informe_Bonos_' + new Date().toISOString().slice(0,10) + '.pdf');
+    }
+
+    /* ========== REIMPRIMIR BONO ========== */
+    document.getElementById('formReimprimir').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert('alertReimprimir');
+
+      const cedula = document.getElementById('cedulaReimprimir').value.trim();
+      if (!cedula) {
+        showAlert('alertReimprimir', 'Ingresa una cédula.', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('btnReimprimir');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Buscando...';
+
+      try {
+        const res = await fetch('/boletas/cedula/' + encodeURIComponent(cedula));
+        const data = await res.json();
+
+        if (!res.ok) {
+          showAlert('alertReimprimir', data.error || 'No se encontraron bonos.', 'error');
+          document.getElementById('listaReimprimir').innerHTML = '';
+          return;
+        }
+
+        let html = '';
+        data.forEach((bono, i) => {
+          const venc = bono.vencimiento ? new Date(bono.vencimiento).toLocaleDateString('es-ES') : 'Sin vencimiento';
+          const vencido = bono.vencimiento && new Date(bono.vencimiento) < new Date();
+          const estadoClass = bono.estado === 'ACTIVA' ? 'activa' : 'inactiva';
+          html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:0.75rem">';
+          html += '<div class="result-row"><span class="label">Nombre</span><span class="value">' + bono.nombre + '</span></div>';
+          html += '<div class="result-row"><span class="label">Monto</span><span class="value">$ ' + Math.round(parseFloat(bono.monto)) + '</span></div>';
+          html += '<div class="result-row"><span class="label">Fecha</span><span class="value">' + new Date(bono.fecha).toLocaleDateString('es-ES') + '</span></div>';
+          html += '<div class="result-row"><span class="label">Vencimiento</span><span class="value"' + (vencido ? ' style="color:#f87171"' : '') + '>' + venc + (vencido ? ' (VENCIDO)' : '') + '</span></div>';
+          html += '<div class="result-row"><span class="label">Estado</span><span class="value"><span class="status-badge ' + estadoClass + '">' + bono.estado + '</span></span></div>';
+          html += '<button type="button" class="btn-primary" style="margin-top:0.75rem;width:100%" onclick="reimprimirBono(' + i + ')">🖨️ Reimprimir</button>';
+          html += '</div>';
+        });
+
+        document.getElementById('listaReimprimir').innerHTML = html;
+        window._bonosReimprimir = data;
+        hideAlert('alertReimprimir');
+
+      } catch (err) {
+        showAlert('alertReimprimir', 'No se pudo conectar con el servidor.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Buscar Bonos';
+      }
+    });
+
+    function reimprimirBono(index) {
+      const bono = window._bonosReimprimir[index];
+      document.getElementById('printNombre').textContent = bono.nombre;
+      document.getElementById('printCedula').textContent = bono.cedula;
+      document.getElementById('printMonto').textContent = '$ ' + Math.round(parseFloat(bono.monto));
+      document.getElementById('printVencimiento').textContent = bono.vencimiento ? new Date(bono.vencimiento).toLocaleDateString('es-ES') : 'Sin vencimiento';
+      document.getElementById('printCodigo').textContent = 'Código: ' + bono.codigo;
+      document.getElementById('printFecha').textContent = new Date(bono.fecha).toLocaleDateString('es-ES');
+
+      JsBarcode('#printBarcode', bono.codigo, {
+        format: 'CODE128',
+        width: 1.5,
+        height: 50,
+        displayValue: false,
+        margin: 0
+      });
+
+      document.getElementById('printBoleta').style.display = 'block';
+      window.print();
+      document.getElementById('printBoleta').style.display = 'none';
+
+      // Marcar como impreso
+      fetch('/boletas/' + encodeURIComponent(bono.codigo) + '/imprimir', { method: 'PUT' });
+    }
+
+    /* ========== CARGA MASIVA ========== */
+    document.getElementById('archivoCarga').addEventListener('change', function () {
+      const file = this.files[0];
+      if (!file) {
+        document.getElementById('previewCarga').style.display = 'none';
+        document.getElementById('btnCargaMasiva').disabled = true;
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const json = XLSX.utils.sheet_to_json(sheet);
+
+          if (!json || json.length === 0) {
+            showAlert('alertCarga', 'El archivo está vacío o no tiene datos válidos.', 'error');
+            document.getElementById('previewCarga').style.display = 'none';
+            document.getElementById('btnCargaMasiva').disabled = true;
+            return;
+          }
+
+          window._datosCarga = json;
+          document.getElementById('previewCount').textContent = '(' + json.length + ' registros)';
+
+          let h = '<table style="width:100%;border-collapse:collapse;font-size:0.82rem"><thead><tr>';
+          h += '<th style="padding:0.4rem;text-align:left;color:var(--muted-foreground);border-bottom:1px solid var(--border)">#</th>';
+          h += '<th style="padding:0.4rem;text-align:left;color:var(--muted-foreground);border-bottom:1px solid var(--border)">Nombre</th>';
+          h += '<th style="padding:0.4rem;text-align:left;color:var(--muted-foreground);border-bottom:1px solid var(--border)">Cédula</th>';
+          h += '<th style="padding:0.4rem;text-align:left;color:var(--muted-foreground);border-bottom:1px solid var(--border)">Monto</th>';
+          h += '</tr></thead><tbody>';
+
+          const preview = json.slice(0, 20);
+          preview.forEach((fila, i) => {
+            const norm = {};
+            Object.keys(fila).forEach(k => { norm[k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")] = fila[k]; });
+            const nombre = norm.nombre || '';
+            const cedula = norm.cedula || norm.ci || '';
+            const monto = norm.bono || norm.monto || norm.valor || 0;
+            const valid = nombre && cedula && monto;
+            const trStyle = valid ? '' : 'color:#f87171';
+            h += '<tr style="border-bottom:1px solid var(--border);' + trStyle + '">';
+            h += '<td style="padding:0.4rem">' + (i + 1) + '</td>';
+            h += '<td style="padding:0.4rem">' + nombre + '</td>';
+            h += '<td style="padding:0.4rem">' + cedula + '</td>';
+            h += '<td style="padding:0.4rem">$ ' + Math.round(parseFloat(monto) || 0) + '</td>';
+            h += '</tr>';
+          });
+          if (json.length > 20) {
+            h += '<tr><td colspan="4" style="padding:0.6rem;color:var(--muted-foreground);text-align:center">... y ' + (json.length - 20) + ' más</td></tr>';
+          }
+          h += '</tbody></table>';
+
+          document.getElementById('tablaPreview').innerHTML = h;
+          document.getElementById('previewCarga').style.display = 'block';
+          document.getElementById('btnCargaMasiva').disabled = false;
+          hideAlert('alertCarga');
+        } catch (err) {
+          showAlert('alertCarga', 'Error al leer el archivo: ' + err.message, 'error');
+          document.getElementById('btnCargaMasiva').disabled = true;
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    document.getElementById('formCargaMasiva').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert('alertCarga');
+
+      const fileInput = document.getElementById('archivoCarga');
+      if (!fileInput.files[0]) {
+        showAlert('alertCarga', 'Selecciona un archivo Excel.', 'error');
+        return;
+      }
+
+      const count = window._datosCarga ? window._datosCarga.length : 0;
+      if (!confirm('¿Crear ' + count + ' bonos? Esta acción no se puede deshacer.')) return;
+
+      const btn = document.getElementById('btnCargaMasiva');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Procesando...';
+
+      const formData = new FormData();
+      formData.append('archivo', fileInput.files[0]);
+      formData.append('diasVencimiento', document.getElementById('diasVencCarga').value);
+
+      try {
+        const res = await fetch('/boletas/carga-masiva', { method: 'POST', body: formData });
+        const data = await res.json();
+
+        if (!res.ok) {
+          showAlert('alertCarga', data.error || 'Error en la carga.', 'error');
+          return;
+        }
+
+        document.getElementById('cargaTotal').textContent = data.total;
+        document.getElementById('cargaInsertados').textContent = data.insertados;
+        document.getElementById('cargaErrores').textContent = data.errores;
+
+        if (data.detalleErrores && data.detalleErrores.length > 0) {
+          let errHtml = '<div style="font-size:0.8rem;color:#f87171;margin-top:0.5rem">';
+          data.detalleErrores.forEach(e => { errHtml += '<div>• ' + e + '</div>'; });
+          errHtml += '</div>';
+          document.getElementById('cargaDetalleErrores').innerHTML = errHtml;
+          document.getElementById('cargaDetalleErrores').style.display = 'block';
+        } else {
+          document.getElementById('cargaDetalleErrores').style.display = 'none';
+        }
+
+        document.getElementById('resultCarga').style.display = 'block';
+        showAlert('alertCarga', '✅ Se crearon ' + data.insertados + ' bonos exitosamente.', 'success');
+
+        // Limpiar
+        fileInput.value = '';
+        document.getElementById('previewCarga').style.display = 'none';
+        window._datosCarga = null;
+
+      } catch (err) {
+        showAlert('alertCarga', 'Error de conexión al servidor.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '📤 Subir y Crear Bonos';
+      }
+    });
+
+    /* ========== CANJEAR BONO ========== */
+    document.getElementById('formCanjear').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert('alertCanjear');
+
+      const codigo = document.getElementById('codigoCanjear').value.trim();
+      if (!codigo) {
+        showAlert('alertCanjear', 'Ingresa o escanea un código de bono.', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('btnCanjear');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Verificando...';
+
+      const statusEl = document.getElementById('canjearStatus');
+
+      try {
+        const res = await fetch('/boletas/' + encodeURIComponent(codigo) + '/canjear', {
+          method: 'PUT'
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          statusEl.textContent = '❌ DENEGADO';
+          statusEl.style.background = 'rgba(239,68,68,0.15)';
+          statusEl.style.color = '#f87171';
+          statusEl.style.border = '2px solid rgba(239,68,68,0.3)';
+          document.getElementById('resultCanjear').style.display = 'block';
+          document.getElementById('resultCanjear').querySelector('div:last-child').style.display = 'none';
+          showAlert('alertCanjear', data.error || 'Bono no válido.', 'error');
+          return;
+        }
+
+        statusEl.textContent = '✅ AUTORIZADO';
+        statusEl.style.background = 'rgba(34,197,94,0.15)';
+        statusEl.style.color = '#4ade80';
+        statusEl.style.border = '2px solid rgba(34,197,94,0.3)';
+
+        document.getElementById('canNombre').textContent = data.boleta.nombre;
+        document.getElementById('canCedula').textContent = data.boleta.cedula;
+        document.getElementById('canMonto').textContent = '$ ' + Math.round(parseFloat(data.boleta.monto));
+        document.getElementById('resultCanjear').style.display = 'block';
+        document.getElementById('resultCanjear').querySelector('div:last-child').style.display = 'block';
+
+        // Imprimir recibo de canje
+        const consecutivo = String(data.boleta.consecutivo_canje).padStart(4, '0');
+        document.getElementById('printCanjeConsecutivo').textContent = 'N° ' + consecutivo;
+        document.getElementById('printCanjeFecha').textContent = new Date(data.boleta.fecha_canje).toLocaleString('es-ES');
+        document.getElementById('printCanjeNombre').textContent = data.boleta.nombre;
+        document.getElementById('printCanjeCedula').textContent = data.boleta.cedula;
+        document.getElementById('printCanjeMonto').textContent = '$ ' + Math.round(parseFloat(data.boleta.monto));
+        document.getElementById('printCanjeCodigo').textContent = 'Código: ' + data.boleta.codigo;
+
+        document.getElementById('printCanje').style.display = 'block';
+        document.getElementById('printBoleta').style.display = 'none';
+        window.print();
+        document.getElementById('printCanje').style.display = 'none';
+
+        document.getElementById('formCanjear').reset();
+
+      } catch (err) {
+        showAlert('alertCanjear', 'No se pudo conectar con el servidor.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Canjear Bono';
+        document.getElementById('codigoCanjear').focus();
+      }
+    });
+
+    /* ========== GESTIÓN DE USUARIOS: movido a /usuarios.html ========== */
+  </script>
+
+</body>
+</html>

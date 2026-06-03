@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crear Cuenta — Grupo Santacruz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/design-system.css?v=3" />
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background:
+        radial-gradient(ellipse 70% 55% at 50% 0%, rgba(83,172,48,0.18), transparent 60%),
+        #ffffff;
+    }
+    .login-card {
+      width: 100%;
+      max-width: 440px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 40px rgba(10,10,10,0.06);
+      padding: 32px;
+    }
+    .login-header { text-align: center; margin-bottom: 24px; }
+    .login-header .logo {
+      width: 64px; height: 64px;
+      margin: 0 auto 16px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-xs);
+      background: #fff;
+    }
+    .login-header .logo img { width: 100%; height: 100%; object-fit: contain; }
+    .login-header h1 {
+      font-size: 24px; font-weight: 800; letter-spacing: -0.02em;
+      color: var(--foreground);
+    }
+    .login-header p {
+      margin-top: 6px;
+      font-size: 14px;
+      color: var(--muted-foreground);
+    }
+    .footer-text {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--muted-foreground);
+    }
+    .footer-text a { color: var(--brand); font-weight: 500; }
+    .alert { display: none; margin-bottom: 12px; }
+    .alert.show { display: flex; }
+  </style>
+</head>
+<body>
+
+  <div class="login-card">
+    <div class="login-header">
+      <div class="logo"><img src="/logo.jpg" alt="Grupo Santacruz" /></div>
+      <h1>Crear Cuenta</h1>
+      <p>Regístrate para acceder al sistema</p>
+    </div>
+
+    <div id="alert" class="alert" role="alert"></div>
+
+    <form id="registerForm" class="stack" novalidate>
+      <div class="form-group">
+        <label class="label" for="username">Usuario</label>
+        <div class="input-wrapper">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          <input type="text" id="username" name="username" class="input" placeholder="Elige un nombre de usuario" autocomplete="username" required />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="label" for="password">Contraseña</label>
+        <div class="input-wrapper">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <input type="password" id="password" name="password" class="input" placeholder="Mínimo 6 caracteres" autocomplete="new-password" required minlength="6" />
+        </div>
+        <span class="hint">Usa al menos 6 caracteres.</span>
+      </div>
+
+      <div class="form-group">
+        <label class="label" for="confirmPassword">Confirmar contraseña</label>
+        <div class="input-wrapper">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <input type="password" id="confirmPassword" name="confirmPassword" class="input" placeholder="Repite tu contraseña" autocomplete="new-password" required minlength="6" />
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-full mt-2" id="btnRegister">
+        Crear Cuenta
+      </button>
+    </form>
+
+    <p class="footer-text">
+      ¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a>
+    </p>
+  </div>
+
+  <script>
+    const form = document.getElementById('registerForm');
+    const alertBox = document.getElementById('alert');
+    const btnRegister = document.getElementById('btnRegister');
+
+    function showAlert(message, type) {
+      alertBox.textContent = message;
+      alertBox.className = 'alert alert-' + (type === 'error' ? 'error' : 'success') + ' show';
+    }
+    function hideAlert() {
+      alertBox.className = 'alert';
+      alertBox.textContent = '';
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert();
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+
+      if (!username || !password || !confirmPassword) {
+        showAlert('Por favor completa todos los campos.', 'error');
+        return;
+      }
+      if (password.length < 6) {
+        showAlert('La contraseña debe tener al menos 6 caracteres.', 'error');
+        return;
+      }
+      if (password !== confirmPassword) {
+        showAlert('Las contraseñas no coinciden.', 'error');
+        return;
+      }
+
+      btnRegister.disabled = true;
+      btnRegister.innerHTML = '<span class="spinner"></span> Registrando...';
+
+      try {
+        const res = await fetch('/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          showAlert(data.error || 'Error al registrarse.', 'error');
+          return;
+        }
+
+        showAlert('¡Cuenta creada! Redirigiendo al login...', 'success');
+        setTimeout(() => { window.location.href = '/login.html'; }, 1200);
+
+      } catch (err) {
+        showAlert('No se pudo conectar con el servidor.', 'error');
+      } finally {
+        btnRegister.disabled = false;
+        btnRegister.innerHTML = 'Crear Cuenta';
+      }
+    });
+  </script>
+</body>
+</html>

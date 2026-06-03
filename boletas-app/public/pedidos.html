@@ -1,0 +1,1848 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Toma de Pedidos — Grupo Santacruz</title>
+  <link rel="stylesheet" href="/assets/design-system.css?v=3" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      background:var(--background);
+      color:var(--foreground);
+    }
+
+    /* ========== HEADER ========== */
+    .top-bar {
+      background:var(--card);
+      border-bottom:1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .top-bar h1 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color:var(--foreground);
+    }
+
+    .top-bar .actions {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 0.55rem 1.2rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .btn-primary {
+      background:var(--brand);
+      color: #fff;
+    }
+
+    .btn-primary:hover { opacity: 0.9; }
+
+    .btn-secondary {
+      background:var(--card);
+      color:var(--foreground);
+      border:1px solid var(--border);
+    }
+
+    .btn-secondary:hover { background:var(--muted); }
+
+    .btn-success { background: #2ecc71; color: #fff; }
+    .btn-success:hover { background: #27ae60; }
+
+    .btn-warning { background: #f39c12; color: #fff; }
+    .btn-warning:hover { background: #e67e22; }
+
+    .btn-danger { background: #e74c3c; color: #fff; }
+    .btn-danger:hover { background: #c0392b; }
+
+    .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.78rem; }
+
+    /* ========== LAYOUT ========== */
+    .container {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 1.5rem 2rem;
+    }
+
+    /* ========== TABS ========== */
+    .tabs {
+      display: flex;
+      gap: 0.25rem;
+      margin-bottom: 1.5rem;
+      border-bottom:1px solid var(--border);
+      padding-bottom: 0;
+    }
+
+    .tab {
+      padding: 0.7rem 1.3rem;
+      background: none;
+      border: none;
+      color:var(--muted-foreground);
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .tab:hover { color:var(--foreground); }
+
+    .tab.active {
+      color:var(--brand);
+      border-bottom-color:var(--brand);
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ========== CARDS ========== */
+    .card {
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .card h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color:var(--foreground);
+    }
+
+    /* ========== FORM ========== */
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .form-group label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color:var(--muted-foreground);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-group input, .form-group select, .form-group textarea {
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.6rem 0.85rem;
+      color:var(--foreground);
+      font-size: 0.9rem;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none;
+      border-color:var(--brand);
+    }
+
+    .form-group select option { background:var(--card); }
+
+    /* ========== TABLE ========== */
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      text-align: left;
+      padding: 0.65rem 0.85rem;
+      font-size: 0.73rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color:var(--muted-foreground);
+      border-bottom:1px solid var(--border);
+    }
+
+    td {
+      padding: 0.7rem 0.85rem;
+      font-size: 0.88rem;
+      border-bottom:1px solid var(--border);
+    }
+
+    tbody tr:hover {
+      background:var(--card);
+    }
+
+    /* ========== BADGES ========== */
+    .badge {
+      padding: 0.25rem 0.65rem;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .badge-pendiente { background: rgba(243,156,18,0.15); color: #f39c12; }
+    .badge-en-proceso { background:var(--brand-soft); color:var(--brand); }
+    .badge-entregado { background: rgba(46,204,113,0.15); color: #2ecc71; }
+    .badge-cancelado { background: rgba(231,76,60,0.15); color: #e74c3c; }
+
+    /* ========== ITEMS LIST ========== */
+    .items-list {
+      margin: 1rem 0;
+    }
+
+    .item-row {
+      display: grid;
+      grid-template-columns: 100px 1.5fr 80px 90px auto;
+      gap: 0.6rem;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .item-row input, .item-row select {
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.5rem 0.7rem;
+      color:var(--foreground);
+      font-size: 0.85rem;
+      font-family: inherit;
+    }
+
+    .item-row input:focus, .item-row select:focus {
+      outline: none;
+      border-color:var(--brand);
+    }
+
+    .item-total {
+      font-weight: 700;
+      color: #2ecc71;
+      text-align: right;
+      min-width: 80px;
+    }
+
+    .total-line {
+      display: grid;
+      grid-template-columns: 100px 1.5fr 80px 90px auto;
+      gap: 0.6rem;
+      align-items: center;
+      padding: 1rem 0;
+      border-top:1px solid var(--border);
+      margin-top: 0.5rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .total-line span:last-child { color: #2ecc71; }
+
+    /* ========== FILTROS ========== */
+    .filters {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+      align-items: flex-end;
+    }
+
+    .filters .form-group { min-width: 160px; }
+
+    /* ========== MODAL ========== */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal {
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      width: 90%;
+      max-width: 700px;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    .modal h3 {
+      font-size: 1.15rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    /* ========== EMPTY STATE ========== */
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color:var(--muted-foreground);
+    }
+
+    .empty-state svg {
+      width: 48px;
+      height: 48px;
+      fill:var(--muted-foreground);
+      margin-bottom: 0.75rem;
+    }
+
+    /* ========== TOAST ========== */
+    .toast {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      padding: 0.85rem 1.4rem;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      z-index: 2000;
+      transition: all 0.3s;
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast-success { background: #2ecc71; color: #fff; }
+    .toast-error { background: #e74c3c; color: #fff; }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 768px) {
+      .container { padding: 1rem; }
+      .top-bar { padding: 0.75rem 1rem; }
+      .item-row { grid-template-columns: 1fr; }
+      .filters { flex-direction: column; }
+    }
+
+    .back-link {
+      color:var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: color 0.2s;
+    }
+
+    .back-link:hover { color:var(--brand); }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="top-bar">
+  <div style="display:flex;align-items:center;gap:1rem;">
+    <a href="/dashboard.html" class="brand-block" title="Volver al Dashboard" style="display:flex;align-items:center;gap:0.6rem;text-decoration:none;cursor:pointer;transition:opacity 150ms;" onmouseover="this.style.opacity='0.75'" onmouseout="this.style.opacity='1'">
+      <img src="/logo.jpg" alt="Grupo Santacruz" style="width:36px;height:36px;object-fit:contain;border-radius:8px;" />
+      <div style="display:flex;flex-direction:column;line-height:1.15;">
+        <strong style="font-size:0.95rem;color:var(--foreground);">Grupo Santacruz</strong>
+        <span style="font-size:0.72rem;color:var(--muted-foreground);">Sistema de Gestión</span>
+      </div>
+    </a>
+    <h1 style="font-size:1.05rem;font-weight:600;color:var(--muted-foreground);">Toma de Pedidos</h1>
+  </div>
+  <div class="actions">
+    <button class="btn btn-primary" onclick="abrirNuevoPedido()">+ Nuevo Pedido</button>
+  </div>
+</div>
+
+<!-- Bloque de usuario flotante (abajo-izquierda) -->
+<div class="user-bottom-left">
+  <div class="avatar" id="topUserAvatar">U</div>
+  <div class="user-info">
+    <div class="user-name" id="topUserName">Usuario</div>
+    <div class="user-role" id="topUserRole">Usuario</div>
+  </div>
+  <button class="btn-logout" id="btnLogout" title="Cerrar sesión">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+  </button>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<div class="container">
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" data-tab="pedidos">Pedidos</button>
+    <button class="tab" data-tab="productos">Productos</button>
+    <button class="tab" data-tab="clientes">Clientes</button>
+    <button class="tab" data-tab="pdv">Puntos de Venta</button>
+  </div>
+
+  <!-- ==================== TAB: PEDIDOS ==================== -->
+  <div class="tab-panel active" id="tab-pedidos">
+    <!-- Filtros -->
+    <div class="filters">
+      <div class="form-group">
+        <label>Punto de Venta</label>
+        <select id="filtroPDV" onchange="cargarPedidos()">
+          <option value="TODOS">Todos los PDV</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Estado</label>
+        <select id="filtroEstado" onchange="cargarPedidos()">
+          <option value="TODOS">Todos</option>
+          <option value="PENDIENTE">Pendiente</option>
+          <option value="EN_PROCESO">En proceso</option>
+          <option value="ENTREGADO">Entregado</option>
+          <option value="CANCELADO">Cancelado</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Desde</label>
+        <input type="date" id="filtroDesde" onchange="cargarPedidos()" />
+      </div>
+      <div class="form-group">
+        <label>Hasta</label>
+        <input type="date" id="filtroHasta" onchange="cargarPedidos()" />
+      </div>
+    </div>
+
+    <!-- Tabla de pedidos -->
+    <div class="card">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>N° Pedido</th>
+              <th>PDV</th>
+              <th>Cliente</th>
+              <th>Cédula</th>
+              <th>Fecha</th>
+              <th>Total</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tablaPedidos">
+            <tr><td colspan="8"><div class="empty-state">Cargando...</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TAB: PRODUCTOS ==================== -->
+  <div class="tab-panel" id="tab-productos">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.75rem;">
+      <h3 style="margin:0;">Catálogo de Productos</h3>
+      <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" onclick="abrirNuevoProducto()">+ Nuevo Producto</button>
+        <button class="btn btn-warning btn-sm" onclick="document.getElementById('modalCargaProductos').classList.add('active')">📁 Carga Masiva</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Referencia</th>
+              <th>Desc. Item</th>
+              <th>Precio Unit.</th>
+              <th>U.M.</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tablaProductos">
+            <tr><td colspan="6"><div class="empty-state">Cargando...</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- ==================== TAB: CLIENTES ==================== -->
+  <div class="tab-panel" id="tab-clientes">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.75rem;">
+      <h3 style="margin:0;">Clientes</h3>
+      <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+        <input type="text" id="buscarCliente" placeholder="Buscar por nombre, cédula, teléfono..." style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.85rem;color:var(--foreground);font-size:0.85rem;min-width:250px;" oninput="cargarClientes()" />
+        <button class="btn btn-primary btn-sm" onclick="abrirNuevoCliente()">+ Nuevo Cliente</button>
+        <button class="btn btn-warning btn-sm" onclick="document.getElementById('modalCargaClientes').classList.add('active')">📁 Carga Masiva</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Nit/Cédula</th>
+              <th>Teléfono</th>
+              <th>Dirección</th>
+              <th>Referencia</th>
+              <th>Barrio</th>
+              <th>Ciudad</th>
+              <th>Punto de Venta</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tablaClientes">
+            <tr><td colspan="10"><div class="empty-state">Cargando...</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODAL: CARGA MASIVA CLIENTES ==================== -->
+<div class="modal-overlay" id="modalCargaClientes">
+  <div class="modal" style="max-width:550px;">
+    <h3>Carga Masiva de Clientes</h3>
+    <p style="color:var(--muted-foreground);font-size:0.85rem;margin-bottom:1rem;">Sube un archivo Excel (.xlsx) con las columnas: <strong>NOMBRE</strong> (obligatorio), NIT_CEDULA, TELEFONO, DIRECCION, REFERENCIA, BARRIO, CIUDAD, PUNTO DE VENTA.<br>Si un cliente con la misma cédula/NIT ya existe, se actualizará.</p>
+    <div class="form-group" style="margin-bottom:1rem;">
+      <label>Archivo Excel</label>
+      <input type="file" id="archivoClientes" accept=".xlsx,.xls,.csv" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:0.5rem;color:var(--foreground);width:100%;" />
+    </div>
+    <div id="resultadoCarga" style="display:none;margin-bottom:1rem;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="cerrarModalCarga()">Cerrar</button>
+      <button class="btn btn-primary" id="btnSubirClientes" onclick="subirClientes()">Subir y Cargar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODAL: NUEVO/EDITAR CLIENTE ==================== -->
+<div class="modal-overlay" id="modalCliente">
+  <div class="modal" style="max-width:600px;">
+    <h3 id="modalClienteTitulo">Nuevo Cliente</h3>
+    <input type="hidden" id="clienteEditId" />
+    <div class="form-row">
+      <div class="form-group"><label>Nombre *</label><input type="text" id="clienteNombre" placeholder="Nombre completo" /></div>
+      <div class="form-group"><label>Nit / Cédula</label><input type="text" id="clienteCedula" placeholder="Nit o Cédula" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Teléfono</label><input type="text" id="clienteTelefono" placeholder="Teléfono / Celular" /></div>
+      <div class="form-group"><label>Email</label><input type="text" id="clienteEmail" placeholder="Correo electrónico" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Dirección</label><input type="text" id="clienteDireccion" placeholder="Dirección" /></div>
+      <div class="form-group"><label>Referencia</label><input type="text" id="clienteReferencia" placeholder="Referencia" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Barrio</label><input type="text" id="clienteBarrio" placeholder="Barrio / Sector" /></div>
+      <div class="form-group"><label>Ciudad</label><input type="text" id="clienteCiudad" placeholder="Ciudad" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Punto de Venta</label><select id="clientePuntoVenta"><option value="">-- Seleccione --</option></select></div>
+      <div class="form-group"><label>Observaciones</label><input type="text" id="clienteObs" placeholder="Notas" /></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="cerrarModalCliente()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarCliente()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODAL: NUEVO/EDITAR PEDIDO ==================== -->
+<div class="modal-overlay" id="modalPedido">
+  <div class="modal" style="max-width:950px;width:95%;">
+    <h3 id="modalPedidoTitulo">Nuevo Pedido</h3>
+    <input type="hidden" id="pedidoEditId" />
+    <select id="pedidoPDV" style="display:none;"><option value="">-- Seleccione PDV --</option></select>
+
+    <div class="form-row" style="grid-template-columns:1fr 2fr;">
+      <div class="form-group">
+        <label>Cédula / NIT *</label>
+        <input type="text" id="pedidoCedula" placeholder="Digite la cédula y presione Enter" onkeydown="if(event.key==='Enter'){event.preventDefault();buscarClientePedido()}" />
+      </div>
+      <div class="form-group" style="display:flex;align-items:flex-end;">
+        <button class="btn btn-primary btn-sm" onclick="buscarClientePedido()" style="margin-bottom:2px;">Buscar</button>
+      </div>
+    </div>
+
+    <!-- Info del cliente encontrado -->
+    <div id="infoClientePedido" style="display:none;background:var(--brand-soft);border:1px solid var(--brand);border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1rem;">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:0.75rem;">
+        <button class="btn btn-warning btn-sm" id="btnEditarClientePedido" onclick="editarClienteDesdePedido()" style="font-size:0.75rem;">✏️ Editar Cliente</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0.85rem 1.25rem;font-size:0.9rem;">
+        <div><span style="color:var(--muted-foreground);font-size:0.74rem;text-transform:uppercase;letter-spacing:0.3px;">Nombre</span><br/><strong id="infoPedNombre" style="font-size:0.92rem;word-break:break-word;">—</strong></div>
+        <div><span style="color:var(--muted-foreground);font-size:0.74rem;text-transform:uppercase;letter-spacing:0.3px;">Nit/Cédula</span><br/><strong id="infoPedCedula" style="font-size:0.92rem;">—</strong></div>
+        <div><span style="color:var(--muted-foreground);font-size:0.74rem;text-transform:uppercase;letter-spacing:0.3px;">Teléfono</span><br/><strong id="infoPedTelefono" style="font-size:0.92rem;">—</strong></div>
+        <div><span style="color:var(--muted-foreground);font-size:0.74rem;text-transform:uppercase;letter-spacing:0.3px;">Dirección</span><br/><strong id="infoPedDireccion" style="font-size:0.92rem;word-break:break-word;">—</strong></div>
+        <div><span style="color:var(--muted-foreground);font-size:0.74rem;text-transform:uppercase;letter-spacing:0.3px;">Referencia</span><br/><strong id="infoPedReferencia" style="font-size:0.92rem;word-break:break-word;">—</strong></div>
+        <div><span style="color:var(--muted-foreground);font-size:0.74rem;text-transform:uppercase;letter-spacing:0.3px;">Barrio</span><br/><strong id="infoPedBarrio" style="font-size:0.92rem;">—</strong></div>
+        <div><span style="color:var(--muted-foreground);font-size:0.74rem;text-transform:uppercase;letter-spacing:0.3px;">Ciudad</span><br/><strong id="infoPedCiudad" style="font-size:0.92rem;">—</strong></div>
+        <div><span style="color:var(--muted-foreground);font-size:0.74rem;text-transform:uppercase;letter-spacing:0.3px;">Punto de Venta</span><br/><strong id="infoPedPuntoVenta" style="font-size:0.92rem;">—</strong></div>
+      </div>
+    </div>
+
+    <div id="clienteNoEncontrado" style="display:none;background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);border-radius:10px;padding:0.75rem 1rem;margin-bottom:1rem;display:none;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
+      <span style="color:#e74c3c;font-size:0.88rem;">Cliente no encontrado con esta cédula/NIT.</span>
+      <button class="btn btn-primary btn-sm" onclick="crearClienteDesdePedido()">+ Crear Cliente</button>
+    </div>
+
+    <input type="hidden" id="pedidoCliente" />
+
+    <h4 style="font-size:0.85rem;color:var(--muted-foreground);margin-bottom:0.5rem;">PRODUCTOS DEL PEDIDO</h4>
+    <div class="items-list" id="pedidoItems">
+      <!-- Items dinámicos -->
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="agregarItem()">+ Agregar Producto</button>
+
+    <div style="display:flex;justify-content:flex-end;gap:2rem;align-items:center;padding:1rem 0;border-top:1px solid var(--border);margin-top:0.5rem;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <span style="font-size:0.85rem;color:var(--muted-foreground);">Kilos:</span>
+        <span id="pedidoTotalKilos" style="font-weight:700;font-size:1rem;color:var(--brand);">0</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <span style="font-size:0.85rem;color:var(--muted-foreground);">Unidades:</span>
+        <span id="pedidoTotalUnidades" style="font-weight:700;font-size:1rem;color:#f39c12;">0</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <span style="font-weight:700;font-size:1.1rem;">Total:</span>
+        <span id="pedidoTotal" style="font-weight:700;font-size:1.1rem;color:#2ecc71;">$0</span>
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-top:1rem;">
+      <label>Observaciones</label>
+      <textarea id="pedidoObs" rows="2" placeholder="Notas del pedido..."></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="cerrarModalPedido()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarPedido()">Guardar Pedido</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODAL: NUEVO/EDITAR PRODUCTO ==================== -->
+<div class="modal-overlay" id="modalProducto">
+  <div class="modal" style="max-width:500px;">
+    <h3 id="modalProductoTitulo">Nuevo Producto</h3>
+    <input type="hidden" id="productoEditId" />
+
+    <div class="form-row">
+      <div class="form-group"><label>Referencia</label><input type="text" id="productoReferencia" placeholder="Código de referencia" /></div>
+      <div class="form-group"><label>Desc. Item *</label><input type="text" id="productoNombre" placeholder="Descripción del producto" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Precio Unit. *</label><input type="number" id="productoPrecio" placeholder="0" min="0" step="0.01" /></div>
+      <div class="form-group">
+        <label>U.M. Invent. *</label>
+        <select id="productoUnidad">
+          <option value="UNIDAD">Unidad</option>
+          <option value="KILO">Kilo</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="cerrarModalProducto()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarProducto()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODAL: CARGA MASIVA PRODUCTOS ==================== -->
+<div class="modal-overlay" id="modalCargaProductos">
+  <div class="modal" style="max-width:550px;">
+    <h3>Carga Masiva de Productos</h3>
+    <p style="color:var(--muted-foreground);font-size:0.85rem;margin-bottom:1rem;">Sube un archivo Excel (.xlsx) con las columnas: <strong>Referencia</strong>, <strong>Desc. Item</strong> (obligatorio), <strong>Precio Unit.</strong> (obligatorio), <strong>U.M. Invent.</strong> (KILO, UNIDAD, etc.).<br>Si un producto con la misma referencia ya existe, se actualizará.</p>
+    <div class="form-group" style="margin-bottom:1rem;">
+      <label>Archivo Excel</label>
+      <input type="file" id="archivoProductos" accept=".xlsx,.xls,.csv" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:0.5rem;color:var(--foreground);width:100%;" />
+    </div>
+    <div id="resultadoCargaProductos" style="display:none;margin-bottom:1rem;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="cerrarModalCargaProductos()">Cerrar</button>
+      <button class="btn btn-primary" id="btnSubirProductos" onclick="subirProductos()">Subir y Cargar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== TAB: PUNTOS DE VENTA ==================== -->
+  <div class="tab-panel" id="tab-pdv">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.75rem;">
+      <h3 style="margin:0;">Puntos de Venta</h3>
+      <button class="btn btn-primary btn-sm" onclick="abrirNuevoPDV()">+ Nuevo Punto de Venta</button>
+    </div>
+
+    <div class="card">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Indicador</th>
+              <th>Nombre</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tablaPDV">
+            <tr><td colspan="4"><div class="empty-state">Cargando...</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+<!-- ==================== MODAL: NUEVO/EDITAR PDV ==================== -->
+<div class="modal-overlay" id="modalPDV">
+  <div class="modal" style="max-width:450px;">
+    <h3 id="modalPDVTitulo">Nuevo Punto de Venta</h3>
+    <input type="hidden" id="pdvEditId" />
+    <div class="form-group" style="margin-bottom:1rem;">
+      <label>Nombre del Punto de Venta *</label>
+      <input type="text" id="pdvNombre" placeholder="Ej: Carnes Santacruz Nuevo" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="cerrarModalPDV()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarPDV()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODAL: DETALLE PEDIDO ==================== -->
+<div class="modal-overlay" id="modalDetalle">
+  <div class="modal">
+    <h3>Detalle del Pedido</h3>
+    <div id="detalleContenido"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="btnReimprimir" onclick="reimprimirDetalle()">🖨️ Reimprimir</button>
+      <button class="btn btn-secondary" onclick="cerrarModalDetalle()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Guard de acceso al módulo
+  (function () {
+    const rol = localStorage.getItem('userRol') || '';
+    const modulos = (localStorage.getItem('userModulos') || '').split(',').map(s => s.trim());
+    if (rol !== 'administrador' && !modulos.includes('pedidos')) {
+      alert('No tienes acceso al módulo de Toma de Pedidos.');
+      window.location.href = '/dashboard.html';
+    }
+  })();
+
+  // Bloque de usuario en top-bar + logout
+  (function () {
+    const u = localStorage.getItem('username') || 'invitado';
+    const rol = localStorage.getItem('userRol') || 'usuario';
+    const elName = document.getElementById('topUserName');
+    const elAvatar = document.getElementById('topUserAvatar');
+    const elRole = document.getElementById('topUserRole');
+    if (elName) elName.textContent = u;
+    if (elAvatar) elAvatar.textContent = (u || 'U').charAt(0).toUpperCase();
+    if (elRole) elRole.textContent = rol === 'administrador' ? 'Administrador' : 'Usuario Estándar';
+    const btn = document.getElementById('btnLogout');
+    if (btn) btn.addEventListener('click', () => {
+      ['username','userRol','userPermisos','userModulos','userSubmodulos'].forEach(k => localStorage.removeItem(k));
+      window.location.href = '/login.html';
+    });
+  })();
+
+  const API = "/api/toma-pedidos";
+  let productosCache = [];
+  let pdvCache = [];
+
+  // ========== PUNTOS DE VENTA ==========
+  async function cargarPDVs() {
+    try {
+      const res = await fetch(API + "/puntos-venta?todos=1");
+      const data = await res.json();
+      pdvCache = data.filter(p => p.activo);
+      renderTablaPDV(data);
+      cargarSelectPDV();
+      cargarFiltroPDV();
+    } catch (e) {
+      toast("Error al cargar puntos de venta", "error");
+    }
+  }
+
+  function cargarSelectPDV() {
+    const select = document.getElementById("pedidoPDV");
+    const valorActual = select.value;
+    select.innerHTML = '<option value="">-- Seleccione PDV --</option>';
+    pdvCache.forEach(p => {
+      const opt = document.createElement("option");
+      opt.value = p.id;
+      opt.textContent = "PDV" + String(p.indicador).padStart(2, "0") + " — " + p.nombre;
+      select.appendChild(opt);
+    });
+    if (valorActual) select.value = valorActual;
+  }
+
+  function cargarFiltroPDV() {
+    const select = document.getElementById("filtroPDV");
+    const valorActual = select.value;
+    select.innerHTML = '<option value="TODOS">Todos los PDV</option>';
+    pdvCache.forEach(p => {
+      const opt = document.createElement("option");
+      opt.value = p.id;
+      opt.textContent = "PDV" + String(p.indicador).padStart(2, "0") + " — " + p.nombre;
+      select.appendChild(opt);
+    });
+    if (valorActual) select.value = valorActual;
+
+    // También llenar el select de punto de venta en clientes
+    const selectCliente = document.getElementById("clientePuntoVenta");
+    const valorCliente = selectCliente.value;
+    selectCliente.innerHTML = '<option value="">-- Seleccione --</option>';
+    pdvCache.forEach(p => {
+      const opt = document.createElement("option");
+      opt.value = p.nombre;
+      opt.textContent = p.nombre;
+      selectCliente.appendChild(opt);
+    });
+    if (valorCliente) selectCliente.value = valorCliente;
+  }
+
+  function renderTablaPDV(pdvs) {
+    const tbody = document.getElementById("tablaPDV");
+    if (!pdvs.length) {
+      tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">No hay puntos de venta</div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = pdvs.map(p => `
+      <tr>
+        <td><strong>PDV${String(p.indicador).padStart(2, "0")}</strong></td>
+        <td>${esc(p.nombre)}</td>
+        <td><span class="badge ${p.activo ? "badge-entregado" : "badge-cancelado"}">${p.activo ? "Activo" : "Inactivo"}</span></td>
+        <td>
+          <button class="btn btn-secondary btn-sm" onclick="editarPDV(${p.id})">Editar</button>
+          ${p.activo ? `<button class="btn btn-danger btn-sm" onclick="desactivarPDV(${p.id})">Desactivar</button>` : ""}
+        </td>
+      </tr>`).join("");
+  }
+
+  function abrirNuevoPDV() {
+    document.getElementById("modalPDVTitulo").textContent = "Nuevo Punto de Venta";
+    document.getElementById("pdvEditId").value = "";
+    document.getElementById("pdvNombre").value = "";
+    document.getElementById("modalPDV").classList.add("active");
+  }
+
+  async function editarPDV(id) {
+    const pdv = pdvCache.find(p => p.id === id) || (await fetch(API + "/puntos-venta?todos=1").then(r => r.json())).find(p => p.id === id);
+    if (!pdv) return toast("PDV no encontrado", "error");
+    document.getElementById("modalPDVTitulo").textContent = "Editar Punto de Venta (PDV" + String(pdv.indicador).padStart(2, "0") + ")";
+    document.getElementById("pdvEditId").value = pdv.id;
+    document.getElementById("pdvNombre").value = pdv.nombre;
+    document.getElementById("modalPDV").classList.add("active");
+  }
+
+  async function guardarPDV() {
+    const id = document.getElementById("pdvEditId").value;
+    const nombre = document.getElementById("pdvNombre").value.trim();
+    if (!nombre) return toast("El nombre es requerido", "error");
+
+    try {
+      const url = id ? API + "/puntos-venta/" + id : API + "/puntos-venta";
+      const method = id ? "PUT" : "POST";
+      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nombre }) });
+      const data = await res.json();
+      if (!res.ok) return toast(data.error || "Error", "error");
+      toast(data.message);
+      cerrarModalPDV();
+      cargarPDVs();
+    } catch (e) {
+      toast("Error de conexión", "error");
+    }
+  }
+
+  async function desactivarPDV(id) {
+    if (!confirm("¿Desactivar este punto de venta?")) return;
+    try {
+      const res = await fetch(API + "/puntos-venta/" + id, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) return toast(data.error || "Error", "error");
+      toast(data.message);
+      cargarPDVs();
+    } catch (e) {
+      toast("Error de conexión", "error");
+    }
+  }
+
+  function cerrarModalPDV() {
+    document.getElementById("modalPDV").classList.remove("active");
+  }
+
+  // ========== TABS ==========
+  document.querySelectorAll(".tab").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+      document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
+      tab.classList.add("active");
+      document.getElementById("tab-" + tab.dataset.tab).classList.add("active");
+    });
+  });
+
+  // ========== TOAST ==========
+  function toast(msg, tipo = "success") {
+    const el = document.getElementById("toast");
+    el.textContent = msg;
+    el.className = "toast toast-" + tipo + " show";
+    setTimeout(() => el.classList.remove("show"), 3000);
+  }
+
+  // ========== PRODUCTOS ==========
+  async function cargarProductos() {
+    try {
+      const res = await fetch(API + "/productos?todos=1");
+      const data = await res.json();
+      productosCache = data.filter((p) => p.activo);
+      renderTablaProductos(data);
+    } catch (e) {
+      toast("Error al cargar productos", "error");
+    }
+  }
+
+  function renderTablaProductos(productos) {
+    const tbody = document.getElementById("tablaProductos");
+    if (!productos.length) {
+      tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">No hay productos registrados</div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = productos
+      .map(
+        (p) => `
+      <tr>
+        <td>${esc(p.referencia || "—")}</td>
+        <td>${esc(p.nombre)}</td>
+        <td>$${Number(p.precio).toLocaleString()}</td>
+        <td>${esc(p.unidad_medida || "UNIDAD")}</td>
+        <td><span class="badge ${p.activo ? "badge-entregado" : "badge-cancelado"}">${p.activo ? "Activo" : "Inactivo"}</span></td>
+        <td>
+          <button class="btn btn-secondary btn-sm" onclick="editarProducto(${p.id})">Editar</button>
+          ${p.activo ? `<button class="btn btn-danger btn-sm" onclick="eliminarProducto(${p.id})">Desactivar</button>` : ""}
+        </td>
+      </tr>`
+      )
+      .join("");
+  }
+
+  function abrirNuevoProducto() {
+    document.getElementById("modalProductoTitulo").textContent = "Nuevo Producto";
+    document.getElementById("productoEditId").value = "";
+    document.getElementById("productoReferencia").value = "";
+    document.getElementById("productoNombre").value = "";
+    document.getElementById("productoPrecio").value = "";
+    document.getElementById("productoUnidad").value = "UNIDAD";
+    document.getElementById("modalProducto").classList.add("active");
+  }
+
+  async function editarProducto(id) {
+    try {
+      const res = await fetch(API + "/productos?todos=1");
+      const todos = await res.json();
+      const p = todos.find((x) => x.id === id);
+      if (!p) return toast("Producto no encontrado", "error");
+
+      document.getElementById("modalProductoTitulo").textContent = "Editar Producto";
+      document.getElementById("productoEditId").value = p.id;
+      document.getElementById("productoReferencia").value = p.referencia || "";
+      document.getElementById("productoNombre").value = p.nombre;
+      document.getElementById("productoPrecio").value = p.precio;
+      document.getElementById("productoUnidad").value = p.unidad_medida || "UNIDAD";
+      document.getElementById("modalProducto").classList.add("active");
+    } catch (e) {
+      toast("Error al cargar producto", "error");
+    }
+  }
+
+  async function guardarProducto() {
+    const id = document.getElementById("productoEditId").value;
+    const referencia = document.getElementById("productoReferencia").value.trim();
+    const nombre = document.getElementById("productoNombre").value.trim();
+    const precio = document.getElementById("productoPrecio").value;
+    const unidad_medida = document.getElementById("productoUnidad").value;
+
+    if (!nombre || !precio) return toast("Desc. Item y Precio son requeridos", "error");
+
+    try {
+      const url = id ? API + "/productos/" + id : API + "/productos";
+      const method = id ? "PUT" : "POST";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ referencia, nombre, precio: parseFloat(precio), unidad_medida }),
+      });
+      const data = await res.json();
+      if (!res.ok) return toast(data.error || "Error", "error");
+      toast(data.message);
+      cerrarModalProducto();
+      cargarProductos();
+    } catch (e) {
+      toast("Error de conexión", "error");
+    }
+  }
+
+  async function eliminarProducto(id) {
+    if (!confirm("¿Desactivar este producto?")) return;
+    try {
+      const res = await fetch(API + "/productos/" + id, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) return toast(data.error || "Error", "error");
+      toast(data.message);
+      cargarProductos();
+    } catch (e) {
+      toast("Error de conexión", "error");
+    }
+  }
+
+  function cerrarModalProducto() {
+    document.getElementById("modalProducto").classList.remove("active");
+  }
+
+  // ========== CARGA MASIVA PRODUCTOS ==========
+  async function subirProductos() {
+    const input = document.getElementById("archivoProductos");
+    if (!input.files.length) return toast("Selecciona un archivo", "error");
+
+    const btn = document.getElementById("btnSubirProductos");
+    btn.disabled = true;
+    btn.textContent = "Cargando...";
+
+    const formData = new FormData();
+    formData.append("archivo", input.files[0]);
+
+    try {
+      const res = await fetch(API + "/productos/carga-masiva", { method: "POST", body: formData });
+      const data = await res.json();
+      if (!res.ok) return toast(data.error || "Error", "error");
+
+      let html = `<div style="background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.3);border-radius:10px;padding:1rem;">`;
+      html += `<p><strong>Total filas:</strong> ${data.total}</p>`;
+      html += `<p style="color:#2ecc71;"><strong>Insertados:</strong> ${data.insertados}</p>`;
+      if (data.actualizados) html += `<p style="color:var(--brand);"><strong>Actualizados:</strong> ${data.actualizados}</p>`;
+      if (data.errores > 0) {
+        html += `<p style="color:#e74c3c;"><strong>Errores:</strong> ${data.errores}</p>`;
+        html += `<ul style="font-size:0.8rem;color:#e74c3c;margin-top:0.5rem;">`;
+        data.detalleErrores.forEach(e => html += `<li>${esc(e)}</li>`);
+        html += `</ul>`;
+      }
+      html += `</div>`;
+
+      document.getElementById("resultadoCargaProductos").innerHTML = html;
+      document.getElementById("resultadoCargaProductos").style.display = "block";
+      toast("Carga completada: " + data.insertados + " nuevos, " + (data.actualizados || 0) + " actualizados");
+      cargarProductos();
+    } catch (e) {
+      toast("Error al subir archivo", "error");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Subir y Cargar";
+    }
+  }
+
+  function cerrarModalCargaProductos() {
+    document.getElementById("modalCargaProductos").classList.remove("active");
+    document.getElementById("resultadoCargaProductos").style.display = "none";
+    document.getElementById("archivoProductos").value = "";
+  }
+
+  // ========== PEDIDOS ==========
+  async function cargarPedidos() {
+    try {
+      const estado = document.getElementById("filtroEstado").value;
+      const desde = document.getElementById("filtroDesde").value;
+      const hasta = document.getElementById("filtroHasta").value;
+      const pdv = document.getElementById("filtroPDV").value;
+
+      let url = API + "/pedidos?";
+      if (pdv !== "TODOS") url += "pdv=" + pdv + "&";
+      if (estado !== "TODOS") url += "estado=" + estado + "&";
+      if (desde) url += "desde=" + desde + "&";
+      if (hasta) url += "hasta=" + hasta + "&";
+
+      const res = await fetch(url);
+      const data = await res.json();
+      renderTablaPedidos(data);
+    } catch (e) {
+      toast("Error al cargar pedidos", "error");
+    }
+  }
+
+  function renderTablaPedidos(pedidos) {
+    const tbody = document.getElementById("tablaPedidos");
+    if (!pedidos.length) {
+      tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">No hay pedidos registrados</div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = pedidos
+      .map(
+        (p) => {
+          const pdv = pdvCache.find(x => x.id === p.punto_venta_id);
+          const pdvNombre = pdv ? pdv.nombre : "—";
+          return `
+      <tr>
+        <td><strong>${esc(p.numero_pedido || "#" + p.id)}</strong></td>
+        <td>${esc(pdvNombre)}</td>
+        <td>${esc(p.cliente_nombre)}</td>
+        <td>${esc(p.cliente_cedula || "—")}</td>
+        <td>${new Date(p.fecha).toLocaleString("es-CO")}</td>
+        <td>$${Number(p.total).toLocaleString()}</td>
+        <td><span class="badge badge-${estadoClase(p.estado)}">${estadoTexto(p.estado)}</span></td>
+        <td style="white-space:nowrap;">
+          <button class="btn btn-secondary btn-sm" onclick="verDetalle(${p.id})">Ver</button>
+          ${p.estado !== 'CANCELADO' ? `<button class="btn btn-primary btn-sm" onclick="editarPedido(${p.id})">Editar</button>
+          <button class="btn btn-sm btn-warning" onclick="cambiarEstado(${p.id}, '${p.estado}')">Estado</button>
+          <button class="btn btn-danger btn-sm" onclick="cancelarPedido(${p.id})">Cancelar</button>` : ''}
+        </td>
+      </tr>`;
+        }
+      )
+      .join("");
+  }
+
+  function estadoClase(estado) {
+    const map = { PENDIENTE: "pendiente", EN_PROCESO: "en-proceso", ENTREGADO: "entregado", CANCELADO: "cancelado" };
+    return map[estado] || "pendiente";
+  }
+
+  function estadoTexto(estado) {
+    const map = { PENDIENTE: "Pendiente", EN_PROCESO: "En proceso", ENTREGADO: "Entregado", CANCELADO: "Cancelado" };
+    return map[estado] || estado;
+  }
+
+  // ========== NUEVO PEDIDO ==========
+  function abrirNuevoPedido() {
+    document.getElementById("modalPedidoTitulo").textContent = "Nuevo Pedido";
+    document.getElementById("pedidoEditId").value = "";
+    document.getElementById("pedidoCliente").value = "";
+    document.getElementById("pedidoCedula").value = "";
+    document.getElementById("pedidoObs").value = "";
+    document.getElementById("pedidoPDV").value = "";
+    document.getElementById("pedidoItems").innerHTML = "";
+    document.getElementById("pedidoTotal").textContent = "$0";
+    document.getElementById("infoClientePedido").style.display = "none";
+    document.getElementById("clienteNoEncontrado").style.display = "none";
+    agregarItem();
+    document.getElementById("modalPedido").classList.add("active");
+    setTimeout(() => document.getElementById("pedidoCedula").focus(), 200);
+  }
+
+  async function buscarClientePedido() {
+    const cedula = document.getElementById("pedidoCedula").value.trim();
+    if (!cedula) return toast("Digite una cédula/NIT", "error");
+
+    try {
+      const res = await fetch(API + "/clientes?buscar=" + encodeURIComponent(cedula));
+      const clientes = await res.json();
+      const cliente = clientes.find(c => c.cedula === cedula);
+
+      if (cliente) {
+        document.getElementById("infoClientePedido").style.display = "block";
+        document.getElementById("clienteNoEncontrado").style.display = "none";
+        document.getElementById("pedidoCliente").value = cliente.nombre;
+        document.getElementById("btnEditarClientePedido").dataset.clienteId = cliente.id;
+
+        document.getElementById("infoPedNombre").textContent = cliente.nombre || "—";
+        document.getElementById("infoPedCedula").textContent = cliente.cedula || "—";
+        document.getElementById("infoPedTelefono").textContent = cliente.telefono || "—";
+        document.getElementById("infoPedDireccion").textContent = cliente.direccion || "—";
+        document.getElementById("infoPedReferencia").textContent = cliente.referencia || "—";
+        document.getElementById("infoPedBarrio").textContent = cliente.barrio || "—";
+        document.getElementById("infoPedCiudad").textContent = cliente.ciudad || "—";
+        document.getElementById("infoPedPuntoVenta").textContent = cliente.punto_venta || "—";
+      } else {
+        document.getElementById("infoClientePedido").style.display = "none";
+        document.getElementById("clienteNoEncontrado").style.display = "flex";
+        document.getElementById("pedidoCliente").value = "";
+      }
+    } catch (e) {
+      toast("Error al buscar cliente", "error");
+    }
+  }
+
+  let volverAPedidoDespuesDeCliente = false;
+
+  function editarClienteDesdePedido() {
+    const clienteId = document.getElementById("btnEditarClientePedido").dataset.clienteId;
+    if (!clienteId) return;
+    volverAPedidoDespuesDeCliente = true;
+    document.getElementById("modalPedido").classList.remove("active");
+    editarCliente(parseInt(clienteId));
+  }
+
+  function crearClienteDesdePedido() {
+    const cedula = document.getElementById("pedidoCedula").value.trim();
+    volverAPedidoDespuesDeCliente = true;
+    document.getElementById("modalPedido").classList.remove("active");
+    abrirNuevoCliente();
+    if (cedula) document.getElementById("clienteCedula").value = cedula;
+  }
+
+  function agregarItem() {
+    const div = document.getElementById("pedidoItems");
+    const idx = div.children.length;
+
+    const row = document.createElement("div");
+    row.className = "item-row";
+    row.style.gridTemplateColumns = "130px 1.5fr 80px 90px auto";
+    row.innerHTML = `
+      <div style="display:flex;align-items:center;gap:2px;position:relative;">
+        <button type="button" class="btn-lupa" onclick="toggleBuscadorProducto(this)" title="Buscar producto por nombre" style="background:none;border:none;cursor:pointer;font-size:1rem;padding:2px 4px;flex-shrink:0;">🔍</button>
+        <input type="text" placeholder="Referencia" class="item-ref" onkeydown="if(event.key==='Enter'){event.preventDefault();buscarPorReferencia(this)}" style="flex:1;min-width:0;" />
+        <div class="lupa-dropdown" style="display:none;position:absolute;top:100%;left:0;width:320px;background:var(--popover);border:1px solid var(--border);border-radius:8px;max-height:200px;overflow-y:auto;z-index:100;margin-top:4px;box-shadow:0 8px 24px rgba(10,10,10,0.10);">
+          <input type="text" class="lupa-input" placeholder="Escriba nombre del producto..." oninput="filtrarProductosLupa(this)" style="width:100%;background:var(--card);border:none;border-bottom:1px solid var(--border);padding:0.5rem 0.7rem;color:var(--foreground);font-size:0.82rem;border-radius:8px 8px 0 0;" autocomplete="off" />
+          <div class="lupa-resultados"></div>
+        </div>
+      </div>
+      <input type="text" placeholder="Producto" class="item-nombre" readonly style="opacity:0.7;" />
+      <input type="number" placeholder="Cant." class="item-cant" value="1" min="1" onchange="calcularTotal()" oninput="calcularTotal()" onkeydown="if(event.key==='Enter'){event.preventDefault();calcularTotal();if(this.closest('.item-row').querySelector('.item-nombre').value.trim()){agregarItem();}}" />
+      <input type="number" placeholder="Precio" class="item-precio" min="0" step="0.01" onchange="calcularTotal()" oninput="calcularTotal()" />
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <span class="item-total" style="min-width:70px;">$0</span>
+        <span class="item-um" style="font-size:0.75rem;color:var(--muted-foreground);min-width:40px;"></span>
+        <button class="btn btn-danger btn-sm" onclick="this.closest('.item-row').remove();calcularTotal();">×</button>
+      </div>
+    `;
+    div.appendChild(row);
+    row.querySelector(".item-ref").focus();
+  }
+
+  function buscarPorReferencia(input) {
+    const ref = input.value.trim();
+    if (!ref) return;
+    const row = input.closest(".item-row");
+    const producto = productosCache.find(p => String(p.referencia) === ref);
+
+    if (producto) {
+      row.querySelector(".item-nombre").value = producto.nombre;
+      row.querySelector(".item-precio").value = producto.precio;
+      row.querySelector(".item-um").textContent = producto.unidad_medida || "";
+      row.querySelector(".item-cant").focus();
+      calcularTotal();
+    } else {
+      row.querySelector(".item-nombre").value = "";
+      row.querySelector(".item-precio").value = "";
+      row.querySelector(".item-um").textContent = "";
+      toast("Producto con referencia " + ref + " no encontrado", "error");
+    }
+  }
+
+  // ========== BUSCAR PRODUCTO POR NOMBRE (LUPA) ==========
+  function toggleBuscadorProducto(btn) {
+    const dropdown = btn.parentElement.querySelector(".lupa-dropdown");
+    // Cerrar otros dropdowns abiertos
+    document.querySelectorAll(".lupa-dropdown").forEach(d => { if (d !== dropdown) d.style.display = "none"; });
+    if (dropdown.style.display === "none") {
+      dropdown.style.display = "block";
+      const input = dropdown.querySelector(".lupa-input");
+      input.value = "";
+      input.focus();
+      dropdown.querySelector(".lupa-resultados").innerHTML = "";
+    } else {
+      dropdown.style.display = "none";
+    }
+  }
+
+  function filtrarProductosLupa(input) {
+    const dropdown = input.closest(".lupa-dropdown");
+    const resultadosDiv = dropdown.querySelector(".lupa-resultados");
+    const texto = input.value.trim().toLowerCase();
+    const row = input.closest(".item-row");
+
+    if (!texto) { resultadosDiv.innerHTML = ""; return; }
+
+    const resultados = productosCache.filter(p =>
+      p.nombre.toLowerCase().includes(texto) || (p.referencia && p.referencia.toLowerCase().includes(texto))
+    ).slice(0, 10);
+
+    if (resultados.length === 0) {
+      resultadosDiv.innerHTML = '<div style="padding:0.5rem 0.7rem;color:var(--muted-foreground);font-size:0.82rem;">No se encontraron productos</div>';
+      return;
+    }
+
+    resultadosDiv.innerHTML = resultados.map(p => `
+      <div onclick="seleccionarProductoLupa(this, ${p.id})" style="padding:0.45rem 0.7rem;cursor:pointer;font-size:0.82rem;border-bottom:1px solid var(--border);transition:background 0.15s;display:flex;justify-content:space-between;align-items:center;" onmouseenter="this.style.background='rgba(83,172,48,0.15)'" onmouseleave="this.style.background='none'">
+        <span><strong style="color:var(--brand);">${esc(p.referencia || "—")}</strong> ${esc(p.nombre)}</span>
+        <span style="color:#2ecc71;font-size:0.75rem;">$${Number(p.precio).toLocaleString()}</span>
+      </div>
+    `).join("");
+  }
+
+  function seleccionarProductoLupa(el, productoId) {
+    const producto = productosCache.find(p => p.id === productoId);
+    if (!producto) return;
+    const row = el.closest(".item-row");
+    row.querySelector(".item-ref").value = producto.referencia || "";
+    row.querySelector(".item-nombre").value = producto.nombre;
+    row.querySelector(".item-precio").value = producto.precio;
+    row.querySelector(".item-um").textContent = producto.unidad_medida || "";
+    row.querySelector(".lupa-dropdown").style.display = "none";
+    row.querySelector(".item-cant").focus();
+    calcularTotal();
+  }
+
+  // Cerrar dropdowns de lupa al hacer clic fuera
+  document.addEventListener("click", function(e) {
+    if (!e.target.closest(".lupa-dropdown") && !e.target.classList.contains("btn-lupa")) {
+      document.querySelectorAll(".lupa-dropdown").forEach(d => d.style.display = "none");
+    }
+  });
+
+  function calcularTotal() {
+    let total = 0;
+    let totalKilos = 0;
+    let totalUnidades = 0;
+    document.querySelectorAll("#pedidoItems .item-row").forEach((row) => {
+      const cant = parseFloat(row.querySelector(".item-cant").value) || 0;
+      const precio = parseFloat(row.querySelector(".item-precio").value) || 0;
+      const um = (row.querySelector(".item-um").textContent || "").trim().toUpperCase();
+      const sub = cant * precio;
+      row.querySelector(".item-total").textContent = "$" + sub.toLocaleString();
+      total += sub;
+      if (um === "KILO") totalKilos += cant;
+      else if (um === "UNIDAD" || um) totalUnidades += cant;
+    });
+    document.getElementById("pedidoTotal").textContent = "$" + total.toLocaleString();
+    document.getElementById("pedidoTotalKilos").textContent = totalKilos.toLocaleString();
+    document.getElementById("pedidoTotalUnidades").textContent = totalUnidades.toLocaleString();
+  }
+
+  async function guardarPedido() {
+    const cliente_nombre = document.getElementById("pedidoCliente").value.trim();
+    const cliente_cedula = document.getElementById("pedidoCedula").value.trim();
+    const observaciones = document.getElementById("pedidoObs").value.trim();
+    if (!cliente_nombre) return toast("El nombre del cliente es requerido", "error");
+
+    const items = [];
+    let itemsValidos = true;
+
+    document.querySelectorAll("#pedidoItems .item-row").forEach((row) => {
+      const nombreInput = row.querySelector(".item-nombre");
+      const producto_nombre = nombreInput ? nombreInput.value.trim() : "";
+
+      const cantidad = parseInt(row.querySelector(".item-cant").value) || 0;
+      const precio_unitario = parseFloat(row.querySelector(".item-precio").value) || 0;
+
+      if (!producto_nombre || cantidad <= 0 || precio_unitario <= 0) {
+        itemsValidos = false;
+        return;
+      }
+
+      items.push({ producto_nombre, cantidad, precio_unitario });
+    });
+
+    if (!itemsValidos || items.length === 0) return toast("Revise los productos: todos deben tener nombre, cantidad y precio", "error");
+
+    try {
+      const editId = document.getElementById("pedidoEditId").value;
+      const url = editId ? API + "/pedidos/" + editId + "/completo" : API + "/pedidos";
+      const method = editId ? "PUT" : "POST";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cliente_nombre, cliente_cedula, observaciones, items }),
+      });
+      const data = await res.json();
+      if (!res.ok) return toast(data.error || "Error", "error");
+      toast(editId ? "Pedido actualizado exitosamente" : "Pedido " + (data.numero_pedido || "#" + data.id) + " creado exitosamente");
+      // Imprimir al guardar
+      imprimirPedidoPOS(data.id || editId);
+      cerrarModalPedido();
+      cargarPedidos();
+    } catch (e) {
+      toast("Error de conexión", "error");
+    }
+  }
+
+  function cerrarModalPedido() {
+    document.getElementById("modalPedido").classList.remove("active");
+  }
+
+  // ========== EDITAR PEDIDO ==========
+  async function editarPedido(id) {
+    try {
+      const res = await fetch(API + "/pedidos/" + id);
+      const p = await res.json();
+      if (!res.ok) return toast(p.error || "Error", "error");
+
+      document.getElementById("modalPedidoTitulo").textContent = "Editar Pedido " + (p.numero_pedido || "#" + p.id);
+      document.getElementById("pedidoEditId").value = p.id;
+      document.getElementById("pedidoCedula").value = p.cliente_cedula || "";
+      document.getElementById("pedidoCliente").value = p.cliente_nombre || "";
+      document.getElementById("pedidoObs").value = p.observaciones || "";
+      document.getElementById("infoClientePedido").style.display = "none";
+      document.getElementById("clienteNoEncontrado").style.display = "none";
+
+      // Cargar items
+      document.getElementById("pedidoItems").innerHTML = "";
+      if (p.items && p.items.length > 0) {
+        p.items.forEach(item => {
+          agregarItem();
+          const rows = document.querySelectorAll("#pedidoItems .item-row");
+          const row = rows[rows.length - 1];
+          // Buscar referencia del producto
+          const prod = productosCache.find(pr => pr.nombre === item.producto_nombre);
+          if (prod) row.querySelector(".item-ref").value = prod.referencia || "";
+          row.querySelector(".item-nombre").value = item.producto_nombre;
+          row.querySelector(".item-cant").value = item.cantidad;
+          row.querySelector(".item-precio").value = item.precio_unitario;
+          if (prod) row.querySelector(".item-um").textContent = prod.unidad_medida || "";
+        });
+        calcularTotal();
+      } else {
+        agregarItem();
+      }
+
+      // Buscar cliente para mostrar info
+      if (p.cliente_cedula) {
+        buscarClientePedido();
+      }
+
+      document.getElementById("modalPedido").classList.add("active");
+    } catch (e) {
+      toast("Error al cargar pedido", "error");
+    }
+  }
+
+  // ========== VER DETALLE ==========
+  let detallePedidoActualId = null;
+  async function verDetalle(id) {
+    detallePedidoActualId = id;
+    try {
+      const res = await fetch(API + "/pedidos/" + id);
+      const p = await res.json();
+      if (!res.ok) return toast(p.error || "Error", "error");
+
+      let html = `
+        <div style="margin-bottom:1rem;">
+          <p><strong>N° Pedido:</strong> ${esc(p.numero_pedido || "#" + p.id)}</p>
+          <p><strong>Cliente:</strong> ${esc(p.cliente_nombre)}</p>
+          <p><strong>Cédula:</strong> ${esc(p.cliente_cedula || "—")}</p>
+          <p><strong>Fecha:</strong> ${new Date(p.fecha).toLocaleString("es-CO")}</p>
+          <p><strong>Estado:</strong> <span class="badge badge-${estadoClase(p.estado)}">${estadoTexto(p.estado)}</span></p>
+          ${p.observaciones ? `<p><strong>Observaciones:</strong> ${esc(p.observaciones)}</p>` : ""}
+        </div>
+        <table>
+          <thead><tr><th>Producto</th><th>Cant.</th><th>Precio Unit.</th><th>Subtotal</th></tr></thead>
+          <tbody>
+            ${(p.items || []).map((i) => `<tr><td>${esc(i.producto_nombre)}</td><td>${i.cantidad}</td><td>$${Number(i.precio_unitario).toLocaleString()}</td><td>$${Number(i.subtotal).toLocaleString()}</td></tr>`).join("")}
+          </tbody>
+        </table>
+        <div class="total-line"><span>Total:</span><span>$${Number(p.total).toLocaleString()}</span></div>
+      `;
+      document.getElementById("detalleContenido").innerHTML = html;
+      document.getElementById("modalDetalle").classList.add("active");
+    } catch (e) {
+      toast("Error al cargar detalle", "error");
+    }
+  }
+
+  function cerrarModalDetalle() {
+    document.getElementById("modalDetalle").classList.remove("active");
+  }
+
+  function reimprimirDetalle() {
+    if (detallePedidoActualId) imprimirPedidoPOS(detallePedidoActualId);
+  }
+
+  // ========== IMPRIMIR POS (80mm tirilla) ==========
+  async function imprimirPedidoPOS(id) {
+    try {
+      const res = await fetch(API + "/pedidos/" + id);
+      const p = await res.json();
+      if (!res.ok) return;
+
+      // Buscar info del cliente
+      let clienteInfo = {};
+      if (p.cliente_cedula) {
+        try {
+          const rc = await fetch(API + "/clientes?buscar=" + encodeURIComponent(p.cliente_cedula));
+          const cls = await rc.json();
+          clienteInfo = cls.find(c => c.cedula === p.cliente_cedula) || {};
+        } catch(e) {}
+      }
+
+      // Buscar PDV
+      const pdv = pdvCache.find(x => x.id === p.punto_venta_id);
+      const pdvNombre = pdv ? pdv.nombre : "—";
+
+      // Calcular totales por UM
+      let totalKilos = 0, totalUnidades = 0;
+      (p.items || []).forEach(item => {
+        const prod = productosCache.find(pr => pr.nombre === item.producto_nombre);
+        const um = prod ? (prod.unidad_medida || "").toUpperCase() : "";
+        if (um === "KILO") totalKilos += item.cantidad;
+        else totalUnidades += item.cantidad;
+      });
+
+      const win = window.open("", "_blank", "width=350,height=600");
+      win.document.write(`
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Pedido ${esc(p.numero_pedido || "#" + p.id)}</title>
+<style>
+  @page { margin: 0; size: 80mm auto; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
+    width: 80mm;
+    padding: 4mm;
+    color: #000;
+  }
+  .center { text-align: center; }
+  .bold { font-weight: bold; }
+  .line { border-top: 1px dashed #000; margin: 6px 0; }
+  .double-line { border-top: 2px solid #000; margin: 6px 0; }
+  h1 { font-size: 16px; margin-bottom: 2px; }
+  h2 { font-size: 13px; margin-bottom: 4px; }
+  .info-row { display: flex; justify-content: space-between; margin: 2px 0; font-size: 11px; }
+  .info-row span:first-child { color: #555; }
+  table { width: 100%; border-collapse: collapse; margin: 4px 0; }
+  th { font-size: 10px; text-align: left; border-bottom: 1px solid #000; padding: 3px 2px; }
+  th:nth-child(2), th:nth-child(3), th:nth-child(4) { text-align: right; }
+  td { font-size: 11px; padding: 3px 2px; border-bottom: 1px dotted #ccc; }
+  td:nth-child(2), td:nth-child(3), td:nth-child(4) { text-align: right; }
+  .totals { margin-top: 4px; }
+  .totals .row { display: flex; justify-content: space-between; font-size: 12px; margin: 2px 0; }
+  .totals .row.grand { font-size: 15px; font-weight: bold; margin-top: 4px; }
+  .footer { margin-top: 10px; font-size: 10px; text-align: center; color: #555; }
+  @media print {
+    body { width: 80mm; }
+  }
+</style></head><body>
+
+<div class="center">
+  <h1>GRUPO SANTACRUZ</h1>
+  <h2>${esc(pdvNombre)}</h2>
+</div>
+
+<div class="double-line"></div>
+
+<div class="center bold" style="font-size:14px;margin:4px 0;">
+  ORDEN DE SERVICIO
+</div>
+<div class="center bold" style="font-size:16px;margin-bottom:4px;">
+  ${esc(p.numero_pedido || "#" + p.id)}
+</div>
+
+<div class="line"></div>
+
+<div class="info-row"><span>Fecha:</span><span>${new Date(p.fecha).toLocaleString("es-CO")}</span></div>
+<div class="info-row"><span>Estado:</span><span>${p.estado}</span></div>
+
+<div class="line"></div>
+
+<div style="font-size:11px;font-weight:bold;margin:4px 0;">DATOS DEL CLIENTE</div>
+<div class="info-row"><span>Nombre:</span><span>${esc(p.cliente_nombre)}</span></div>
+<div class="info-row"><span>NIT/Cédula:</span><span>${esc(p.cliente_cedula || "—")}</span></div>
+${clienteInfo.telefono ? `<div class="info-row"><span>Teléfono:</span><span>${esc(clienteInfo.telefono)}</span></div>` : ""}
+${clienteInfo.direccion ? `<div class="info-row"><span>Dirección:</span><span>${esc(clienteInfo.direccion)}</span></div>` : ""}
+${clienteInfo.barrio ? `<div class="info-row"><span>Barrio:</span><span>${esc(clienteInfo.barrio)}</span></div>` : ""}
+${clienteInfo.ciudad ? `<div class="info-row"><span>Ciudad:</span><span>${esc(clienteInfo.ciudad)}</span></div>` : ""}
+${clienteInfo.referencia ? `<div class="info-row"><span>Referencia:</span><span>${esc(clienteInfo.referencia)}</span></div>` : ""}
+
+<div class="double-line"></div>
+
+<table>
+  <thead><tr><th>Producto</th><th>Cant</th><th>P.Unit</th><th>Subtotal</th></tr></thead>
+  <tbody>
+    ${(p.items || []).map(i => {
+      const prod = productosCache.find(pr => pr.nombre === i.producto_nombre);
+      const um = prod ? (prod.unidad_medida || "") : "";
+      return `<tr><td>${esc(i.producto_nombre)}</td><td>${i.cantidad} ${um}</td><td>$${Number(i.precio_unitario).toLocaleString()}</td><td>$${Number(i.subtotal).toLocaleString()}</td></tr>`;
+    }).join("")}
+  </tbody>
+</table>
+
+<div class="double-line"></div>
+
+<div class="totals">
+  <div class="row"><span>Total Kilos:</span><span>${totalKilos.toLocaleString()}</span></div>
+  <div class="row"><span>Total Unidades:</span><span>${totalUnidades.toLocaleString()}</span></div>
+  <div class="row grand"><span>TOTAL:</span><span>$${Number(p.total).toLocaleString()}</span></div>
+</div>
+
+${p.observaciones ? `<div class="line"></div><div style="font-size:11px;"><strong>Obs:</strong> ${esc(p.observaciones)}</div>` : ""}
+
+<div class="line"></div>
+<div class="footer">
+  <p>Gracias por su preferencia</p>
+  <p style="margin-top:4px;">${new Date().toLocaleString("es-CO")}</p>
+</div>
+
+<script>window.onload=function(){window.print();}<\/script>
+</body></html>`);
+      win.document.close();
+    } catch (e) {
+      toast("Error al generar impresión", "error");
+    }
+  }
+
+  // ========== CAMBIAR ESTADO ==========
+  async function cambiarEstado(id, estadoActual) {
+    const estados = ["PENDIENTE", "EN_PROCESO", "ENTREGADO", "CANCELADO"];
+    const textos = { PENDIENTE: "Pendiente", EN_PROCESO: "En proceso", ENTREGADO: "Entregado", CANCELADO: "Cancelado" };
+    const opciones = estados.filter((e) => e !== estadoActual).map((e) => textos[e]).join(", ");
+    const nuevoTexto = prompt("Estado actual: " + textos[estadoActual] + "\n\nEscriba el nuevo estado:\n" + opciones);
+    if (!nuevoTexto) return;
+
+    const reverso = {};
+    Object.entries(textos).forEach(([k, v]) => (reverso[v.toLowerCase()] = k));
+    const nuevoEstado = reverso[nuevoTexto.trim().toLowerCase()];
+
+    if (!nuevoEstado) return toast("Estado no válido", "error");
+
+    try {
+      const res = await fetch(API + "/pedidos/" + id + "/estado", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ estado: nuevoEstado }),
+      });
+      const data = await res.json();
+      if (!res.ok) return toast(data.error || "Error", "error");
+      toast(data.message);
+      cargarPedidos();
+    } catch (e) {
+      toast("Error de conexión", "error");
+    }
+  }
+
+  // ========== ELIMINAR PEDIDO ==========
+  async function cancelarPedido(id) {
+    if (!confirm("¿Está seguro de cancelar este pedido?")) return;
+    try {
+      const res = await fetch(API + "/pedidos/" + id + "/estado", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ estado: "CANCELADO" }),
+      });
+      const data = await res.json();
+      if (!res.ok) return toast(data.error || "Error", "error");
+      toast("Pedido cancelado");
+      cargarPedidos();
+    } catch (e) {
+      toast("Error de conexión", "error");
+    }
+  }
+
+  // ========== CLIENTES ==========
+  async function cargarClientes() {
+    try {
+      const buscar = document.getElementById("buscarCliente").value.trim();
+      let url = API + "/clientes?";
+      if (buscar) url += "buscar=" + encodeURIComponent(buscar);
+      const res = await fetch(url);
+      const data = await res.json();
+      renderTablaClientes(data);
+    } catch (e) {
+      toast("Error al cargar clientes", "error");
+    }
+  }
+
+  function renderTablaClientes(clientes) {
+    const tbody = document.getElementById("tablaClientes");
+    if (!clientes.length) {
+      tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state">No hay clientes registrados</div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = clientes.map(c => `
+      <tr>
+        <td>${c.id}</td>
+        <td>${esc(c.nombre)}</td>
+        <td>${esc(c.cedula || "—")}</td>
+        <td>${esc(c.telefono || "—")}</td>
+        <td>${esc(c.direccion || "—")}</td>
+        <td>${esc(c.referencia || "—")}</td>
+        <td>${esc(c.barrio || "—")}</td>
+        <td>${esc(c.ciudad || "—")}</td>
+        <td>${esc(c.punto_venta || "—")}</td>
+        <td>
+          <button class="btn btn-secondary btn-sm" onclick="editarCliente(${c.id})">Editar</button>
+          <button class="btn btn-danger btn-sm" onclick="eliminarCliente(${c.id})">Desactivar</button>
+        </td>
+      </tr>`).join("");
+  }
+
+  function abrirNuevoCliente() {
+    document.getElementById("modalClienteTitulo").textContent = "Nuevo Cliente";
+    document.getElementById("clienteEditId").value = "";
+    ["clienteNombre","clienteCedula","clienteTelefono","clienteEmail","clienteDireccion","clienteReferencia","clienteBarrio","clienteCiudad","clientePuntoVenta","clienteObs"].forEach(id => document.getElementById(id).value = "");
+    document.getElementById("modalCliente").classList.add("active");
+  }
+
+  async function editarCliente(id) {
+    try {
+      const res = await fetch(API + "/clientes/" + id);
+      const c = await res.json();
+      if (!res.ok) return toast(c.error || "Error", "error");
+      document.getElementById("modalClienteTitulo").textContent = "Editar Cliente";
+      document.getElementById("clienteEditId").value = c.id;
+      document.getElementById("clienteNombre").value = c.nombre || "";
+      document.getElementById("clienteCedula").value = c.cedula || "";
+      document.getElementById("clienteTelefono").value = c.telefono || "";
+      document.getElementById("clienteEmail").value = c.email || "";
+      document.getElementById("clienteDireccion").value = c.direccion || "";
+      document.getElementById("clienteReferencia").value = c.referencia || "";
+      document.getElementById("clienteBarrio").value = c.barrio || "";
+      document.getElementById("clienteCiudad").value = c.ciudad || "";
+      document.getElementById("clientePuntoVenta").value = c.punto_venta || "";
+      document.getElementById("clienteObs").value = c.observaciones || "";
+      document.getElementById("modalCliente").classList.add("active");
+    } catch (e) {
+      toast("Error al cargar cliente", "error");
+    }
+  }
+
+  async function guardarCliente() {
+    const id = document.getElementById("clienteEditId").value;
+    const nombre = document.getElementById("clienteNombre").value.trim();
+    if (!nombre) return toast("El nombre es requerido", "error");
+
+    const body = {
+      nombre,
+      cedula: document.getElementById("clienteCedula").value.trim(),
+      telefono: document.getElementById("clienteTelefono").value.trim(),
+      email: document.getElementById("clienteEmail").value.trim(),
+      direccion: document.getElementById("clienteDireccion").value.trim(),
+      referencia: document.getElementById("clienteReferencia").value.trim(),
+      barrio: document.getElementById("clienteBarrio").value.trim(),
+      ciudad: document.getElementById("clienteCiudad").value.trim(),
+      punto_venta: document.getElementById("clientePuntoVenta").value.trim(),
+      observaciones: document.getElementById("clienteObs").value.trim(),
+    };
+
+    try {
+      const url = id ? API + "/clientes/" + id : API + "/clientes";
+      const method = id ? "PUT" : "POST";
+      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const data = await res.json();
+      if (!res.ok) return toast(data.error || "Error", "error");
+      toast(data.message);
+      cerrarModalCliente();
+      cargarClientes();
+
+      if (volverAPedidoDespuesDeCliente) {
+        volverAPedidoDespuesDeCliente = false;
+        document.getElementById("modalPedido").classList.add("active");
+        setTimeout(() => buscarClientePedido(), 300);
+      }
+    } catch (e) {
+      toast("Error de conexión", "error");
+    }
+  }
+
+  async function eliminarCliente(id) {
+    if (!confirm("¿Desactivar este cliente?")) return;
+    try {
+      const res = await fetch(API + "/clientes/" + id, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) return toast(data.error || "Error", "error");
+      toast(data.message);
+      cargarClientes();
+    } catch (e) {
+      toast("Error de conexión", "error");
+    }
+  }
+
+  function cerrarModalCliente() {
+    document.getElementById("modalCliente").classList.remove("active");
+  }
+
+  // ========== CARGA MASIVA CLIENTES ==========
+  async function subirClientes() {
+    const input = document.getElementById("archivoClientes");
+    if (!input.files.length) return toast("Selecciona un archivo", "error");
+
+    const btn = document.getElementById("btnSubirClientes");
+    btn.disabled = true;
+    btn.textContent = "Cargando...";
+
+    const formData = new FormData();
+    formData.append("archivo", input.files[0]);
+
+    try {
+      const res = await fetch(API + "/clientes/carga-masiva", { method: "POST", body: formData });
+      const data = await res.json();
+      if (!res.ok) return toast(data.error || "Error", "error");
+
+      let html = `<div style="background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.3);border-radius:10px;padding:1rem;">`;
+      html += `<p><strong>Total filas:</strong> ${data.total}</p>`;
+      html += `<p style="color:#2ecc71;"><strong>Insertados:</strong> ${data.insertados}</p>`;
+      if (data.actualizados) html += `<p style="color:var(--brand);"><strong>Actualizados:</strong> ${data.actualizados}</p>`;
+      if (data.errores > 0) {
+        html += `<p style="color:#e74c3c;"><strong>Errores:</strong> ${data.errores}</p>`;
+        html += `<ul style="font-size:0.8rem;color:#e74c3c;margin-top:0.5rem;">`;
+        data.detalleErrores.forEach(e => html += `<li>${esc(e)}</li>`);
+        html += `</ul>`;
+      }
+      html += `</div>`;
+
+      document.getElementById("resultadoCarga").innerHTML = html;
+      document.getElementById("resultadoCarga").style.display = "block";
+      toast("Carga completada: " + data.insertados + " nuevos, " + (data.actualizados || 0) + " actualizados");
+      cargarClientes();
+    } catch (e) {
+      toast("Error al subir archivo", "error");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Subir y Cargar";
+    }
+  }
+
+  function cerrarModalCarga() {
+    document.getElementById("modalCargaClientes").classList.remove("active");
+    document.getElementById("resultadoCarga").style.display = "none";
+    document.getElementById("archivoClientes").value = "";
+  }
+
+  // ========== UTILIDADES ==========
+  function esc(str) {
+    const d = document.createElement("div");
+    d.textContent = str || "";
+    return d.innerHTML;
+  }
+
+  // ========== INIT ==========
+  cargarPDVs();
+  cargarProductos();
+  cargarPedidos();
+  cargarClientes();
+</script>
+</body>
+</html>
