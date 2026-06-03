@@ -1,0 +1,11 @@
+node_modules
+npm-debug.log
+.env
+*.db
+boletas.db
+.git
+.gitignore
+server-out.log
+*.log
+tmp_transportador
+tmp_xlsx_extract
