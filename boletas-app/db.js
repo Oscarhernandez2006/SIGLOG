@@ -255,13 +255,17 @@ db.serialize(() => {
       rol TEXT DEFAULT 'usuario',
       permisos TEXT DEFAULT 'canjear,generar,informes,reimprimir,validar',
       modulos TEXT DEFAULT 'bono,pedidos,agropecuaria',
-      submodulos TEXT DEFAULT ''
+      submodulos TEXT DEFAULT '',
+      nombres TEXT DEFAULT '',
+      apellidos TEXT DEFAULT ''
     )
   `);
   db.run(`ALTER TABLE usuarios ADD COLUMN rol TEXT DEFAULT 'usuario'`, (err) => {});
   db.run(`ALTER TABLE usuarios ADD COLUMN permisos TEXT DEFAULT 'canjear,generar,informes,reimprimir,validar'`, (err) => {});
   db.run(`ALTER TABLE usuarios ADD COLUMN modulos TEXT DEFAULT 'bono,pedidos,agropecuaria'`, (err) => {});
   db.run(`ALTER TABLE usuarios ADD COLUMN submodulos TEXT DEFAULT ''`, (err) => {});
+  db.run(`ALTER TABLE usuarios ADD COLUMN nombres TEXT DEFAULT ''`, (err) => {});
+  db.run(`ALTER TABLE usuarios ADD COLUMN apellidos TEXT DEFAULT ''`, (err) => {});
 
   // Boletas
   db.run(`

@@ -163,15 +163,17 @@ app.post("/register", (req, res) => {
 
 /*Inicio gestión de usuarios*/
 app.get("/usuarios", (req, res) => {
-  db.all("SELECT id, username, rol, permisos, modulos, submodulos FROM usuarios ORDER BY id", [], (err, rows) => {
+  db.all("SELECT id, username, rol, permisos, modulos, submodulos, nombres, apellidos FROM usuarios ORDER BY id", [], (err, rows) => {
     if (err) return res.status(500).json({ error: "Error del servidor" });
     res.json(rows || []);
   });
 });
 
 app.post("/usuarios", (req, res) => {
-  const { username, password, rol, permisos, modulos, submodulos } = req.body;
+  const { username, password, rol, permisos, modulos, submodulos, nombres, apellidos } = req.body;
   if (!username || !password) return res.status(400).json({ error: "Usuario y contraseña son requeridos" });
+  if (!nombres || !String(nombres).trim()) return res.status(400).json({ error: "Los nombres son requeridos" });
+  if (!apellidos || !String(apellidos).trim()) return res.status(400).json({ error: "Los apellidos son requeridos" });
 
   const rolFinal = rol || 'usuario';
   const permisosFinal = permisos || 'canjear,generar,informes,reimprimir,validar';
@@ -183,8 +185,8 @@ app.post("/usuarios", (req, res) => {
   if (!modulosFinal) return res.status(400).json({ error: "Debe asignar al menos un módulo al usuario" });
 
   db.run(
-    "INSERT INTO usuarios (username, password, rol, permisos, modulos, submodulos) VALUES (?, ?, ?, ?, ?, ?)",
-    [username, password, rolFinal, permisosFinal, modulosFinal, submodulosFinal],
+    "INSERT INTO usuarios (username, password, rol, permisos, modulos, submodulos, nombres, apellidos) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    [username, password, rolFinal, permisosFinal, modulosFinal, submodulosFinal, String(nombres).trim(), String(apellidos).trim()],
     function (err) {
       if (err) return res.status(400).json({ error: "Usuario ya existe" });
       res.json({ message: "Usuario creado", id: this.lastID });
@@ -194,7 +196,7 @@ app.post("/usuarios", (req, res) => {
 
 app.put("/usuarios/:id", (req, res) => {
   const { id } = req.params;
-  const { username, password, rol, permisos, modulos, submodulos } = req.body;
+  const { username, password, rol, permisos, modulos, submodulos, nombres, apellidos } = req.body;
 
   db.get("SELECT * FROM usuarios WHERE id = ?", [id], (err, user) => {
     if (err) return res.status(500).json({ error: "Error del servidor" });
@@ -207,6 +209,14 @@ app.put("/usuarios/:id", (req, res) => {
     if (password) { updates.push("password = ?"); params.push(password); }
     if (rol) { updates.push("rol = ?"); params.push(rol); }
     if (permisos !== undefined) { updates.push("permisos = ?"); params.push(permisos); }
+    if (nombres !== undefined) {
+      if (!String(nombres).trim()) return res.status(400).json({ error: "Los nombres son requeridos" });
+      updates.push("nombres = ?"); params.push(String(nombres).trim());
+    }
+    if (apellidos !== undefined) {
+      if (!String(apellidos).trim()) return res.status(400).json({ error: "Los apellidos son requeridos" });
+      updates.push("apellidos = ?"); params.push(String(apellidos).trim());
+    }
     if (modulos !== undefined) {
       const rolFinal = rol || user.rol;
       const modulosFinal = rolFinal === 'administrador'

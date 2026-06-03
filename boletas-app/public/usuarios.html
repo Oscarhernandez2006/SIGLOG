@@ -105,6 +105,17 @@
             </div>
           </div>
 
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nuevoNombres">Nombres</label>
+              <input type="text" id="nuevoNombres" placeholder="Nombres" required />
+            </div>
+            <div class="form-group">
+              <label for="nuevoApellidos">Apellidos</label>
+              <input type="text" id="nuevoApellidos" placeholder="Apellidos" required />
+            </div>
+          </div>
+
           <div class="form-group">
             <label for="nuevoRol">Perfil</label>
             <select id="nuevoRol">
@@ -424,7 +435,7 @@
           html += '<td>' + errCell + '</td>';
           html += '<td>' + (u.rol === 'administrador' ? muted('Todos') : badges) + '</td>';
           html += '<td style="text-align:center">';
-          html += '<button class="btn-action" onclick="editarUsuario(' + u.id + ',\'' + u.username.replace(/'/g, "\\'") + '\',\'' + u.rol + '\',\'' + (u.permisos || '') + '\',\'' + (u.modulos || '') + '\',\'' + (u.submodulos || '') + '\')">✏️ Editar</button>';
+          html += '<button class="btn-action" onclick="editarUsuario(' + u.id + ',\'' + u.username.replace(/\'/g, "\\\'") + '\',\'' + u.rol + '\',\'' + (u.permisos || '') + '\',\'' + (u.modulos || '') + '\',\'' + (u.submodulos || '') + '\',\'' + (u.nombres || '').replace(/\'/g, "\\\'") + '\',\'' + (u.apellidos || '').replace(/\'/g, "\\\'") + '\')">✏️ Editar</button>';
           html += '<button class="btn-action danger" onclick="abrirModalEliminar(' + u.id + ',\'' + u.username.replace(/'/g, "\\'") + '\')">🗑️ Eliminar</button>';
           html += '</td></tr>';
         });
@@ -442,6 +453,8 @@
       const editId = document.getElementById('editandoUsuarioId').value;
       const username = document.getElementById('nuevoUsername').value.trim();
       const password = document.getElementById('nuevoPassword').value;
+      const nombres = document.getElementById('nuevoNombres').value.trim();
+      const apellidos = document.getElementById('nuevoApellidos').value.trim();
       const rol = document.getElementById('nuevoRol').value;
 
       const permisosChecked = [];
@@ -502,6 +515,16 @@
         return;
       }
 
+      if (!nombres) {
+        toast('Ingresa los nombres.', 'error');
+        return;
+      }
+
+      if (!apellidos) {
+        toast('Ingresa los apellidos.', 'error');
+        return;
+      }
+
       if (rol !== 'administrador' && !modulos) {
         toast('Debes seleccionar al menos un módulo para el usuario.', 'error');
         return;
@@ -510,7 +533,7 @@
       try {
         let res;
         if (editId) {
-          const body = { username, rol, permisos, modulos, submodulos };
+          const body = { username, rol, permisos, modulos, submodulos, nombres, apellidos };
           if (password) body.password = password;
           res = await fetch('/usuarios/' + editId, {
             method: 'PUT',
@@ -525,7 +548,7 @@
           res = await fetch('/usuarios', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password, rol, permisos, modulos, submodulos })
+            body: JSON.stringify({ username, password, rol, permisos, modulos, submodulos, nombres, apellidos })
           });
         }
 
@@ -545,9 +568,11 @@
       }
     });
 
-    function editarUsuario(id, username, rol, permisos, modulos, submodulos) {
+    function editarUsuario(id, username, rol, permisos, modulos, submodulos, nombres, apellidos) {
       document.getElementById('editandoUsuarioId').value = id;
       document.getElementById('nuevoUsername').value = username;
+      document.getElementById('nuevoNombres').value = nombres || '';
+      document.getElementById('nuevoApellidos').value = apellidos || '';
       document.getElementById('nuevoPassword').value = '';
       document.getElementById('nuevoPassword').placeholder = 'Dejar vacío para no cambiar';
       document.getElementById('nuevoPassword').removeAttribute('required');
