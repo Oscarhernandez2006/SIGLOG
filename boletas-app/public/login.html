@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/assets/design-system.css?v=3" />
+  <link rel="stylesheet" href="/assets/design-system.css?v=15" />
   <style>
     body {
       min-height: 100vh;
@@ -260,7 +260,7 @@
         <div class="por">POR</div>
         <div class="company">Grupo <strong>SANTACRUZ</strong></div>
         <div class="accent-bar"></div>
-        <p class="tagline">Plataforma integral de trazabilidad y gestión de canastillas</p>
+        <p class="tagline">Plataforma integral de trazabilidad y herramientas de apoyo</p>
 
         <div class="credit">
           <div class="credit-label">Creado por</div>
@@ -401,6 +401,8 @@
         showAlert('¡Bienvenido, ' + data.user.username + '!', 'success');
         localStorage.setItem('username', data.user.username);
         localStorage.setItem('userRol', data.user.rol);
+        localStorage.setItem('userNombres', data.user.nombres || '');
+        localStorage.setItem('userApellidos', data.user.apellidos || '');
         localStorage.setItem('userPermisos', data.user.permisos);
         localStorage.setItem('userModulos', data.user.modulos || '');
         localStorage.setItem('userSubmodulos', data.user.submodulos || '');

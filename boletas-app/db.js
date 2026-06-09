@@ -350,6 +350,7 @@ db.serialize(() => {
   db.run(`ALTER TABLE pedidos ADD COLUMN punto_venta_id INTEGER`, (err) => {});
   db.run(`ALTER TABLE pedidos ADD COLUMN numero_pedido TEXT`, (err) => {});
   db.run(`ALTER TABLE pedidos ADD COLUMN kilos REAL DEFAULT 0`, (err) => {});
+  db.run(`ALTER TABLE pedidos ADD COLUMN editado_de TEXT`, (err) => {});
 
   // Seed: 15 PDVs iniciales si la tabla está vacía
   db.get("SELECT COUNT(*) as c FROM puntos_venta", [], (err, row) => {
@@ -784,6 +785,7 @@ db.serialize(() => {
   db.run(`ALTER TABLE agro_plantillas_dl ADD COLUMN tiempo_recorrido TEXT DEFAULT ''`, () => {});
   db.run(`ALTER TABLE agro_plantillas_dl ADD COLUMN municipios_recorre TEXT DEFAULT ''`, () => {});
   db.run(`ALTER TABLE agro_plantillas_dl ADD COLUMN fecha_hora_llegada TEXT DEFAULT ''`, () => {});
+  db.run(`ALTER TABLE agro_plantillas_dl ADD COLUMN editado INTEGER DEFAULT 0`, () => {});
 
 });
 

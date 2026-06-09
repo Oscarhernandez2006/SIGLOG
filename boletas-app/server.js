@@ -287,6 +287,8 @@ app.post("/login", (req, res) => {
         user: {
           id: user.id,
           username: user.username,
+          nombres: user.nombres || '',
+          apellidos: user.apellidos || '',
           rol: user.rol || 'administrador',
           permisos: user.permisos || 'canjear,generar,informes,reimprimir,validar',
           modulos: user.modulos || 'bono,pedidos,agropecuaria',

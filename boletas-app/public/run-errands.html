@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -9,22 +9,75 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/assets/design-system.css?v=3" />
+  <link rel="stylesheet" href="/assets/design-system.css?v=23" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
 /* Page-specific overrides for run-errands.html */
-/* Casi todo viene de /assets/design-system.css?v=3 */
+/* Casi todo viene de /assets/design-system.css?v=11 */
 
 /* Centrar el contenido de los paneles (Pedidos, Clientes, Puntos de Venta) */
 .tab-panel {
-  max-width: 1100px;
-  margin-left: auto;
-  margin-right: auto;
+  max-width: none;
+  margin-left: 1rem;
+  margin-right: 1rem;
 }
 /* Centrar también la barra de tabs para alinearla con el contenido */
 .tabs {
-  max-width: 1100px;
-  margin-left: auto;
-  margin-right: auto;
+  max-width: none;
+  margin-left: 1rem;
+  margin-right: 1rem;
+  padding-top: 8px !important;
+  margin-top: 0 !important;
+  margin-bottom: 12px !important;
+  box-shadow: none !important;
+  background: var(--background);
+}
+.tabs .tab { padding-top: 4px; padding-bottom: 6px; }
+/* Separar el contenido de cada panel de la barra de tabs */
+.tab-panel { padding-top: 4px; }
+/* Encabezado fijo dentro de las tablas con scroll (pedidos y clientes) */
+.table-wrapper[style*="overflow-y"] thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+/* ===== Dashboard (Resumen) ===== */
+.dash-kpis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.dash-kpi {
+  background: #0f1410;
+  border: 1px solid rgba(34, 197, 94, 0.45);
+  border-radius: 10px;
+  padding: 0.6rem 0.9rem;
+  width: max-content;
+  min-width: 130px;
+}
+.dash-kpi-label {
+  font-size: 0.72rem;
+  color: #86efac;
+  margin-bottom: 0.2rem;
+}
+.dash-kpi-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #22c55e;
+}
+.dash-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1rem;
+}
+.dash-chart-card { padding: 1.25rem; }
+/* Forzar que el contenedor de la página sea full-width en esta vista */
+.container {
+  max-width: none !important;
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
 /* Modal de pedido: necesita position:relative para anclar el botón flotante "+" */
@@ -74,35 +127,80 @@
   <div class="actions">
     <button class="btn btn-primary" onclick="abrirNuevoPedido()">+ Nuevo Pedido</button>
     <button class="btn btn-success" onclick="exportarFreeOrderFiltrado()" style="background:#1f8a4a;">⬇️ Exportar Excel (Free_Order)</button>
-    <button class="btn btn-danger" onclick="abrirModalBorrarTodosPedidos()">🗑️ Borrar Todos los Pedidos</button>
+    <button class="btn btn-danger btn-sm" onclick="abrirModalBorrarTodosPedidos()" title="Borrar todos los pedidos" style="padding:0.35rem 0.6rem;">✕</button>
   </div>
-</div>
-
-<!-- Bloque de usuario flotante (abajo-izquierda) -->
-<div class="user-bottom-left">
-  <div class="avatar" id="topUserAvatar">U</div>
-  <div class="user-info">
-    <div class="user-name" id="topUserName">Usuario</div>
-    <div class="user-role" id="topUserRole">Usuario</div>
-  </div>
-  <button class="btn-logout" id="btnLogout" title="Cerrar sesión">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
-  </button>
 </div>
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<div class="container">
+<div class="container" style="padding-top:0;">
   <!-- Tabs -->
-  <div class="tabs">
-    <button class="tab active" data-tab="pedidos">Pedidos</button>
+  <div class="tabs" style="position:sticky;top:60px;z-index:30;overflow:visible;">
+    <button class="tab active" data-tab="resumen">Dashboard</button>
+    <button class="tab" data-tab="pedidos">Pedidos</button>
     <button class="tab" data-tab="clientes">Clientes</button>
     <button class="tab" data-tab="pdv">Puntos de Venta</button>
+    <!-- Bloque de usuario (alineado a la línea de tabs, dentro de la barra sticky) -->
+    <div class="user-bottom-left" style="position:absolute;right:0;top:50%;bottom:auto;transform:translateY(-50%);">
+      <div class="avatar" id="topUserAvatar">U</div>
+      <div class="user-info">
+        <div class="user-name" id="topUserName">Usuario</div>
+        <div class="user-role" id="topUserRole">Usuario</div>
+      </div>
+      <button class="btn-logout" id="btnLogout" title="Cerrar sesión">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== TAB: RESUMEN (DASHBOARD) ==================== -->
+  <div class="tab-panel active" id="tab-resumen">
+    <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:1rem;flex-wrap:wrap;gap:0.75rem;">
+      <div style="display:flex;align-items:flex-end;gap:0.6rem;flex-wrap:wrap;">
+        <div style="display:flex;flex-direction:column;gap:0.2rem;">
+          <label style="font-size:0.72rem;color:#86efac;">Desde</label>
+          <input type="date" id="dashDesde" class="input" style="padding:0.35rem 0.5rem;" />
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.2rem;">
+          <label style="font-size:0.72rem;color:#86efac;">Hasta</label>
+          <input type="date" id="dashHasta" class="input" style="padding:0.35rem 0.5rem;" />
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="cargarDashboard()">🔄 Actualizar</button>
+        <button class="btn btn-secondary btn-sm" onclick="limpiarFiltroDashboard()">Limpiar</button>
+      </div>
+    </div>
+
+    <!-- Tarjetas KPI -->
+    <div class="dash-kpis">
+      <div class="dash-kpi">
+        <div class="dash-kpi-label">Pedidos activos</div>
+        <div class="dash-kpi-value" id="kpiPedidos">0</div>
+      </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="dash-charts">
+      <div class="card dash-chart-card">
+        <h4 style="margin:0 0 0.75rem;font-size:0.95rem;">Pedidos por punto de venta o origen</h4>
+        <div style="position:relative;height:280px;"><canvas id="chartPedidosPDV"></canvas></div>
+      </div>
+      <div class="card dash-chart-card">
+        <h4 style="margin:0 0 0.75rem;font-size:0.95rem;">Pedidos por día (últimos 14 días)</h4>
+        <div style="position:relative;height:280px;"><canvas id="chartPedidosDia"></canvas></div>
+      </div>
+      <div class="card dash-chart-card">
+        <h4 style="margin:0 0 0.75rem;font-size:0.95rem;">Pedidos por cliente (top 10)</h4>
+        <div style="position:relative;height:280px;"><canvas id="chartPedidosCliente"></canvas></div>
+      </div>
+    </div>
   </div>
 
   <!-- ==================== TAB: PEDIDOS ==================== -->
-  <div class="tab-panel active" id="tab-pedidos">
+  <div class="tab-panel" id="tab-pedidos">
+    <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:1rem;">
+      <h3 style="margin:0;display:flex;align-items:center;gap:0.6rem;">Pedidos <span id="contadorPedidos" style="background:rgba(99,102,241,0.18);color:#a5b4fc;border:1px solid rgba(99,102,241,0.35);border-radius:999px;padding:0.15rem 0.65rem;font-size:0.8rem;font-weight:600;">0</span></h3>
+    </div>
     <!-- Filtros -->
     <div class="filters">
       <div class="form-group">
@@ -111,7 +209,7 @@
           <option value="TODOS">Todos los PDV</option>
         </select>
       </div>
-      <div class="form-group">
+      <div class="form-group" style="margin-left:auto;">
         <label>Desde</label>
         <input type="date" id="filtroDesde" onchange="cargarPedidos()" />
       </div>
@@ -123,18 +221,18 @@
 
     <!-- Tabla de pedidos -->
     <div class="card">
-      <div class="table-wrapper">
+      <div class="table-wrapper" style="max-height:60vh;overflow-y:auto;">
         <table>
           <thead>
             <tr>
               <th style="width:36px;text-align:center;"><span class="toggle-preparar" id="togglePedidosTodos" onclick="togglePedidosTodos(this)" title="Seleccionar todos"></span></th>
               <th>Consecutivo</th>
-              <th>PDV ORIGEN</th>
+              <th>Código</th>
+              <th>PDV Origen</th>
               <th>Cliente</th>
-              <th>CODIGO</th>
               <th>Fecha</th>
-              <th>Unidad</th>
-              <th>Acciones</th>
+              <th style="width:70px;text-align:center;">Unidad</th>
+              <th style="text-align:right;">Acciones</th>
             </tr>
           </thead>
           <tbody id="tablaPedidos">
@@ -147,7 +245,7 @@
 
   <!-- ==================== TAB: CLIENTES ==================== -->
   <div class="tab-panel" id="tab-clientes">
-    <div style="position:sticky;top:118px;z-index:50;background:var(--background);padding:0.75rem 0;display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.75rem;border-bottom:1px solid var(--border);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.75rem;">
       <h3 style="margin:0;display:flex;align-items:center;gap:0.6rem;">Clientes <span id="contadorClientes" style="background:rgba(99,102,241,0.18);color:#a5b4fc;border:1px solid rgba(99,102,241,0.35);border-radius:999px;padding:0.15rem 0.65rem;font-size:0.8rem;font-weight:600;">0</span></h3>
       <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
         <input type="text" id="buscarCliente" placeholder="Buscar por nombre, cédula, teléfono..." style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.85rem;color:var(--foreground);font-size:0.85rem;min-width:250px;" oninput="cargarClientes()" />
@@ -158,7 +256,7 @@
     </div>
 
     <div class="card">
-      <div class="table-wrapper">
+      <div class="table-wrapper" style="max-height:60vh;overflow-y:auto;">
         <table>
           <thead>
             <tr>
@@ -346,12 +444,12 @@
 <!-- ==================== TAB: PUNTOS DE VENTA ==================== -->
   <div class="tab-panel" id="tab-pdv">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.75rem;">
-      <h3 style="margin:0;">Puntos de Venta</h3>
+      <h3 style="margin:0;display:flex;align-items:center;gap:0.6rem;">Puntos de Venta <span id="contadorPDV" style="background:rgba(99,102,241,0.18);color:#a5b4fc;border:1px solid rgba(99,102,241,0.35);border-radius:999px;padding:0.15rem 0.65rem;font-size:0.8rem;font-weight:600;">0</span></h3>
       <button class="btn btn-primary btn-sm" onclick="abrirNuevoPDV()">+ Nuevo Punto de Venta</button>
     </div>
 
     <div class="card">
-      <div class="table-wrapper">
+      <div class="table-wrapper" style="max-height:60vh;overflow-y:auto;">
         <table>
           <thead>
             <tr>
@@ -412,15 +510,19 @@
   (function () {
     const u = localStorage.getItem('username') || 'invitado';
     const rol = localStorage.getItem('userRol') || 'usuario';
+    const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : '';
+    const pn = cap((localStorage.getItem('userNombres') || '').trim().split(/\s+/)[0] || '');
+    const pa = cap((localStorage.getItem('userApellidos') || '').trim().split(/\s+/)[0] || '');
+    const nombreMostrar = (pn + ' ' + pa).trim() || u;
     const elName = document.getElementById('topUserName');
     const elAvatar = document.getElementById('topUserAvatar');
     const elRole = document.getElementById('topUserRole');
-    if (elName) elName.textContent = u;
-    if (elAvatar) elAvatar.textContent = (u || 'U').charAt(0).toUpperCase();
+    if (elName) elName.textContent = nombreMostrar;
+    if (elAvatar) elAvatar.textContent = (nombreMostrar || 'U').charAt(0).toUpperCase();
     if (elRole) elRole.textContent = rol === 'administrador' ? 'Administrador' : 'Usuario Estándar';
     const btn = document.getElementById('btnLogout');
     if (btn) btn.addEventListener('click', () => {
-      ['username','userRol','userPermisos','userModulos','userSubmodulos'].forEach(k => localStorage.removeItem(k));
+      ['username','userRol','userNombres','userApellidos','userPermisos','userModulos','userSubmodulos'].forEach(k => localStorage.removeItem(k));
       window.location.href = '/login.html';
     });
   })();
@@ -483,6 +585,8 @@
 
   function renderTablaPDV(pdvs) {
     const tbody = document.getElementById("tablaPDV");
+    const contadorPdv = document.getElementById("contadorPDV");
+    if (contadorPdv) contadorPdv.textContent = pdvs.length;
     if (!pdvs.length) {
       tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">No hay puntos de venta</div></td></tr>';
       return;
@@ -602,7 +706,7 @@
     if (seleccionadosVisibles.length === 0) {
       return toast("Selecciona al menos un pedido (círculo a la izquierda)", "error");
     }
-    descargarFreeOrder(seleccionadosVisibles.map(p => p.id));
+    descargarFreeOrder(seleccionadosVisibles.map(p => p.id), seleccionadosVisibles.map(p => p.numero_pedido).filter(Boolean));
   }
 
   function togglePedidoSel(id, el) {
@@ -641,6 +745,8 @@
 
   function renderTablaPedidos(pedidos) {
     const tbody = document.getElementById("tablaPedidos");
+    const contadorP = document.getElementById("contadorPedidos");
+    if (contadorP) contadorP.textContent = pedidos.length;
     if (!pedidos.length) {
       tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">No hay pedidos registrados</div></td></tr>';
       actualizarTogglePedidosTodos();
@@ -656,23 +762,30 @@
           const pdv = pdvCache.find(x => x.id === p.punto_venta_id);
           const pdvNombre = pdv ? pdv.nombre : "—";
           const cancelado = p.estado === 'CANCELADO';
-          const rowStyle = cancelado ? ' style="opacity:0.45;text-decoration:line-through;"' : '';
-          const checkCell = cancelado
+          const editado = p.estado === 'EDITADO';
+          const inactivo = cancelado || editado;
+          const rowStyle = inactivo ? ' style="opacity:0.6;text-decoration:line-through;text-decoration-color:#dc2626;text-decoration-thickness:1px;"' : '';
+          const checkCell = inactivo
             ? '<td style="text-align:center;"></td>'
             : `<td style="text-align:center;"><span class="toggle-preparar${pedidosSeleccionados.has(p.id) ? ' activo' : ''}" data-pedido-id="${p.id}" onclick="togglePedidoSel(${p.id}, this)" title="Seleccionar para exportar"></span></td>`;
+          const etiquetaEstado = cancelado
+            ? '<span style="background:#fee2e2;color:#b91c1c;font-weight:700;font-size:11px;letter-spacing:0.04em;padding:4px 10px;border-radius:999px;text-decoration:none;display:inline-block;">CANCELADO</span>'
+            : (editado ? '<span style="background:#fef3c7;color:#92400e;font-weight:700;font-size:11px;letter-spacing:0.04em;padding:4px 10px;border-radius:999px;text-decoration:none;display:inline-block;">EDITADO</span>' : '');
           return `
       <tr${rowStyle}>
         ${checkCell}
         <td><strong>${esc(p.numero_pedido || "#" + p.id)}</strong></td>
-        <td>${esc(pdvNombre)}</td>
-        <td>${esc(p.cliente_nombre)}</td>
         <td>${esc(p.cliente_cedula || "—")}</td>
+        <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;" title="${esc(pdvNombre)}">${esc(pdvNombre)}</td>
+        <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;" title="${esc(p.cliente_nombre)}">${esc(p.cliente_nombre)}</td>
         <td>${new Date(p.fecha).toLocaleString("es-CO")}</td>
-        <td>1</td>
-        <td style="white-space:nowrap;">
-          <button class="btn btn-secondary btn-sm" onclick="verDetalle(${p.id})">Ver</button>
-          ${p.estado !== 'CANCELADO' ? `<button class="btn btn-primary btn-sm" onclick="editarPedido(${p.id})">Editar</button>
-          <button class="btn btn-danger btn-sm" onclick="cancelarPedido(${p.id})">Cancelar</button>` : ''}
+        <td style="text-align:center;">1</td>
+        <td style="white-space:nowrap;text-align:right;">
+          ${!inactivo ? `<div>
+            <button class="btn btn-primary btn-sm" onclick="editarPedido(${p.id})">Editar</button>
+            <button class="btn btn-danger btn-sm" onclick="cancelarPedido(${p.id})">Cancelar</button>
+          </div>
+          ${p.editado_de ? `<div style="font-size:11px;color:var(--muted-foreground);margin-top:4px;font-style:italic;">Editado de la orden ${esc(p.editado_de)}</div>` : ''}` : etiquetaEstado}
         </td>
       </tr>`;
         }
@@ -964,22 +1077,42 @@
     const kilos_actual = parseFloat(document.getElementById("pedidoKilosField").value) || 0;
     const estado_actual = document.getElementById("pedidoEstado").value;
 
-    // Modo edición: comportamiento original
+    // Modo edición: marcar el original como EDITADO y crear uno nuevo con consecutivo nuevo
     if (editId) {
       if (!cliente_nombre_actual) return toast("Debe seleccionar un destino", "error");
       if (!punto_venta_id_actual) return toast("Debe seleccionar el PDV de Despacho", "error");
       if (kilos_actual <= 0) return toast("Debe indicar los kilos del pedido", "error");
       try {
-        const res = await fetch(API + "/pedidos/" + editId + "/completo", {
+        // 1) Marcar original como EDITADO
+        const resEstado = await fetch(API + "/pedidos/" + editId + "/estado", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cliente_nombre: cliente_nombre_actual, cliente_cedula: cliente_cedula_actual, kilos: kilos_actual, estado: estado_actual, punto_venta_id: punto_venta_id_actual }),
+          body: JSON.stringify({ estado: "EDITADO" }),
         });
-        const data = await res.json();
-        if (!res.ok) return toast(data.error || "Error", "error");
-        toast("Pedido actualizado exitosamente");
+        if (!resEstado.ok) {
+          const err = await resEstado.json().catch(() => ({}));
+          return toast(err.error || "No se pudo marcar el pedido como editado", "error");
+        }
+        // 2) Crear pedido nuevo con consecutivo nuevo
+        const numeroOriginal = document.getElementById("pedidoEditId").dataset.numeroOriginal || "";
+        const resNuevo = await fetch(API + "/pedidos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            cliente_nombre: cliente_nombre_actual,
+            cliente_cedula: cliente_cedula_actual,
+            kilos: kilos_actual,
+            estado: estado_actual,
+            punto_venta_id: punto_venta_id_actual,
+            editado_de: numeroOriginal,
+          }),
+        });
+        const data = await resNuevo.json();
+        if (!resNuevo.ok) return toast(data.error || "Error al crear nuevo pedido", "error");
+        toast("Pedido editado: original marcado y " + (data.numero_pedido || "nuevo pedido") + " creado");
         cerrarModalPedido();
         cargarPedidos();
+        if (data && data.id) descargarFreeOrder([data.id], data.numero_pedido ? [data.numero_pedido] : []);
       } catch (e) {
         toast("Error de conexión", "error");
       }
@@ -999,6 +1132,7 @@
 
     let ok = 0, errores = 0;
     const idsCreados = [];
+    const numerosCreados = [];
     for (const p of aGuardar) {
       try {
         const res = await fetch(API + "/pedidos", {
@@ -1008,7 +1142,11 @@
         });
         if (res.ok) {
           ok++;
-          try { const data = await res.json(); if (data && data.id) idsCreados.push(data.id); } catch (e) {}
+          try {
+            const data = await res.json();
+            if (data && data.id) idsCreados.push(data.id);
+            if (data && data.numero_pedido) numerosCreados.push(data.numero_pedido);
+          } catch (e) {}
         } else { errores++; }
       } catch (e) { errores++; }
     }
@@ -1017,10 +1155,10 @@
     pedidosCola = [];
     cerrarModalPedido();
     cargarPedidos();
-    if (idsCreados.length > 0) descargarFreeOrder(idsCreados);
+    if (idsCreados.length > 0) descargarFreeOrder(idsCreados, numerosCreados);
   }
 
-  async function descargarFreeOrder(ids) {
+  async function descargarFreeOrder(ids, numerosPedido) {
     try {
       const res = await fetch(API + "/pedidos/export-free-order", {
         method: "POST",
@@ -1031,10 +1169,17 @@
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      const ts = new Date();
-      const pad = (n) => String(n).padStart(2, "0");
       a.href = url;
-      a.download = "Free_Order_" + ts.getFullYear() + pad(ts.getMonth() + 1) + pad(ts.getDate()) + "_" + pad(ts.getHours()) + pad(ts.getMinutes()) + ".xlsx";
+      let nombre;
+      const nums = (numerosPedido || []).filter(Boolean);
+      if (nums.length > 0) {
+        nombre = "Free_Order_" + nums.join("-") + ".xlsx";
+      } else {
+        const ts = new Date();
+        const pad = (n) => String(n).padStart(2, "0");
+        nombre = "Free_Order_" + ts.getFullYear() + pad(ts.getMonth() + 1) + pad(ts.getDate()) + "_" + pad(ts.getHours()) + pad(ts.getMinutes()) + ".xlsx";
+      }
+      a.download = nombre;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -1083,7 +1228,7 @@
     cont.innerHTML = pedidosCola.map((p, idx) => `
       <div style="display:flex;align-items:center;gap:0.75rem;background:var(--brand-soft);border:1px solid var(--brand);border-radius:10px;padding:0.55rem 0.85rem;">
         <span style="color:var(--brand);font-weight:600;font-size:0.85rem;min-width:110px;">${esc(p._numero || "")}</span>
-        <span style="color:var(--foreground);font-size:0.82rem;flex:1;">${esc(p._pdv || "")} → ${esc(p.cliente_nombre)}${p.cliente_cedula ? " (" + esc(p.cliente_cedula) + ")" : ""}</span>
+        <span style="color:var(--foreground);font-size:0.82rem;flex:1;">${esc(p._pdv || "")} ? ${esc(p.cliente_nombre)}${p.cliente_cedula ? " (" + esc(p.cliente_cedula) + ")" : ""}</span>
         <button type="button" onclick="quitarPedidoCola(${idx})" title="Quitar" style="background:transparent;border:none;color:#e74c3c;cursor:pointer;font-size:1.1rem;line-height:1;">×</button>
       </div>
     `).join("");
@@ -1107,6 +1252,7 @@
 
       document.getElementById("modalPedidoTitulo").textContent = "Editar Pedido " + (p.numero_pedido || "#" + p.id);
       document.getElementById("pedidoEditId").value = p.id;
+      document.getElementById("pedidoEditId").dataset.numeroOriginal = p.numero_pedido || "";
       document.getElementById("pedidoCedula").value = p.cliente_cedula || "";
       document.getElementById("pedidoCliente").value = p.cliente_nombre || "";
       document.getElementById("pedidoNombre").value = p.cliente_nombre || "";
@@ -1200,7 +1346,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/assets/design-system.css?v=3" />
+  <link rel="stylesheet" href="/assets/design-system.css?v=23" />
 <style>
   @page { margin: 0; size: 80mm auto; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1377,7 +1523,6 @@ ${p.observaciones ? `<div style="font-size:11px;"><strong>Obs:</strong> ${esc(p.
         <td>${esc(c.region || "—")}</td>
         <td>
           <button class="btn btn-secondary btn-sm" onclick="editarCliente(${c.id})">Editar</button>
-          <button class="btn btn-danger btn-sm" onclick="eliminarCliente(${c.id})">Desactivar</button>
         </td>
       </tr>`).join("");
   }
@@ -1651,10 +1796,156 @@ ${p.observaciones ? `<div style="font-size:11px;"><strong>Obs:</strong> ${esc(p.
     return d.innerHTML;
   }
 
+  // ========== DASHBOARD (RESUMEN) ==========
+  let chartPedidosPDV = null;
+  let chartPedidosDia = null;
+  let chartPedidosCliente = null;
+  async function cargarDashboard() {
+    try {
+      const desde = document.getElementById("dashDesde").value;
+      const hasta = document.getElementById("dashHasta").value;
+      let urlPedidos = API + "/pedidos?";
+      if (desde) urlPedidos += "desde=" + desde + "&";
+      if (hasta) urlPedidos += "hasta=" + hasta + "&";
+
+      const [pedidos, clientes, pdvs] = await Promise.all([
+        fetch(urlPedidos).then(r => r.json()).catch(() => []),
+        fetch(API + "/clientes").then(r => r.json()).catch(() => []),
+        fetch(API + "/puntos-venta?todos=1").then(r => r.json()).catch(() => []),
+      ]);
+
+      const lista = Array.isArray(pedidos) ? pedidos : [];
+      const activos = lista.filter(p => p.estado !== "CANCELADO");
+
+      document.getElementById("kpiPedidos").textContent = activos.length;
+      renderChartPedidosPDV(activos, Array.isArray(pdvs) ? pdvs : []);
+      renderChartPedidosDia(activos);
+      renderChartPedidosCliente(activos);
+    } catch (e) {      console.error(e);
+    }
+  }
+
+  function limpiarFiltroDashboard() {
+    document.getElementById("dashDesde").value = "";
+    document.getElementById("dashHasta").value = "";
+    cargarDashboard();
+  }
+
+  function renderChartPedidosPDV(pedidos, pdvs) {
+    const nombrePorId = {};
+    pdvs.forEach(p => { nombrePorId[p.id] = p.nombre; });
+    const conteo = {};
+    pedidos.forEach(p => {
+      const nombre = nombrePorId[p.punto_venta_id] || "Sin PDV";
+      conteo[nombre] = (conteo[nombre] || 0) + 1;
+    });
+    const labels = Object.keys(conteo);
+    const valores = labels.map(l => conteo[l]);
+
+    if (chartPedidosPDV) chartPedidosPDV.destroy();
+    const ctx = document.getElementById("chartPedidosPDV");
+    if (!ctx || typeof Chart === "undefined") return;
+    chartPedidosPDV = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [{ label: "Pedidos", data: valores, backgroundColor: "#6366f1", borderRadius: 6 }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: "#94a3b8" }, grid: { display: false } },
+          y: { beginAtZero: true, ticks: { color: "#94a3b8", precision: 0 }, grid: { color: "rgba(148,163,184,0.12)" } },
+        },
+      },
+    });
+  }
+
+  function renderChartPedidosDia(pedidos) {
+    const dias = [];
+    const hoy = new Date();
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(hoy);
+      d.setDate(hoy.getDate() - i);
+      dias.push(d.toISOString().slice(0, 10));
+    }
+    const conteo = {};
+    dias.forEach(d => { conteo[d] = 0; });
+    pedidos.forEach(p => {
+      const f = (p.fecha || "").slice(0, 10);
+      if (f in conteo) conteo[f]++;
+    });
+    const labels = dias.map(d => d.slice(5));
+    const valores = dias.map(d => conteo[d]);
+
+    if (chartPedidosDia) chartPedidosDia.destroy();
+    const ctx = document.getElementById("chartPedidosDia");
+    if (!ctx || typeof Chart === "undefined") return;
+    chartPedidosDia = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [{
+          label: "Pedidos",
+          data: valores,
+          borderColor: "#22c55e",
+          backgroundColor: "rgba(34,197,94,0.15)",
+          fill: true,
+          tension: 0.3,
+          pointRadius: 3,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: "#94a3b8" }, grid: { display: false } },
+          y: { beginAtZero: true, ticks: { color: "#94a3b8", precision: 0 }, grid: { color: "rgba(148,163,184,0.12)" } },
+        },
+      },
+    });
+  }
+
+  function renderChartPedidosCliente(pedidos) {
+    const conteo = {};
+    pedidos.forEach(p => {
+      const nombre = (p.cliente_nombre || "Sin cliente").trim() || "Sin cliente";
+      conteo[nombre] = (conteo[nombre] || 0) + 1;
+    });
+    const ordenado = Object.entries(conteo).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    const labels = ordenado.map(e => e[0]);
+    const valores = ordenado.map(e => e[1]);
+
+    if (chartPedidosCliente) chartPedidosCliente.destroy();
+    const ctx = document.getElementById("chartPedidosCliente");
+    if (!ctx || typeof Chart === "undefined") return;
+    chartPedidosCliente = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [{ label: "Pedidos", data: valores, backgroundColor: "#22c55e", borderRadius: 6 }],
+      },
+      options: {
+        indexAxis: "y",
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { beginAtZero: true, ticks: { color: "#94a3b8", precision: 0 }, grid: { color: "rgba(148,163,184,0.12)" } },
+          y: { ticks: { color: "#94a3b8" }, grid: { display: false } },
+        },
+      },
+    });
+  }
+
   // ========== INIT ==========
   cargarPDVs();
   cargarPedidos();
   cargarClientes();
+  cargarDashboard();
 </script>
 </body>
 </html>

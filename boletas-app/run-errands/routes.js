@@ -307,7 +307,7 @@ router.get("/pedidos/:id", (req, res) => {
 
 // Crear pedido con items
 router.post("/pedidos", (req, res) => {
-  const { cliente_nombre, cliente_cedula, kilos, estado, punto_venta_id: pdvBody } = req.body;
+  const { cliente_nombre, cliente_cedula, kilos, estado, punto_venta_id: pdvBody, editado_de } = req.body;
 
   if (!cliente_nombre) return res.status(400).json({ error: "El nombre del cliente es requerido" });
 
@@ -343,8 +343,8 @@ router.post("/pedidos", (req, res) => {
         const kilosFinal = parseFloat(kilos) || 0;
 
         db.run(
-          "INSERT INTO pedidos (cliente_nombre, cliente_cedula, fecha, estado, total, kilos, observaciones, punto_venta_id, numero_pedido) VALUES (?, ?, ?, ?, 0, ?, '', ?, ?)",
-          [cliente_nombre.trim(), cliente_cedula || "", fecha, estadoFinal, kilosFinal, punto_venta_id, numero_pedido],
+          "INSERT INTO pedidos (cliente_nombre, cliente_cedula, fecha, estado, total, kilos, observaciones, punto_venta_id, numero_pedido, editado_de) VALUES (?, ?, ?, ?, 0, ?, '', ?, ?, ?)",
+          [cliente_nombre.trim(), cliente_cedula || "", fecha, estadoFinal, kilosFinal, punto_venta_id, numero_pedido, editado_de || null],
           function (err) {
             if (err) return res.status(500).json({ error: "Error al crear pedido" });
             res.json({ message: "Pedido creado", id: this.lastID, numero_pedido, kilos: kilosFinal });
@@ -359,7 +359,7 @@ router.post("/pedidos", (req, res) => {
 router.put("/pedidos/:id/estado", (req, res) => {
   const { id } = req.params;
   const { estado } = req.body;
-  const estadosValidos = ["PENDIENTE", "EN_PROCESO", "ENTREGADO", "CANCELADO"];
+  const estadosValidos = ["PENDIENTE", "EN_PROCESO", "ENTREGADO", "CANCELADO", "EDITADO", "REVISADO"];
 
   if (!estadosValidos.includes(estado)) {
     return res.status(400).json({ error: "Estado no válido. Use: " + estadosValidos.join(", ") });
@@ -585,9 +585,9 @@ router.get("/clientes", (req, res) => {
 
   if (buscar) {
     const prefix = todos !== "1" ? " AND" : " WHERE";
-    query += prefix + " (nombre LIKE ? OR cedula LIKE ? OR telefono LIKE ? OR barrio LIKE ?)";
+    query += prefix + " (nombre ILIKE ? OR cedula ILIKE ? OR telefono ILIKE ? OR barrio ILIKE ? OR direccion ILIKE ? OR ciudad ILIKE ? OR region ILIKE ? OR punto_venta ILIKE ? OR email ILIKE ? OR referencia ILIKE ?)";
     const term = "%" + buscar + "%";
-    params.push(term, term, term, term);
+    params.push(term, term, term, term, term, term, term, term, term, term);
   }
 
   query += " ORDER BY nombre";

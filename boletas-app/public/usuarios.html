@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/assets/design-system.css?v=3" />
+  <link rel="stylesheet" href="/assets/design-system.css?v=15" />
   <style>
     /* Page-specific overrides for usuarios.html */
 
@@ -210,14 +210,18 @@
       window.location.href = '/dashboard.html';
     }
 
-    document.getElementById('topUserName').textContent = username;
+    const _cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : '';
+    const _pn = _cap((localStorage.getItem('userNombres') || '').trim().split(/\s+/)[0] || '');
+    const _pa = _cap((localStorage.getItem('userApellidos') || '').trim().split(/\s+/)[0] || '');
+    const nombreMostrar = (_pn + ' ' + _pa).trim() || username;
+    document.getElementById('topUserName').textContent = nombreMostrar;
     const elAvatar = document.getElementById('topUserAvatar');
-    if (elAvatar) elAvatar.textContent = (username || 'U').charAt(0).toUpperCase();
+    if (elAvatar) elAvatar.textContent = (nombreMostrar || 'U').charAt(0).toUpperCase();
     const elRole = document.getElementById('topUserRole');
     if (elRole) elRole.textContent = userRol === 'administrador' ? 'Administrador' : 'Usuario Estándar';
 
     document.getElementById('btnLogout').addEventListener('click', () => {
-      ['username','userRol','userPermisos','userModulos','userSubmodulos'].forEach(k => localStorage.removeItem(k));
+      ['username','userRol','userNombres','userApellidos','userPermisos','userModulos','userSubmodulos'].forEach(k => localStorage.removeItem(k));
       window.location.href = '/login.html';
     });
 
@@ -403,7 +407,7 @@
         const users = await res.json();
 
         let html = '<table><thead><tr>';
-        html += '<th>Usuario</th><th>Perfil</th><th>Módulos</th><th>Secc. Agro</th><th>Secc. Errands</th><th>Permisos</th><th style="text-align:center;">Acciones</th>';
+        html += '<th>Usuario</th><th>Nombre</th><th>Perfil</th><th>Módulos</th><th>Secc. Agro</th><th>Secc. Errands</th><th>Permisos</th><th style="text-align:center;">Acciones</th>';
         html += '</tr></thead><tbody>';
 
         users.forEach(u => {
@@ -429,6 +433,11 @@
 
           html += '<tr>';
           html += '<td>' + u.username + '</td>';
+          const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : '';
+          const primerNombre = cap((u.nombres || '').trim().split(/\s+/)[0] || '');
+          const primerApellido = cap((u.apellidos || '').trim().split(/\s+/)[0] || '');
+          const nombreCorto = (primerNombre + ' ' + primerApellido).trim();
+          html += '<td>' + (nombreCorto || muted('—')) + '</td>';
           html += '<td>' + rolBadge + '</td>';
           html += '<td>' + (u.rol === 'administrador' ? muted('Todos') : modulosBadges) + '</td>';
           html += '<td>' + agroCell + '</td>';

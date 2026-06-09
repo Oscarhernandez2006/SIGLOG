@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/png" href="/logosiglog.png" />
   <title>Toma de Pedidos — Grupo Santacruz</title>
-  <link rel="stylesheet" href="/assets/design-system.css?v=3" />
+  <link rel="stylesheet" href="/assets/design-system.css?v=15" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -770,15 +770,19 @@
   (function () {
     const u = localStorage.getItem('username') || 'invitado';
     const rol = localStorage.getItem('userRol') || 'usuario';
+    const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : '';
+    const pn = cap((localStorage.getItem('userNombres') || '').trim().split(/\s+/)[0] || '');
+    const pa = cap((localStorage.getItem('userApellidos') || '').trim().split(/\s+/)[0] || '');
+    const nombreMostrar = (pn + ' ' + pa).trim() || u;
     const elName = document.getElementById('topUserName');
     const elAvatar = document.getElementById('topUserAvatar');
     const elRole = document.getElementById('topUserRole');
-    if (elName) elName.textContent = u;
-    if (elAvatar) elAvatar.textContent = (u || 'U').charAt(0).toUpperCase();
+    if (elName) elName.textContent = nombreMostrar;
+    if (elAvatar) elAvatar.textContent = (nombreMostrar || 'U').charAt(0).toUpperCase();
     if (elRole) elRole.textContent = rol === 'administrador' ? 'Administrador' : 'Usuario Estándar';
     const btn = document.getElementById('btnLogout');
     if (btn) btn.addEventListener('click', () => {
-      ['username','userRol','userPermisos','userModulos','userSubmodulos'].forEach(k => localStorage.removeItem(k));
+      ['username','userRol','userNombres','userApellidos','userPermisos','userModulos','userSubmodulos'].forEach(k => localStorage.removeItem(k));
       window.location.href = '/login.html';
     });
   })();

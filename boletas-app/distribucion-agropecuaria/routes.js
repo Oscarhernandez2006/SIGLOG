@@ -951,11 +951,22 @@ router.put("/vehiculos/:id", (req, res) => {
         // Quitar tripulante: limpiar también el texto conductor heredado
         aplicar(conductor !== undefined ? (conductor || "") : "", null);
       } else {
-        db.get("SELECT nombres, apellidos FROM agro_tripulacion WHERE id = ?", [tripulacion_id], (e, t) => {
-          if (e || !t) return res.status(400).json({ error: "Tripulante no encontrado" });
-          const nombreFull = ((t.nombres || "") + " " + (t.apellidos || "")).trim();
-          aplicar(nombreFull || conductor || veh.conductor, tripulacion_id);
-        });
+        // Validar que el conductor no esté ya asignado a otro vehículo activo
+        db.get(
+          "SELECT id, placa FROM agro_vehiculos WHERE tripulacion_id = ? AND id <> ? AND activo = 1",
+          [tripulacion_id, id],
+          (eDup, dup) => {
+            if (eDup) return res.status(500).json({ error: "Error del servidor" });
+            if (dup) {
+              return res.status(400).json({ error: "Este conductor ya está asignado al vehículo " + dup.placa });
+            }
+            db.get("SELECT nombres, apellidos FROM agro_tripulacion WHERE id = ?", [tripulacion_id], (e, t) => {
+              if (e || !t) return res.status(400).json({ error: "Tripulante no encontrado" });
+              const nombreFull = ((t.nombres || "") + " " + (t.apellidos || "")).trim();
+              aplicar(nombreFull || conductor || veh.conductor, tripulacion_id);
+            });
+          }
+        );
       }
     } else {
       aplicar(conductor || veh.conductor, veh.tripulacion_id);
@@ -1773,12 +1784,71 @@ router.get("/asignaciones/historial/exportar-excel", (req, res) => {
           (err2, ordenes) => {
             a.ordenes = ordenes || [];
             pendientes--;
-            if (pendientes === 0) generarExcel(asignaciones, res);
+            if (pendientes === 0) generarExcel(asignaciones, res, fecha_exportacion);
           }
         );
       });
     }
   );
+});
+
+// Detalle de un lote exportado (para edición) por fecha_exportacion
+router.get("/asignaciones/lote", (req, res) => {
+  const { fecha_exportacion } = req.query;
+  if (!fecha_exportacion) return res.status(400).json({ error: "fecha_exportacion es requerida" });
+  db.all(
+    "SELECT id, vehiculo_placa, vehiculo_conductor, COALESCE(auxiliar,'') AS auxiliar FROM agro_asignaciones WHERE estado = 'EXPORTADA' AND COALESCE(fecha_exportacion, fecha) = ? ORDER BY vehiculo_placa",
+    [fecha_exportacion],
+    (err, asignaciones) => {
+      if (err) return res.status(500).json({ error: "Error del servidor: " + err.message });
+      if (!asignaciones || !asignaciones.length) return res.status(404).json({ error: "No se encontró el lote" });
+      let pendientes = asignaciones.length;
+      asignaciones.forEach(a => {
+        db.all(
+          `SELECT ao.orden_id, o.numero_orden,
+                  o.distribuidor_nombre, o.total
+           FROM agro_asignacion_ordenes ao
+           LEFT JOIN agro_ordenes o ON o.id = ao.orden_id
+           WHERE ao.asignacion_id = ?
+           ORDER BY o.numero_orden`,
+          [a.id],
+          (err2, ordenes) => {
+            a.ordenes = ordenes || [];
+            if (--pendientes === 0) res.json(asignaciones);
+          }
+        );
+      });
+    }
+  );
+});
+
+// Actualizar placa/conductor de una asignación
+router.put("/asignaciones/:id/lote", (req, res) => {
+  const { id } = req.params;
+  const { vehiculo_placa, vehiculo_conductor } = req.body || {};
+  const sets = [];
+  const params = [];
+  if (vehiculo_placa !== undefined) { sets.push("vehiculo_placa = ?"); params.push((vehiculo_placa || "").toString().trim()); }
+  if (vehiculo_conductor !== undefined) { sets.push("vehiculo_conductor = ?"); params.push((vehiculo_conductor || "").toString().trim()); }
+  if (!sets.length) return res.status(400).json({ error: "Nada que actualizar" });
+  params.push(id);
+  db.run("UPDATE agro_asignaciones SET " + sets.join(", ") + " WHERE id = ?", params, function (err) {
+    if (err) return res.status(500).json({ error: "Error del servidor" });
+    if (this.changes === 0) return res.status(404).json({ error: "Asignación no encontrada" });
+    res.json({ message: "Asignación actualizada" });
+  });
+});
+
+// Actualizar kilos (total) de una ORDEN
+router.put("/ordenes/:id/total", (req, res) => {
+  const { id } = req.params;
+  const total = Number(req.body && req.body.total);
+  if (!isFinite(total) || total < 0) return res.status(400).json({ error: "Total inválido" });
+  db.run("UPDATE agro_ordenes SET total = ? WHERE id = ?", [total, id], function (err) {
+    if (err) return res.status(500).json({ error: "Error del servidor" });
+    if (this.changes === 0) return res.status(404).json({ error: "Orden no encontrada" });
+    res.json({ message: "Kilos actualizados", total });
+  });
 });
 
 // Actualizar observacion_servicio de una asignacion (legacy, por placa)
@@ -1835,7 +1905,7 @@ router.put("/ordenes/:id/historial", (req, res) => {
   });
 });
 
-function generarExcel(asignaciones, res) {
+function generarExcel(asignaciones, res, fechaArchivo) {
   // Recoger todos los distribuidor_nombre para buscar datos del cliente
   const clienteNombres = new Set();
   asignaciones.forEach(a => {
@@ -1846,7 +1916,7 @@ function generarExcel(asignaciones, res) {
 
   const nombres = Array.from(clienteNombres);
   if (!nombres.length) {
-    return enviarExcel(asignaciones, {}, res);
+    return enviarExcel(asignaciones, {}, res, fechaArchivo);
   }
 
   const placeholders = nombres.map(() => "?").join(",");
@@ -1860,12 +1930,12 @@ function generarExcel(asignaciones, res) {
         clienteMap[c.nombre] = c;
         if (c.codigo_concatenado) clienteMap[c.codigo_concatenado] = c;
       });
-      enviarExcel(asignaciones, clienteMap, res);
+      enviarExcel(asignaciones, clienteMap, res, fechaArchivo);
     }
   );
 }
 
-function enviarExcel(asignaciones, clienteMap, res) {
+function enviarExcel(asignaciones, clienteMap, res, fechaArchivo) {
   // Encabezados del formato Free Order
   const headers = [
     "Factura", "Kilos", "Unidades_2", "Unidades_3", "Prioridad",
@@ -1963,7 +2033,12 @@ function enviarExcel(asignaciones, clienteMap, res) {
   const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
 
   res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-  res.setHeader("Content-Disposition", "attachment; filename=Free_Order_Agropecuaria.xlsx");
+  const f = fechaArchivo ? new Date(fechaArchivo) : new Date();
+  const fechaValida = isNaN(f.getTime()) ? new Date() : f;
+  const dd = String(fechaValida.getDate()).padStart(2, "0");
+  const mm = String(fechaValida.getMonth() + 1).padStart(2, "0");
+  const yyyy = fechaValida.getFullYear();
+  res.setHeader("Content-Disposition", `attachment; filename=Free_Order_${dd}${mm}${yyyy}.xlsx`);
   res.send(buffer);
 }
 
@@ -2003,7 +2078,7 @@ router.get("/plantillas", (req, res) => {
   if (placa) { where.push("UPPER(placa) LIKE UPPER(?)"); params.push("%" + placa + "%"); }
   const sql = `
     SELECT consecutivo, placa, conductor, COALESCE(auxiliar,'') AS auxiliar, fecha_despacho, origen, hora_salida, ruta,
-           total_documentos, total_kilos, ordenes_json, created_at
+           total_documentos, total_kilos, ordenes_json, created_at, COALESCE(editado,0) AS editado
     FROM agro_plantillas_dl
     ${where.length ? "WHERE " + where.join(" AND ") : ""}
     ORDER BY consecutivo DESC
@@ -2022,6 +2097,93 @@ router.get("/plantillas/:consecutivo", (req, res) => {
     if (!row) return res.status(404).json({ error: "Plantilla no encontrada" });
     try { row.ordenes = JSON.parse(row.ordenes_json || "[]"); } catch { row.ordenes = []; }
     res.json(row);
+  });
+});
+
+// Editar una plantilla (placa, conductor y kilos por orden)
+router.put("/plantillas/:consecutivo", (req, res) => {
+  const { consecutivo } = req.params;
+  const { placa, conductor, auxiliar, ordenes } = req.body || {};
+  db.get(`SELECT ordenes_json FROM agro_plantillas_dl WHERE consecutivo = ?`, [consecutivo], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!row) return res.status(404).json({ error: "Plantilla no encontrada" });
+    let ordsActuales = [];
+    try { ordsActuales = JSON.parse(row.ordenes_json || "[]"); } catch { ordsActuales = []; }
+
+    // Mezclar los kilos editados (por numero_orden) si llegan
+    let ords = ordsActuales;
+    if (Array.isArray(ordenes)) {
+      const mapKilos = new Map();
+      ordenes.forEach(o => { if (o && o.numero_orden != null) mapKilos.set(String(o.numero_orden), Number(o.total)); });
+      ords = ordsActuales.map(o => {
+        const k = mapKilos.get(String(o.numero_orden));
+        return (k != null && isFinite(k)) ? { ...o, total: k } : o;
+      });
+    }
+
+    const totalKilos = ords.reduce((s, o) => s + (Number(o.total) || 0), 0);
+    const totalDoctos = ords.length;
+
+    const sets = ["ordenes_json = ?", "total_kilos = ?", "total_documentos = ?", "editado = 1"];
+    const params = [JSON.stringify(ords), totalKilos, totalDoctos];
+    if (placa !== undefined) { sets.push("placa = ?"); params.push((placa || "").toString().trim()); }
+    if (conductor !== undefined) { sets.push("conductor = ?"); params.push((conductor || "").toString().trim()); }
+    if (auxiliar !== undefined) { sets.push("auxiliar = ?"); params.push((auxiliar || "").toString().trim()); }
+    params.push(consecutivo);
+
+    db.run(`UPDATE agro_plantillas_dl SET ${sets.join(", ")} WHERE consecutivo = ?`, params, function (e2) {
+      if (e2) return res.status(500).json({ error: e2.message });
+      res.json({ message: "Plantilla actualizada", total_kilos: totalKilos, total_documentos: totalDoctos });
+    });
+  });
+});
+
+// Eliminar una orden de una plantilla y devolverla a la cola de órdenes por asignar
+router.delete("/plantillas/:consecutivo/orden", (req, res) => {
+  const { consecutivo } = req.params;
+  const ordenId = (req.body && (req.body.orden_id != null ? req.body.orden_id : undefined));
+  const numeroOrden = (req.body && req.body.numero_orden != null) ? String(req.body.numero_orden) : undefined;
+  if (ordenId == null && numeroOrden == null) return res.status(400).json({ error: "Falta orden_id o numero_orden" });
+
+  db.get(`SELECT ordenes_json FROM agro_plantillas_dl WHERE consecutivo = ?`, [consecutivo], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!row) return res.status(404).json({ error: "Plantilla no encontrada" });
+    let ords = [];
+    try { ords = JSON.parse(row.ordenes_json || "[]"); } catch { ords = []; }
+
+    const coincide = (o) => {
+      if (ordenId != null && o.orden_id != null) return String(o.orden_id) === String(ordenId);
+      if (numeroOrden != null) return String(o.numero_orden) === numeroOrden;
+      return false;
+    };
+    const restantes = ords.filter(o => !coincide(o));
+    if (restantes.length === ords.length) return res.status(404).json({ error: "Orden no encontrada en la plantilla" });
+
+    const totalKilos = restantes.reduce((s, o) => s + (Number(o.total) || 0), 0);
+    const totalDoctos = restantes.length;
+
+    db.run(
+      `UPDATE agro_plantillas_dl SET ordenes_json = ?, total_kilos = ?, total_documentos = ?, editado = 1 WHERE consecutivo = ?`,
+      [JSON.stringify(restantes), totalKilos, totalDoctos, consecutivo],
+      function (e2) {
+        if (e2) return res.status(500).json({ error: e2.message });
+
+        // Liberar la orden: quitarla de cualquier asignación para que vuelva a estar disponible
+        const liberar = (oid) => db.run("DELETE FROM agro_asignacion_ordenes WHERE orden_id = ?", [oid], () => {
+          res.json({ message: "Orden eliminada y liberada", total_kilos: totalKilos, total_documentos: totalDoctos });
+        });
+
+        if (ordenId != null) {
+          liberar(ordenId);
+        } else {
+          // Resolver el id por numero_orden
+          db.get("SELECT id FROM agro_ordenes WHERE numero_orden = ?", [numeroOrden], (e3, r3) => {
+            if (e3 || !r3) return res.json({ message: "Orden eliminada de la plantilla", total_kilos: totalKilos, total_documentos: totalDoctos });
+            liberar(r3.id);
+          });
+        }
+      }
+    );
   });
 });
 

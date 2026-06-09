@@ -410,8 +410,9 @@ h4 { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
   padding-right: 32px;
 }
 
-.form-group { display: flex; flex-direction: column; gap: 6px; }
-.form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-bottom: 14px; }
+.form-row .form-group { margin-bottom: 0; }
 @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
 .label {
   font-size: 13px;
@@ -528,9 +529,16 @@ h4 { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
   display: flex;
   gap: 4px;
   border-bottom: 1px solid var(--border);
-  margin-bottom: 24px;
   overflow-x: auto;
   scrollbar-width: thin;
+  position: sticky;
+  top: 56px;
+  z-index: 30;
+  background: var(--background);
+  padding-top: 16px;
+  padding-bottom: 0;
+  margin-bottom: 16px;
+  box-shadow: 0 6px 6px -6px rgba(0,0,0,0.08);
 }
 .tab {
   padding: 10px 14px;
@@ -581,6 +589,45 @@ h4 { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
 .table tbody tr:last-child td { border-bottom: none; }
 .table tbody tr:hover { background: var(--muted); }
 
+/* -------------------- Separadores verticales (solo visual) -------------------- */
+/* Aplican a cualquier tabla envuelta en .table-wrapper, incluso si no usa la clase .table */
+.table-wrapper table { border-collapse: collapse; width: 100%; font-size: 13px; table-layout: auto; }
+.table-wrapper table thead th,
+.table-wrapper table tbody td {
+  padding: 8px 10px;
+  border-right: 1px solid var(--border);
+  vertical-align: middle;
+}
+/* Por defecto las celdas no se parten; las columnas que quieran envolver deben usar style="white-space:normal" */
+.table-wrapper table thead th,
+.table-wrapper table tbody td {
+  white-space: nowrap;
+}
+.table-wrapper table thead th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted-foreground);
+  background: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+.table-wrapper table tbody td {
+  color: var(--foreground);
+}
+.table-wrapper table thead th:last-child,
+.table-wrapper table tbody td:last-child {
+  border-right: none;
+}
+.table-wrapper table tbody tr td {
+  border-bottom: 1px solid var(--border);
+}
+.table-wrapper table tbody tr:last-child td {
+  border-bottom: none;
+}
+.table-wrapper table tbody tr:hover { background: var(--muted); }
+
 /* -------------------- Modales -------------------- */
 .modal-overlay {
   position: fixed; inset: 0;
@@ -603,7 +650,10 @@ h4 { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
   max-height: 92vh;
   overflow: auto;
   animation: modalIn 180ms ease;
+  padding: 24px 28px;
 }
+.modal:has(> .modal-header),
+.modal:has(> .modal-body) { padding: 0; }
 .modal-header {
   display: flex;
   align-items: center;
@@ -1120,47 +1170,48 @@ h4 { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
   color: var(--muted-foreground);
 }
 
-/* Bloque de usuario flotante abajo-izquierda (módulos sin sidebar) */
+/* Bloque de usuario flotante debajo de la top-bar (derecha) */
 .user-bottom-left {
   position: fixed;
-  left: 16px;
-  bottom: 16px;
+  right: 16px;
+  top: 70px;
   z-index: 90;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: 5px;
+  padding: 2px 5px;
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 7px;
   box-shadow: 0 4px 14px rgba(0,0,0,0.06);
-  max-width: 280px;
+  width: max-content;
+  max-width: 200px;
 }
 .user-bottom-left .avatar {
-  width: 36px; height: 36px;
+  width: 16px; height: 16px;
   border-radius: var(--radius-full);
   background: var(--brand);
   display: grid; place-items: center;
-  font-size: 13px; font-weight: 700; color: #fff;
+  font-size: 8px; font-weight: 700; color: #fff;
   flex: none; text-transform: uppercase;
 }
-.user-bottom-left .user-info { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; flex: 1; }
+.user-bottom-left .user-info { display: flex; flex-direction: column; line-height: 1.05; min-width: 0; flex: none; }
 .user-bottom-left .user-name {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--foreground);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 160px;
+  max-width: 130px;
 }
 .user-bottom-left .user-role {
-  font-size: 11px;
+  font-size: 9px;
   color: var(--muted-foreground);
 }
 @media (max-width: 640px) {
-  .user-bottom-left { left: 8px; bottom: 8px; padding: 8px 10px; }
-  .user-bottom-left .user-name { max-width: 110px; }
+  .user-bottom-left { right: 8px; top: 62px; padding: 2px 5px; }
+  .user-bottom-left .user-name { max-width: 90px; }
 }
 
 .btn-volver-modulos {

@@ -9,10 +9,21 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/assets/design-system.css?v=3" />
+  <link rel="stylesheet" href="/assets/design-system.css?v=23" />
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
 /* Page-specific overrides for distribucion-agropecuaria.html */
+
+/* Barra de desplazamiento vertical en las tablas de cada pestaña (igual que en run-errands) */
+.tab-panel .table-wrapper {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.tab-panel .table-wrapper table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
 
 /* Centrar el contenido de los paneles y la barra de tabs */
 .tab-panel {
@@ -868,6 +879,44 @@
   </div>
 </div>
 
+<!-- ==================== MODAL: EDITAR LOTE DEL HISTORIAL ==================== -->
+<div class="modal-overlay" id="modalEditarLote">
+  <div class="modal" style="max-width:900px;">
+    <h3>✏️ Editar Lote Exportado</h3>
+    <p id="editarLoteFecha" style="color:var(--muted-foreground);font-size:0.85rem;margin-bottom:1rem;"></p>
+    <div id="editarLoteBody" style="max-height:60vh;overflow-y:auto;"></div>
+    <div id="editarLoteError" style="display:none;color:#e74c3c;font-size:0.85rem;margin:0.5rem 0;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="cerrarModalEditarLote()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarLoteHistorial()">Guardar Cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODAL: EDITAR PLANTILLA D.L. ==================== -->
+<div class="modal-overlay" id="modalEditarPlantilla">
+  <div class="modal" style="max-width:900px;">
+    <h3>✏️ Editar Plantilla D.L.</h3>
+    <p id="editarPlantFecha" style="color:var(--muted-foreground);font-size:0.85rem;margin-bottom:1rem;"></p>
+    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.75rem;">
+      <div class="form-group" style="flex:1;min-width:160px;margin:0;">
+        <label style="font-size:0.8rem;">Placa</label>
+        <select id="editarPlantPlaca" onchange="onCambioPlacaPlantilla()" style="width:100%;padding:0.3rem 0.5rem;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--foreground);"></select>
+      </div>
+      <div class="form-group" style="flex:2;min-width:200px;margin:0;">
+        <label style="font-size:0.8rem;">Auxiliar</label>
+        <select id="editarPlantAuxiliar" style="width:100%;padding:0.3rem 0.5rem;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--foreground);"></select>
+      </div>
+    </div>
+    <div id="editarPlantBody" style="max-height:50vh;overflow-y:auto;"></div>
+    <div id="editarPlantError" style="display:none;color:#e74c3c;font-size:0.85rem;margin:0.5rem 0;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="cerrarModalEditarPlantilla()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarPlantillaEditada()">Guardar Cambios</button>
+    </div>
+  </div>
+</div>
+
 <!-- ==================== MODAL: BORRAR TODAS LAS ÓRDENES ==================== -->
 <div class="modal-overlay" id="modalBorrarTodas">
   <div class="modal" style="max-width:450px;">
@@ -971,15 +1020,19 @@
 
   // Mostrar usuario logueado en la barra superior
   const username = localStorage.getItem('username') || '';
+  const _cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : '';
+  const _pn = _cap((localStorage.getItem('userNombres') || '').trim().split(/\s+/)[0] || '');
+  const _pa = _cap((localStorage.getItem('userApellidos') || '').trim().split(/\s+/)[0] || '');
+  const nombreMostrar = (_pn + ' ' + _pa).trim() || username || 'invitado';
   const elName = document.getElementById('topUserName');
   const elAvatar = document.getElementById('topUserAvatar');
   const elRole = document.getElementById('topUserRole');
-  if (elName) elName.textContent = username || 'invitado';
-  if (elAvatar) elAvatar.textContent = (username || 'U').charAt(0).toUpperCase();
+  if (elName) elName.textContent = nombreMostrar;
+  if (elAvatar) elAvatar.textContent = (nombreMostrar || 'U').charAt(0).toUpperCase();
   if (elRole) elRole.textContent = rol === 'administrador' ? 'Administrador' : 'Usuario Estándar';
   const btnLogoutTop = document.getElementById('btnLogout');
   if (btnLogoutTop) btnLogoutTop.addEventListener('click', () => {
-    ['username','userRol','userPermisos','userModulos','userSubmodulos'].forEach(k => localStorage.removeItem(k));
+    ['username','userRol','userNombres','userApellidos','userPermisos','userModulos','userSubmodulos'].forEach(k => localStorage.removeItem(k));
     window.location.href = '/login.html';
   });
 
@@ -2546,7 +2599,7 @@ async function cargarHistorialAsignaciones() {
           <td style="text-align:center;">${g.total_asignaciones || 0}</td>
           <td style="text-align:center;">${g.total_ordenes || 0}</td>
           <td style="text-align:right;">${formatMoney(g.total_kilos || 0)} kg</td>
-          <td><button class="btn btn-secondary btn-sm" onclick="reimprimirExcelLote('${fechaIso}')" title="Reimprimir / Re-exportar Excel">🖨 Reimprimir Excel</button></td>
+          <td><button class="btn btn-secondary btn-sm" onclick="reimprimirExcelLote('${fechaIso}')" title="Descargar Excel">⬇️ Descargar</button></td>
         </tr>`;
     }).join("");
   } catch (e) {
@@ -2565,6 +2618,97 @@ function reimprimirExcelLote(fechaExportacionEnc) {
   }
   iframe.src = API + "/asignaciones/historial/exportar-excel?fecha_exportacion=" + fechaExportacionEnc;
   toast("Generando Excel del lote...", "success");
+}
+
+// ===== Editar lote del historial =====
+let _loteEditando = { fechaEnc: null, asignaciones: [] };
+
+async function editarLoteHistorial(fechaExportacionEnc) {
+  const modal = document.getElementById("modalEditarLote");
+  const body = document.getElementById("editarLoteBody");
+  const errEl = document.getElementById("editarLoteError");
+  const fechaLbl = document.getElementById("editarLoteFecha");
+  errEl.style.display = "none";
+  body.innerHTML = '<div class="empty-state">Cargando...</div>';
+  modal.classList.add("active");
+  try {
+    const res = await fetch(API + "/asignaciones/lote?fecha_exportacion=" + fechaExportacionEnc);
+    if (!res.ok) throw new Error("http " + res.status);
+    const asignaciones = await res.json();
+    _loteEditando = { fechaEnc: fechaExportacionEnc, asignaciones };
+    const f = new Date(decodeURIComponent(fechaExportacionEnc));
+    fechaLbl.textContent = isNaN(f.getTime()) ? "" : "Exportado: " + f.toLocaleString("es-CO", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" });
+    body.innerHTML = asignaciones.map(a => {
+      const filas = (a.ordenes || []).map(o => `
+        <tr>
+          <td>${o.numero_orden || "—"}</td>
+          <td>${o.distribuidor_nombre || "—"}</td>
+          <td style="text-align:right;"><input type="number" min="0" step="0.01" value="${o.total != null ? o.total : 0}" data-orden-id="${o.orden_id}" class="lote-kilos-input" style="width:110px;text-align:right;padding:0.25rem 0.4rem;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--foreground);" /></td>
+        </tr>`).join("");
+      return `
+        <div style="border:1px solid var(--border);border-radius:8px;padding:0.75rem;margin-bottom:0.75rem;" data-asig-id="${a.id}">
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.5rem;">
+            <div class="form-group" style="flex:1;min-width:160px;margin:0;">
+              <label style="font-size:0.8rem;">Placa</label>
+              <input type="text" value="${a.vehiculo_placa || ""}" data-field="placa" style="width:100%;padding:0.3rem 0.5rem;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--foreground);" />
+            </div>
+            <div class="form-group" style="flex:2;min-width:200px;margin:0;">
+              <label style="font-size:0.8rem;">Conductor</label>
+              <input type="text" value="${a.vehiculo_conductor || ""}" data-field="conductor" style="width:100%;padding:0.3rem 0.5rem;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--foreground);" />
+            </div>
+          </div>
+          <table style="width:100%;font-size:0.85rem;">
+            <thead><tr><th>No. Orden</th><th>Destino</th><th style="text-align:right;">Kilos</th></tr></thead>
+            <tbody>${filas || '<tr><td colspan="3" style="color:var(--muted-foreground);">Sin órdenes</td></tr>'}</tbody>
+          </table>
+        </div>`;
+    }).join("");
+  } catch (e) {
+    console.error(e);
+    body.innerHTML = '<div class="empty-state">Error al cargar el lote</div>';
+  }
+}
+
+function cerrarModalEditarLote() {
+  document.getElementById("modalEditarLote").classList.remove("active");
+  _loteEditando = { fechaEnc: null, asignaciones: [] };
+}
+
+async function guardarLoteHistorial() {
+  const errEl = document.getElementById("editarLoteError");
+  errEl.style.display = "none";
+  const bloques = Array.from(document.querySelectorAll("#editarLoteBody [data-asig-id]"));
+  const peticiones = [];
+  bloques.forEach(bloque => {
+    const asigId = bloque.getAttribute("data-asig-id");
+    const placa = bloque.querySelector('[data-field="placa"]').value.trim();
+    const conductor = bloque.querySelector('[data-field="conductor"]').value.trim();
+    peticiones.push(fetch(API + "/asignaciones/" + asigId + "/lote", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ vehiculo_placa: placa, vehiculo_conductor: conductor })
+    }));
+    bloque.querySelectorAll(".lote-kilos-input").forEach(inp => {
+      const ordenId = inp.getAttribute("data-orden-id");
+      if (!ordenId) return;
+      peticiones.push(fetch(API + "/ordenes/" + ordenId + "/total", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ total: Number(inp.value) || 0 })
+      }));
+    });
+  });
+  try {
+    const resps = await Promise.all(peticiones);
+    const fallo = resps.find(r => !r.ok);
+    if (fallo) throw new Error("Algún cambio no se guardó");
+    toast("Lote actualizado", "success");
+    cerrarModalEditarLote();
+    if (typeof cargarHistorialAsignaciones === "function") cargarHistorialAsignaciones();
+  } catch (e) {
+    errEl.textContent = e.message || "Error al guardar";
+    errEl.style.display = "block";
+  }
 }
 
 // ========== TRIPULACIÓN ==========
@@ -2916,12 +3060,19 @@ async function cargarVehiculos() {
       .sort((a, b) =>
         ((a.nombres || "") + " " + (a.apellidos || "")).localeCompare((b.nombres || "") + " " + (b.apellidos || ""))
       );
+    // Mapa de conductores ya asignados a un vehículo: tripulacion_id -> placa
+    const asignados = {};
+    data.forEach(v => { if (v.tripulacion_id) asignados[String(v.tripulacion_id)] = v.placa; });
     tbody.innerHTML = data.map((v, i) => {
       const options = ['<option value="">— Sin asignar —</option>']
         .concat(tripulantesOrdenados.map(t => {
           const full = ((t.nombres || "") + " " + (t.apellidos || "")).trim();
           const sel = String(t.id) === String(v.tripulacion_id) ? " selected" : "";
-          return `<option value="${t.id}"${sel}>${full}${t.cedula ? " — " + t.cedula : ""}</option>`;
+          const placaAsignada = asignados[String(t.id)];
+          const ocupado = placaAsignada && String(t.id) !== String(v.tripulacion_id);
+          const dis = ocupado ? " disabled" : "";
+          const etiqueta = ocupado ? full + " (en " + placaAsignada + ")" : full;
+          return `<option value="${t.id}"${sel}${dis}>${etiqueta}${t.cedula ? " — " + t.cedula : ""}</option>`;
         }))
         .join("");
       const tieneConductor = !!v.tripulacion_id;
@@ -3872,7 +4023,7 @@ async function cargarHistorialPlantillas() {
     }
     tbody.innerHTML = rows.map(r => `
       <tr>
-        <td style="text-align:center;font-weight:700;color:#a78bfa;">${String(r.consecutivo).padStart(5,"0")}</td>
+        <td style="text-align:center;font-weight:700;color:#a78bfa;">${String(r.consecutivo).padStart(5,"0")}${Number(r.editado) ? '<div style="font-size:0.7rem;font-weight:600;color:#f39c12;margin-top:2px;">✏️ editado</div>' : ''}</td>
         <td>${r.created_at || ""}</td>
         <td style="font-weight:700;">${r.placa || ""}</td>
         <td>${r.conductor || ""}</td>
@@ -3882,13 +4033,141 @@ async function cargarHistorialPlantillas() {
         <td style="text-align:center;">${r.total_documentos || 0}</td>
         <td style="text-align:right;">${(Number(r.total_kilos)||0).toLocaleString("es-CO")}</td>
         <td style="text-align:center;">
-          <button class="btn btn-secondary btn-sm" onclick="reimprimirPlantilla(${r.consecutivo})">🖨 Reimprimir</button>
-          <button class="btn btn-secondary btn-sm" onclick="reimprimirPlantillaTransportador(${r.consecutivo})" title="Formato Transportador">🖨 Reimprimir T</button>
+          <button class="btn btn-secondary btn-sm" onclick="reimprimirPlantilla(${r.consecutivo})" title="Reimprimir">🖨 R.I</button>
+          <button class="btn btn-secondary btn-sm" onclick="reimprimirPlantillaTransportador(${r.consecutivo})" title="Reimprimir Transportador">🖨 R.I.T</button>
+          <button class="btn btn-secondary btn-sm" onclick="editarPlantilla(${r.consecutivo})" title="Editar plantilla">✏️ Editar</button>
         </td>
       </tr>
     `).join("");
   } catch (e) {
     tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state">Error al cargar historial</div></td></tr>`;
+  }
+}
+
+// ===== Editar plantilla del historial =====
+let _plantillaEditando = null;
+
+async function editarPlantilla(consecutivo) {
+  const modal = document.getElementById("modalEditarPlantilla");
+  const body = document.getElementById("editarPlantBody");
+  const errEl = document.getElementById("editarPlantError");
+  errEl.style.display = "none";
+  body.innerHTML = '<div class="empty-state">Cargando...</div>';
+  modal.classList.add("active");
+  try {
+    // Asegurar caches de vehículos y tripulación
+    if (!vehiculosCache.length) {
+      try { const rv = await fetch(API + "/vehiculos"); const todos = await rv.json(); vehiculosCache = todos.filter(v => v.disponibilidad === 'Disponible'); } catch (_) {}
+    }
+    if (!tripulacionCache.length) {
+      try { const rt = await fetch(API + "/tripulacion"); tripulacionCache = await rt.json(); } catch (_) {}
+    }
+    const res = await fetch(API + "/plantillas/" + consecutivo);
+    if (!res.ok) throw new Error("Plantilla no encontrada");
+    const p = await res.json();
+    _plantillaEditando = { consecutivo };
+    document.getElementById("editarPlantFecha").textContent =
+      "Consecutivo " + String(consecutivo).padStart(5, "0") + (p.created_at ? " · " + p.created_at : "");
+
+    // Desplegable de Placa (vehículos disponibles + la placa actual aunque no esté disponible)
+    const selPlaca = document.getElementById("editarPlantPlaca");
+    const placaActual = (p.placa || "").trim();
+    let opciones = vehiculosCache.slice();
+    if (placaActual && !opciones.some(v => (v.placa || "").trim() === placaActual)) {
+      opciones = [{ placa: placaActual, conductor: p.conductor || "" }].concat(opciones);
+    }
+    selPlaca.innerHTML = '<option value="">-- Seleccione vehículo --</option>' +
+      opciones.map(v => `<option value="${(v.placa||'').replace(/"/g,'&quot;')}" data-conductor="${(v.conductor||'').replace(/"/g,'&quot;')}">${v.placa}${v.conductor ? ' — ' + v.conductor : ''}</option>`).join("");
+    selPlaca.value = placaActual;
+    _plantillaEditando.conductor = p.conductor || "";
+
+    // Desplegable de Auxiliar
+    const selAux = document.getElementById("editarPlantAuxiliar");
+    const auxs = (tripulacionCache || [])
+      .filter(t => (t.rol || "") === "Auxiliar de ruta")
+      .sort((a,b) => ((a.nombres||"")+" "+(a.apellidos||"")).localeCompare((b.nombres||"")+" "+(b.apellidos||"")));
+    const auxActual = (p.auxiliar || "").trim();
+    let auxNombres = auxs.map(t => ((t.nombres||"") + " " + (t.apellidos||"")).trim());
+    if (auxActual && !auxNombres.includes(auxActual)) auxNombres = [auxActual].concat(auxNombres);
+    selAux.innerHTML = '<option value="">— Sin auxiliar —</option>' +
+      auxNombres.map(n => `<option value="${n.replace(/"/g,'&quot;')}">${n}</option>`).join("");
+    selAux.value = auxActual;
+
+    const ords = Array.isArray(p.ordenes) ? p.ordenes : [];
+    const filas = ords.map(o => `
+      <tr data-orden-row="${o.numero_orden}">
+        <td>${o.numero_orden || "—"}</td>
+        <td>${o.distribuidor_nombre || ""}</td>
+        <td style="text-align:right;"><input type="number" min="0" step="0.01" value="${o.total != null ? o.total : 0}" data-orden="${o.numero_orden}" class="plant-kilos-input" style="width:110px;text-align:right;padding:0.25rem 0.4rem;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--foreground);" /></td>
+        <td style="text-align:center;"><button class="btn btn-danger btn-sm" title="Eliminar y devolver a órdenes" onclick="eliminarOrdenPlantilla('${(o.orden_id != null ? o.orden_id : '')}','${String(o.numero_orden).replace(/'/g,"\\'")}', this)" style="padding:0.2rem 0.45rem;">🗑️</button></td>
+      </tr>`).join("");
+    body.innerHTML = `
+      <table style="width:100%;font-size:0.85rem;">
+        <thead><tr><th>No. Orden</th><th>Destino</th><th style="text-align:right;">Kilos</th><th style="text-align:center;width:50px;">Quitar</th></tr></thead>
+        <tbody>${filas || '<tr><td colspan="4" style="color:var(--muted-foreground);">Sin órdenes</td></tr>'}</tbody>
+      </table>`;
+  } catch (e) {
+    console.error(e);
+    body.innerHTML = '<div class="empty-state">Error al cargar la plantilla</div>';
+  }
+}
+
+function onCambioPlacaPlantilla() {
+  const sel = document.getElementById("editarPlantPlaca");
+  const opt = sel.options[sel.selectedIndex];
+  const conductor = opt ? (opt.getAttribute("data-conductor") || "") : "";
+  if (_plantillaEditando) _plantillaEditando.conductor = conductor;
+}
+
+async function eliminarOrdenPlantilla(ordenId, numeroOrden, btn) {
+  if (!_plantillaEditando) return;
+  if (!confirm("¿Quitar la orden " + numeroOrden + " de la plantilla? Volverá a quedar disponible para asignar.")) return;
+  try {
+    const res = await fetch(API + "/plantillas/" + _plantillaEditando.consecutivo + "/orden", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orden_id: ordenId || undefined, numero_orden: numeroOrden })
+    });
+    if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || "No se pudo eliminar"); }
+    const fila = btn.closest("tr");
+    if (fila) fila.remove();
+    toast("Orden devuelta a la cola de asignación", "success");
+    cargarHistorialPlantillas();
+    if (typeof cargarOrdenes === "function") cargarOrdenes();
+  } catch (e) {
+    toast(e.message || "Error al eliminar", "error");
+  }
+}
+
+function cerrarModalEditarPlantilla() {
+  document.getElementById("modalEditarPlantilla").classList.remove("active");
+  _plantillaEditando = null;
+}
+
+async function guardarPlantillaEditada() {
+  if (!_plantillaEditando) return;
+  const errEl = document.getElementById("editarPlantError");
+  errEl.style.display = "none";
+  const placa = document.getElementById("editarPlantPlaca").value.trim();
+  const conductor = (_plantillaEditando && _plantillaEditando.conductor) ? _plantillaEditando.conductor.trim() : "";
+  const auxiliar = document.getElementById("editarPlantAuxiliar").value.trim();
+  const ordenes = Array.from(document.querySelectorAll("#editarPlantBody .plant-kilos-input")).map(inp => ({
+    numero_orden: inp.getAttribute("data-orden"),
+    total: Number(inp.value) || 0
+  }));
+  try {
+    const res = await fetch(API + "/plantillas/" + _plantillaEditando.consecutivo, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ placa, conductor, auxiliar, ordenes })
+    });
+    if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || "No se pudo guardar"); }
+    toast("Plantilla actualizada", "success");
+    cerrarModalEditarPlantilla();
+    cargarHistorialPlantillas();
+  } catch (e) {
+    errEl.textContent = e.message || "Error al guardar";
+    errEl.style.display = "block";
   }
 }
 
@@ -4043,14 +4322,17 @@ async function crearPlantillaPlaca() {
     .then(r => r.json())
     .then(data => {
       if (data.error) { toast("Error: " + data.error, "error"); return; }
-      _generarPlantillaHTML({
+      const optsPlantilla = {
         placa, conductor, auxiliar, fecha, ordenes,
         origen, horaSalida, ruta,
         kmsRecorridos, tiempoRecorrido,
         municipiosRecorre, fechaHoraLlegada,
         totalDoctos, totalKilos,
         consecutivo: data.consecutivo || "00001"
-      });
+      };
+      _generarPlantillaHTML(optsPlantilla);
+      // Generar también la versión Transportador ("Imprimir T")
+      _generarPlantillaTransportadorHTML(optsPlantilla);
     })
     .catch(err => {
       console.error(err);
