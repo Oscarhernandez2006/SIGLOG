@@ -1,3 +1,7 @@
 .env
 node_modules
 boletas.db
+.env.local.backup
+response.json
+server.stdout.log
+server.stderr.log
