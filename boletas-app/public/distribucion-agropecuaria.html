@@ -4603,8 +4603,18 @@ function _generarPlantillaHTML(opts) {
         <td class="lbl center" style="width:50%;">NOMBRE Y SELLO QUIEN DESPACHA</td>
       </tr>
       <tr>
-        <td class="small" style="height:60px;vertical-align:top;padding:4px;">Recibo a conformidad los Puntos de Ventas y las cantidades descritas en esta planilla, la cual consolida el total de los documentos anexos. El costo económico de las diferencias que se presenten al momento del retorno, estarán bajo mi responsabilidad y asumiré de manera solidaria las diferencias que se presenten.</td>
-        <td class="small" style="height:60px;vertical-align:top;padding:4px;">Confirmo la entrega completa de los Puntos de Ventas y las cantidades descritas en esta planilla, la cual consolida el total de los documentos anexos, que fueron certificados en presencia del Sr. Transportador al momento de la entrega.</td>
+        <td class="small" style="height:60px;vertical-align:top;padding:0;">
+          <table style="width:100%;height:100%;border-collapse:collapse;"><tr>
+            <td style="width:45%;border-right:1px solid #000;vertical-align:bottom;text-align:left;padding:4px;">Firma:________________</td>
+            <td style="width:55%;vertical-align:top;padding:4px;font-size:6pt;">Recibo a conformidad los Puntos de Ventas y las cantidades descritas en esta planilla, la cual consolida el total de los documentos anexos. El costo económico de las diferencias que se presenten al momento del retorno, estarán bajo mi responsabilidad y asumiré de manera solidaria las diferencias que se presenten.</td>
+          </tr></table>
+        </td>
+        <td class="small" style="height:60px;vertical-align:top;padding:0;">
+          <table style="width:100%;height:100%;border-collapse:collapse;"><tr>
+            <td style="width:45%;border-right:1px solid #000;vertical-align:bottom;text-align:left;padding:4px;">Firma:________________</td>
+            <td style="width:55%;vertical-align:top;padding:4px;font-size:6pt;">Confirmo la entrega completa de los Puntos de Ventas y las cantidades descritas en esta planilla, la cual consolida el total de los documentos anexos, que fueron certificados en presencia del Sr. Transportador al momento de la entrega.</td>
+          </tr></table>
+        </td>
       </tr>
     </table></div>
 
@@ -4612,11 +4622,11 @@ function _generarPlantillaHTML(opts) {
 
     <div class="tbl-wrap" style="margin-top:8px;"><table>
       <tr><td class="lbl center" colspan="5">DATOS GENERALES DE LA PLANIFICACION DE RUTA</td></tr>
-      <tr><td class="lbl center" style="width:12%;">Verificado</td><td style="width:0.9cm;">&nbsp;</td><td>Guías de Transporte para el Despacho.</td><td class="lbl center" style="width:22%;">Kms Recorridos</td><td style="width:28%;" class="center">${kmsRecorridos ? Number(kmsRecorridos).toLocaleString("es-CO") : "&nbsp;"}</td></tr>
-      <tr><td class="lbl center">Verificado</td><td>&nbsp;</td><td>Vigencia Licencia de Conducción.</td><td class="lbl center">Kms Pavimentados</td><td class="center">${kmsRecorridos ? Number(kmsRecorridos).toLocaleString("es-CO") : "&nbsp;"}</td></tr>
-      <tr><td class="lbl center">Verificado</td><td>&nbsp;</td><td>Vigencia del SOAT.</td><td class="lbl center">Tiempo del Recorrido</td><td class="center">${tiempoRecorrido || "&nbsp;"}</td></tr>
-      <tr><td class="lbl center">Verificado</td><td>&nbsp;</td><td>Vigencia Tecnomecanica.</td><td class="lbl center">Fecha y Hora de llegada</td><td class="center">${fechaHoraLlegada || "&nbsp;"}</td></tr>
-      <tr><td class="lbl center">Verificado</td><td>&nbsp;</td><td>Vigencia Certificado INVIMA.</td><td class="lbl center">Municipios que Recorre</td><td class="center" style="font-size:8pt;">${(municipiosRecorre || "&nbsp;").replace(/</g,"&lt;")}</td></tr>
+      <tr><td class="lbl center" style="width:12%;">Verificado</td><td style="width:0.9cm;">&nbsp;</td><td>Guías de Transporte para el Despacho.</td><td class="lbl" style="width:22%;text-align:left;">Kms Recorridos</td><td style="width:28%;" class="center">${kmsRecorridos ? Number(kmsRecorridos).toLocaleString("es-CO") : "&nbsp;"}</td></tr>
+      <tr><td class="lbl center">Verificado</td><td>&nbsp;</td><td>Vigencia Licencia de Conducción.</td><td class="lbl" style="text-align:left;">Kms Pavimentados</td><td class="center">${kmsRecorridos ? Number(kmsRecorridos).toLocaleString("es-CO") : "&nbsp;"}</td></tr>
+      <tr><td class="lbl center">Verificado</td><td>&nbsp;</td><td>Vigencia del SOAT.</td><td class="lbl" style="text-align:left;">Tiempo del Recorrido</td><td class="center">${tiempoRecorrido || "&nbsp;"}</td></tr>
+      <tr><td class="lbl center">Verificado</td><td>&nbsp;</td><td>Vigencia Tecnomecanica.</td><td class="lbl" style="text-align:left;">Fecha y Hora de llegada</td><td class="center">${fechaHoraLlegada || "&nbsp;"}</td></tr>
+      <tr><td class="lbl center">Verificado</td><td>&nbsp;</td><td>Vigencia Certificado INVIMA.</td><td class="lbl" style="text-align:left;">Municipios que Recorre</td><td class="center" style="font-size:8pt;">${(municipiosRecorre || "&nbsp;").replace(/</g,"&lt;")}</td></tr>
       <tr><td class="lbl center">Verificado</td><td>&nbsp;</td><td>Tarjeta de Propiedad Vehiculo.</td><td colspan="2">&nbsp;</td></tr>
       <tr><td class="lbl center">Verificado</td><td>&nbsp;</td><td>ARL Impresa de la Tripulacion.</td><td colspan="2">&nbsp;</td></tr>
       <tr><td class="lbl center">Verificado</td><td>&nbsp;</td><td>Carnet Impreso Manipulador de Alimentos de Auxiliar.</td><td colspan="2">&nbsp;</td></tr>
@@ -4810,31 +4820,35 @@ function _generarPlantillaTransportadorHTML(opts) {
 
     <div class="tbl-wrap"><table>
       <tr>
-        <td class="lbl center" style="width:16.66%;">Inicio Cargue:</td>
+        <td class="lbl" style="width:16.66%;text-align:right;">Inicio Cargue:</td>
         <td style="width:16.66%;">&nbsp;</td>
-        <td class="lbl center" style="width:16.66%;">Temp °C Inicio del Cargue:</td>
+        <td class="lbl" style="width:16.66%;text-align:right;white-space:nowrap;">Temp °C Inicio del Cargue:</td>
         <td style="width:16.66%;">&nbsp;</td>
-        <td class="lbl center" style="width:16.66%;">Kilómetros Inicial:</td>
+        <td class="lbl" style="width:16.66%;text-align:right;">Kilómetros Inicial:</td>
         <td style="width:16.66%;">&nbsp;</td>
       </tr>
       <tr>
-        <td class="lbl center">Final Cargue:</td>
+        <td class="lbl" style="text-align:right;">Final Cargue:</td>
         <td>&nbsp;</td>
-        <td class="lbl center">Temp °C Fin del Cargue:</td>
+        <td class="lbl" style="text-align:right;">Temp °C Fin del Cargue:</td>
         <td>&nbsp;</td>
-        <td class="lbl center">Kilómetros Retorno:</td>
+        <td class="lbl" style="text-align:right;">Kilómetros Retorno:</td>
         <td>&nbsp;</td>
       </tr>
     </table></div>
 
     <div class="tbl-wrap"><table>
-      <tr><td class="seccion-tit">PROCEDIMIENTO DE CONTROL Y RETORNO DE DOCUMENTOS</td></tr>
-      <tr><td class="small" style="padding:3px 6px;line-height:1.2;">
-        <b>1-</b> Antes de salir de Planta a ruta, revisar el numero total de documentos recibidos.<br/>
-        <b>2-</b> Al entregar en los PDV revisar que les devuelvan el total de documentos entregados, firmados y sellados.<br/>
-        <b>3-</b> Si hay devolución se debe entregar al área indicada y hacer firmar la planilla de recibido del documento.<br/>
-        <b>4-</b> Los documentos se deben entregar en su totalidad a la persona encargada y mostrarle los que tienen dinero por cancelar.
-      </td></tr>
+      <tr><td class="seccion-tit" colspan="2">PROCEDIMIENTO DE CONTROL Y RETORNO DE DOCUMENTOS</td></tr>
+      <tr>
+        <td class="small" style="width:50%;padding:3px 6px;line-height:1.1;vertical-align:top;font-size:4.5pt;">
+          <b>1-</b> Antes de salir de Planta a ruta, revisar el numero total de documentos recibidos.<br/>
+          <b>2-</b> Al entregar en los PDV revisar que les devuelvan el total de documentos entregados, firmados y sellados.
+        </td>
+        <td class="small" style="width:50%;padding:3px 6px;line-height:1.1;vertical-align:top;font-size:4.5pt;">
+          <b>3-</b> Si hay devolución se debe entregar al área indicada y hacer firmar la planilla de recibido del documento.<br/>
+          <b>4-</b> Los documentos se deben entregar en su totalidad a la persona encargada y mostrarle los que tienen dinero por cancelar.
+        </td>
+      </tr>
     </table></div>
 
     <div class="tbl-wrap"><table>
@@ -4856,93 +4870,97 @@ function _generarPlantillaTransportadorHTML(opts) {
     </table></div>
 
     <div class="tbl-wrap"><table>
-      <tr><td class="seccion-tit" colspan="4">RECOMENDACIONES EN RUTA</td></tr>
-      <tr>
-        <td class="lbl center" style="width:25%;font-size:6pt;padding:1px 2px;">EN VIAS DESTAPADAS Y CARRETEABLES</td>
-        <td class="lbl center" style="width:25%;font-size:6pt;padding:1px 2px;">EN ZONAS URBANAS</td>
-        <td class="lbl center" style="width:25%;font-size:6pt;padding:1px 2px;">EN VIAS NACIONALES</td>
-        <td class="lbl center" style="width:25%;font-size:6pt;padding:1px 2px;">EN PRESENCIA DE CURVA</td>
-      </tr>
-      <tr>
-        <td class="small" style="vertical-align:top;line-height:1.1;font-size:5.5pt;padding:2px 3px;">
-          <b>1.</b> No sobrepase la velocidad de 30 km/h.<br/>
-          <b>2.</b> Evite adelantar vehículos ya que se reduce la visibilidad por el levantamiento de material particulado.<br/>
-          <b>3.</b> No se orille demasiado puede encunetarse o volcarse.
-        </td>
-        <td class="small" style="vertical-align:top;line-height:1.1;font-size:5.5pt;padding:2px 3px;">
-          <b>1.</b> Reduzca la velocidad.<br/>
-          <b>2.</b> Respete los cruces peatonales y señales de tránsito.<br/>
-          <b>3.</b> Ceda el paso.<br/>
-          <b>4.</b> Utilice las señales luminosas y sonoras para avisar sus movimientos.<br/>
-          <b>5.</b> No parquee en zona urbana.
-        </td>
-        <td class="small" style="vertical-align:top;line-height:1.1;font-size:5.5pt;padding:2px 3px;">
-          <b>1.</b> Mantenga una mirada lejana para tener una vista panorámica.<br/>
-          <b>2.</b> Respete la velocidad recomendada en los diferentes tramos de la vía.<br/>
-          <b>3.</b> No se estacione en puentes.<br/>
-          <b>4.</b> Mantenga una distancia mínima de 25 mts con otros vehículos.<br/>
-          <b>5.</b> Mueva los ojos permanentemente para evitar dormirse.<br/>
-          <b>6.</b> Este atento a la salida e ingreso de vehículos.<br/>
-          <b>7.</b> Revise los espejos retrovisores.<br/>
-          <b>8.</b> Informe con anticipación sus intenciones de girar o adelantar.
-        </td>
-        <td class="small" style="vertical-align:top;line-height:1.1;font-size:5.5pt;padding:2px 3px;">
-          <b>1.</b> Reduzca la velocidad antes de tomar las curvas.<br/>
-          <b>2.</b> En descensos no recaliente los frenos utilice el freno de motor.<br/>
-          <b>3.</b> Procure no tomar las curvas ni tan abiertas, ni tan cerradas; los grados de inclinación y el movimiento de los líquidos pueden causar volcamiento.<br/>
-          <b>4.</b> No realice maniobras de adelantamiento.
-        </td>
-      </tr>
+      <tr><td class="seccion-tit">RECOMENDACIONES EN RUTA</td></tr>
+      <tr><td style="padding:3px 5px;">
+        <table style="width:100%;border-collapse:collapse;font-size:3.5pt;line-height:1.05;text-align:left;">
+          <tr style="vertical-align:top;">
+            <td style="width:33.33%;padding:0 5px;font-size:4pt;">
+              <span style="font-weight:700;font-size:4.5pt;display:block;">EN VIAS DESTAPADAS Y CARRETEABLES:</span>
+              <b>1.</b> No sobrepase la velocidad de 30 km/h.<br/>
+              <b>2.</b> Evite adelantar vehículos ya que se reduce la visibilidad por el levantamiento de material particulado.<br/>
+              <b>3.</b> No se orille demasiado puede encunetarse o volcarse.
+              <span style="font-weight:700;font-size:4.5pt;display:block;margin-top:4px;">EN VIAS NACIONALES:</span>
+              <b>1.</b> Mantenga una mirada lejana para tener una vista panorámica.<br/>
+              <b>2.</b> Respete la velocidad recomendada en los diferentes tramos de la vía.<br/>
+              <b>3.</b> No se estacione en puentes.<br/>
+              <b>4.</b> Mantenga una distancia mínima de 25 mts con otros vehículos.
+            </td>
+            <td style="width:33.33%;padding:0 5px;border-left:1px solid #000;font-size:4pt;">
+              <span style="font-weight:700;font-size:4.5pt;display:block;">EN PRESENCIA DE CURVA:</span>
+              <b>1.</b> Reduzca la velocidad antes de tomar las curvas.<br/>
+              <b>2.</b> En descensos no recaliente los frenos utilice el freno de motor.<br/>
+              <b>3.</b> Procure no tomar las curvas ni tan abiertas, ni tan cerradas; los grados de inclinación y el movimiento de los líquidos pueden causar volcamiento.<br/>
+              <b>4.</b> No realice maniobras de adelantamiento.
+              <div style="height:4px;">&nbsp;</div>
+              <b>5.</b> Mueva los ojos permanentemente para evitar dormirse.<br/>
+              <b>6.</b> Este atento a la salida e ingreso de vehículos.<br/>
+              <b>7.</b> Revise los espejos retrovisores.<br/>
+              <b>8.</b> Informe con anticipación sus intenciones de girar o adelantar.
+            </td>
+            <td style="width:33.33%;padding:0 5px;border-left:1px solid #000;font-size:4pt;">
+              <span style="font-weight:700;font-size:4.5pt;display:block;">EN ZONAS URBANAS:</span>
+              <b>1.</b> Reduzca la velocidad.<br/>
+              <b>2.</b> Respete los cruces peatonales y señales de tránsito.<br/>
+              <b>3.</b> Ceda el paso.<br/>
+              <b>4.</b> Utilice las señales luminosas y sonoras para avisar sus movimientos.<br/>
+              <b>5.</b> No parquee en zona urbana.
+            </td>
+          </tr>
+        </table>
+      </td></tr>
     </table></div>
 
-    <div style="display:flex;gap:6px;margin-bottom:6px;">
-      <div class="tbl-wrap" style="margin:0;flex:1;"><table>
+    <div style="display:flex;gap:6px;margin-bottom:6px;align-items:stretch;">
+      <div class="tbl-wrap" style="margin:0;flex:1;"><table style="height:100%;">
         <tr><td class="seccion-tit" colspan="2">VELOCIDADES SEGURAS DE DESPLAZAMIENTO</td></tr>
-        <tr><td class="lbl center">En vías destapadas</td><td class="center">30 Km/h</td></tr>
-        <tr><td class="lbl center">En vías pavimentadas</td><td class="center">80 Km/h</td></tr>
-        <tr><td class="lbl center">Áreas Urbanas</td><td class="center">50 Km/h</td></tr>
-        <tr><td class="lbl center">Zona Escolar</td><td class="center">20 Km/h</td></tr>
-        <tr><td class="lbl center">Descensos Peligrosos</td><td class="center">20 Km/h</td></tr>
+        <tr><td class="lbl" style="text-align:left;">En vías destapadas</td><td class="center">30 Km/h</td></tr>
+        <tr><td class="lbl" style="text-align:left;">En vías pavimentadas</td><td class="center">80 Km/h</td></tr>
+        <tr><td class="lbl" style="text-align:left;">Áreas Urbanas</td><td class="center">50 Km/h</td></tr>
+        <tr><td class="lbl" style="text-align:left;">Zona Escolar</td><td class="center">20 Km/h</td></tr>
+        <tr><td class="lbl" style="text-align:left;">Descensos Peligrosos</td><td class="center">20 Km/h</td></tr>
       </table></div>
-      <div class="tbl-wrap" style="margin:0;flex:1.2;"><table>
+      <div class="tbl-wrap" style="margin:0;flex:1;border:1.5px solid #000;"><table style="height:100%;">
         <tr><td class="seccion-tit" colspan="2">PUNTOS CRITICOS DE LA RUTA</td></tr>
-        <tr><td class="lbl center" style="width:50%;">DESCRIPCION DE LA VIA</td><td class="lbl center" style="width:50%;">(deslizamientos, Orden Publico, trancones, entre otros)</td></tr>
-        <tr><td>&nbsp;</td><td>&nbsp;</td></tr>
-        <tr><td>&nbsp;</td><td>&nbsp;</td></tr>
-        <tr><td>&nbsp;</td><td>&nbsp;</td></tr>
+        <tr><td class="lbl center" colspan="2" style="font-size:6.5pt;"><b>DESCRIPCION DE LA VIA</b>&nbsp;&nbsp;(deslizamientos, Orden Publico, trancones, entre otros)</td></tr>
+        <tr><td colspan="2">&nbsp;</td></tr>
+        <tr><td colspan="2">&nbsp;</td></tr>
+        <tr><td colspan="2">&nbsp;</td></tr>
+        <tr><td colspan="2">&nbsp;</td></tr>
       </table></div>
     </div>
 
-    <div class="tbl-wrap"><table>
-      <tr><td class="seccion-tit" colspan="2">DIRECTORIO TELEFONICO EN CASO DE EMERGENCIA</td></tr>
-      <tr>
-        <td class="small" style="width:50%;line-height:1.2;padding:3px 6px;">
-          ARL Sura - 01 8000 51 888<br/>
-          Emergencias - 123<br/>
-          Ambulancias - 125<br/>
-          Bombero - 119<br/>
-          Defensa Civil - 144
-        </td>
-        <td class="small" style="width:50%;line-height:1.2;padding:3px 6px;">
-          Policía Carreteras - 126<br/>
-          Policía - 112<br/>
-          Gaula - 147<br/>
-          CAI - 156<br/>
-          Cruz Roja - 132
-        </td>
-      </tr>
-    </table></div>
+    <div style="display:flex;gap:6px;margin-bottom:6px;align-items:stretch;">
+      <div class="tbl-wrap" style="margin:0;flex:1;border:1.5px solid #000;"><table style="height:100%;">
+        <tr><td class="seccion-tit" colspan="2">DIRECTORIO TELEFONICO EN CASO DE EMERGENCIA</td></tr>
+        <tr>
+          <td class="small" style="width:50%;line-height:1.2;padding:3px 6px;border-bottom:none;vertical-align:top;">
+            ARL Sura - 01 8000 51 888<br/>
+            Emergencias - 123<br/>
+            Ambulancias - 125<br/>
+            Bombero - 119<br/>
+            Defensa Civil - 144
+          </td>
+          <td class="small" style="width:50%;line-height:1.2;padding:3px 6px;border-bottom:none;vertical-align:top;">
+            Policía Carreteras - 126<br/>
+            Policía - 112<br/>
+            Gaula - 147<br/>
+            CAI - 156<br/>
+            Cruz Roja - 132
+          </td>
+        </tr>
+      </table></div>
+      <div class="tbl-wrap" style="margin:0;flex:1;"><table style="height:100%;">
+        <tr><td class="seccion-tit">NOMBRE Y SELLO QUIEN DESPACHA</td></tr>
+        <tr><td style="padding:6px 8px;vertical-align:top;height:100%;">
+          <div style="height:16px;">&nbsp;</div>
+          <div style="border-top:1px solid #000;padding-top:4px;font-size:6.4pt;line-height:1.2;" class="small">Confirmo la entrega completa de los PDV y las cantidades descritas en esta planilla la cual consolida el total de los documentos anexos, que fueron certificados al momento de la entrega.</div>
+        </td></tr>
+      </table></div>
+    </div>
 
     <div class="small" style="margin:6px 0;text-align:justify;">
       Todos los documentos descritos en esta planilla deben ser devueltos a <b>Agropecuaria Santacruz Ltda.</b> para que estos a su vez cancelen los servicios causados por transporte y entrega de mercancía. La no devolución de los documentos o el no recibo de ellos ya sean porque no estén firmados y sellados por el cliente final que recibió, daño o deterioro de facturas, dará lugar a que no sea firmada y sellada la planilla del retorno y que los servicios de transporte, no sean cancelados por parte de <b>Agropecuaria Santacruz Ltda.</b>, hasta que la relación total se halla recibido.
     </div>
-
-    <div class="tbl-wrap"><table>
-      <tr>
-        <td class="small" style="width:60%;padding:6px 8px;line-height:1.3;">Confirmo la entrega completa de los PDV y las cantidades descritas en esta planilla la cual consolida el total de los documentos anexos, que fueron certificados al momento de la entrega.</td>
-        <td class="lbl center" style="width:40%;">NOMBRE Y SELLO QUIEN DESPACHA<div style="height:50px;">&nbsp;</div></td>
-      </tr>
-    </table></div>
 
   </div>
 </body>
