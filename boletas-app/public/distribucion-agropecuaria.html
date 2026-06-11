@@ -255,7 +255,7 @@
       </div>
 
       <div class="card" style="margin:0;">
-        <h3 style="margin-bottom:0.75rem;">🚗 Vehículos Disponibles</h3>
+        <h3 style="margin-bottom:0.75rem;">🚗 Vehículos Disponibles <span id="countVehDisp" style="font-size:0.8rem;font-weight:600;color:var(--muted-foreground);margin-left:0.35rem;">(0)</span></h3>
         <div class="table-wrapper">
           <table>
             <thead>
@@ -275,7 +275,7 @@
     <!-- Asignaciones activas -->
     <div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.75rem;">
-        <h3 style="margin:0;">Asignaciones Activas</h3>
+        <h3 style="margin:0;">Asignaciones Activas <span id="countAsignaciones" style="font-size:0.8rem;font-weight:600;color:var(--muted-foreground);margin-left:0.35rem;">(0)</span></h3>
         <div style="display:flex;gap:0.5rem;align-items:flex-end;flex-wrap:wrap;">
           <div class="form-group" style="margin:0;">
             <label style="font-size:0.7rem;">Desde</label>
@@ -297,7 +297,7 @@
     <!-- Historial de Exportaciones (lotes ya enviados a Excel) -->
     <div style="margin-top:1.5rem;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.75rem;">
-        <h3 style="margin:0;">📚 Historial de Exportaciones</h3>
+        <h3 style="margin:0;">📚 Historial de Exportaciones <span id="countHistExp" style="font-size:0.8rem;font-weight:600;color:var(--muted-foreground);margin-left:0.35rem;">(0)</span></h3>
         <div style="display:flex;gap:0.5rem;align-items:flex-end;flex-wrap:wrap;">
           <div class="form-group" style="margin:0;">
             <label style="font-size:0.7rem;">Desde</label>
@@ -363,7 +363,7 @@
     <!-- Historial de Plantillas D.L generadas -->
     <div class="card" style="margin-top:1rem;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem;">
-        <h4 style="margin:0;">📚 Historial de Plantillas Generadas</h4>
+        <h4 style="margin:0;">📚 Historial de Plantillas Generadas <span id="countHistPlant" style="font-size:0.78rem;font-weight:600;color:var(--muted-foreground);margin-left:0.35rem;">(0)</span></h4>
         <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
           <input type="date" id="histPlantDesde" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:0.4rem 0.6rem;color:var(--foreground);font-size:0.85rem;" />
           <input type="date" id="histPlantHasta" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:0.4rem 0.6rem;color:var(--foreground);font-size:0.85rem;" />
@@ -398,7 +398,7 @@
   <!-- ==================== TAB: PRODUCTOS ==================== -->
   <div class="tab-panel" id="tab-productos">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.75rem;">
-      <h3 style="margin:0;">Catálogo de Productos Agropecuarios</h3>
+      <h3 style="margin:0;">Catálogo de Productos Agropecuarios <span id="countProductos" style="font-size:0.8rem;font-weight:600;color:var(--muted-foreground);margin-left:0.35rem;">(0)</span></h3>
       <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
         <input type="search" id="buscarProducto" placeholder="Buscar producto..." autocomplete="new-password" autocorrect="off" spellcheck="false" data-form-type="other" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.85rem;color:var(--foreground);font-size:0.85rem;min-width:200px;" oninput="cargarProductos()" />
         <button class="btn btn-primary btn-sm" onclick="abrirNuevoProducto()">+ Nuevo Producto</button>
@@ -411,18 +411,14 @@
         <table>
           <thead>
             <tr>
-              <th>Referencia</th>
-              <th>Nombre</th>
+              <th>No.</th>
               <th>Categoría</th>
-              <th>Precio</th>
-              <th>U.M.</th>
-              <th>Stock</th>
-              <th>Estado</th>
-              <th>Acciones</th>
+              <th>Código</th>
+              <th>Producto</th>
             </tr>
           </thead>
           <tbody id="tablaProductos">
-            <tr><td colspan="8"><div class="empty-state">Cargando...</div></td></tr>
+            <tr><td colspan="4"><div class="empty-state">Cargando...</div></td></tr>
           </tbody>
         </table>
       </div>
@@ -432,7 +428,7 @@
   <!-- ==================== TAB: RUTA ==================== -->
   <div class="tab-panel" id="tab-rutas">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.75rem;">
-      <h3 style="margin:0;">Rutas</h3>
+      <h3 style="margin:0;">Rutas <span id="countRutas" style="font-size:0.8rem;font-weight:600;color:var(--muted-foreground);margin-left:0.35rem;">(0)</span></h3>
       <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
         <input type="search" id="buscarRuta" placeholder="Buscar por nombre, recorrido o ciudad..." autocomplete="off" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.85rem;color:var(--foreground);font-size:0.85rem;min-width:260px;" oninput="cargarRutas()" />
         <button class="btn btn-sm" style="background:#27ae60;" onclick="document.getElementById('modalCargaRutas').classList.add('active');">📁 Cargar Excel</button>
@@ -467,7 +463,7 @@
   <!-- ==================== TAB: VEHÍCULOS ==================== -->
   <div class="tab-panel active" id="tab-vehiculos">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.75rem;">
-      <h3 style="margin:0;">Vehículos</h3>
+      <h3 style="margin:0;">Vehículos <span id="countVehiculos" style="font-size:0.8rem;font-weight:600;color:var(--muted-foreground);margin-left:0.35rem;">(0)</span></h3>
       <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
         <input type="search" id="buscarVehiculo" placeholder="Buscar por placa o conductor..." autocomplete="new-password" autocorrect="off" spellcheck="false" data-form-type="other" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.85rem;color:var(--foreground);font-size:0.85rem;min-width:250px;" oninput="cargarVehiculos()" />
         <button class="btn btn-sm" style="background:#27ae60;" onclick="document.getElementById('modalCargaVehiculos').classList.add('active');">📁 Cargar Excel</button>
@@ -560,7 +556,7 @@
   <!-- ==================== TAB: CLIENTES ==================== -->
   <div class="tab-panel" id="tab-clientes">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.75rem;">
-    <h3 style="margin:0;">Clientes</h3>
+    <h3 style="margin:0;">Clientes <span id="countClientes" style="font-size:0.8rem;font-weight:600;color:var(--muted-foreground);margin-left:0.35rem;">(0)</span></h3>
     <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
       <input type="search" id="buscarCliente" placeholder="Buscar por nombre, código, ciudad..." autocomplete="new-password" autocorrect="off" spellcheck="false" data-form-type="other" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.85rem;color:var(--foreground);font-size:0.85rem;min-width:250px;" oninput="cargarClientes()" />
       <button class="btn btn-sm" style="background:#27ae60;" onclick="document.getElementById('modalCargaClientes').classList.add('active');">📁 Cargar Excel</button>
@@ -597,7 +593,7 @@
   <!-- Historial de despachos (asignaciones exportadas) -->
   <div class="card" style="margin-bottom:1.25rem;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem;">
-      <h3 style="margin:0;font-size:0.95rem;">📜 Historial de Despachos (Exportados)</h3>
+      <h3 style="margin:0;font-size:0.95rem;">📜 Historial de Despachos (Exportados) <span id="countHistDesp" style="font-size:0.78rem;font-weight:600;color:var(--muted-foreground);margin-left:0.35rem;">(0)</span></h3>
       <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
         <input type="date" id="histDesde" onchange="cargarHistorialDespachos()" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:0.4rem 0.6rem;color:var(--foreground);font-size:0.8rem;" />
         <input type="date" id="histHasta" onchange="cargarHistorialDespachos()" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:0.4rem 0.6rem;color:var(--foreground);font-size:0.8rem;" />
@@ -655,6 +651,32 @@
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="document.getElementById('modalRegistrarEntrega').classList.remove('active')">Cancelar</button>
       <button class="btn btn-primary" onclick="guardarEntrega()">Guardar Entrega</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODAL: REPORTAR FALTANTES (CON NOVEDAD) ==================== -->
+<div class="modal-overlay" id="modalFaltantes">
+  <div class="modal" style="max-width:760px;">
+    <h3>Reportar Novedad — <span id="faltOrdenNum"></span></h3>
+    <p style="color:var(--muted-foreground);font-size:0.85rem;margin-bottom:1rem;">Ajusta lo despachado si aplica e indica los kilos que el cliente reporta como <strong>no recibidos</strong> por cada producto.</p>
+    <input type="hidden" id="faltOrdenId" />
+    <div class="table-wrapper" style="max-height:55vh;">
+      <table>
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th style="text-align:right;width:130px;">Despachado (kg)</th>
+            <th style="text-align:right;width:130px;">No llegó (kg)</th>
+            <th style="text-align:right;width:120px;">Recibido (kg)</th>
+          </tr>
+        </thead>
+        <tbody id="faltItemsTabla"></tbody>
+      </table>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="cerrarModalFaltantes()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarFaltantes()">Guardar Novedad</button>
     </div>
   </div>
 </div>
@@ -783,29 +805,17 @@
     <input type="hidden" id="productoEditId" />
 
     <div class="form-row">
-      <div class="form-group"><label>Referencia</label><input type="text" id="productoReferencia" placeholder="Código de referencia" /></div>
-      <div class="form-group"><label>Nombre *</label><input type="text" id="productoNombre" placeholder="Nombre del producto" /></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Categoría</label><input type="text" id="productoCategoria" placeholder="Ej: Fertilizantes, Semillas..." /></div>
-      <div class="form-group"><label>Descripción</label><input type="text" id="productoDescripcion" placeholder="Descripción" /></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Precio *</label><input type="number" id="productoPrecio" placeholder="0" min="0" step="0.01" /></div>
       <div class="form-group">
-        <label>Unidad de Medida</label>
-        <select id="productoUnidad">
-          <option value="UNIDAD">Unidad</option>
-          <option value="KILO">Kilo</option>
-          <option value="LITRO">Litro</option>
-          <option value="BULTO">Bulto</option>
-          <option value="TONELADA">Tonelada</option>
-          <option value="ARROBA">Arroba</option>
+        <label>Categoría</label>
+        <select id="productoCategoria">
+          <option value="BOVINO">Bovino</option>
+          <option value="PORCINO">Porcino</option>
         </select>
       </div>
+      <div class="form-group"><label>Código</label><input type="text" id="productoReferencia" placeholder="Código" /></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Stock</label><input type="number" id="productoStock" placeholder="0" min="0" /></div>
+      <div class="form-group"><label>Producto *</label><input type="text" id="productoNombre" placeholder="Nombre del producto" /></div>
     </div>
 
     <div class="modal-actions">
@@ -819,7 +829,7 @@
 <div class="modal-overlay" id="modalCargaProductos">
   <div class="modal" style="max-width:550px;">
     <h3>Carga Masiva de Productos</h3>
-    <p style="color:var(--muted-foreground);font-size:0.85rem;margin-bottom:1rem;">Sube un archivo Excel (.xlsx) con las columnas: <strong>Referencia</strong>, <strong>Nombre</strong> (obligatorio), <strong>Categoría</strong>, <strong>Precio</strong> (obligatorio), <strong>Unidad</strong>, <strong>Stock</strong>.<br>Si un producto con la misma referencia ya existe, se actualizará.</p>
+    <p style="color:var(--muted-foreground);font-size:0.85rem;margin-bottom:1rem;">Sube un archivo Excel (.xlsx) con las columnas: <strong>Categoría</strong>, <strong>Código</strong>, <strong>Producto</strong> (obligatorio). Opcionales: <strong>Precio</strong>, <strong>Unidad</strong>, <strong>Stock</strong>.<br>Si un producto con el mismo código ya existe, se actualizará.</p>
     <div class="form-group" style="margin-bottom:1rem;">
       <label>Archivo Excel</label>
       <input type="file" id="archivoProductos" accept=".xlsx,.xls,.csv" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:0.5rem;color:var(--foreground);width:100%;" />
@@ -1579,6 +1589,11 @@ async function eliminarOrden(id) {
 }
 
 // ========== PRODUCTOS ==========
+function setHeaderCount(id, n) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = "(" + (Number(n) || 0) + ")";
+}
+
 async function cargarProductos() {
   const buscar = document.getElementById("buscarProducto")?.value || "";
   const params = new URLSearchParams({ todos: "1" });
@@ -1588,26 +1603,20 @@ async function cargarProductos() {
     const res = await fetch(API + "/productos?" + params);
     const prods = await res.json();
     productosCache = prods.filter(p => p.activo);
+    setHeaderCount("countProductos", prods.length);
 
     const tbody = document.getElementById("tablaProductos");
     if (!prods.length) {
-      tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">No hay productos registrados</div></td></tr>';
+      tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">No hay productos registrados</div></td></tr>';
       return;
     }
 
-    tbody.innerHTML = prods.map(p => `
+    tbody.innerHTML = prods.map((p, i) => `
       <tr style="${!p.activo ? 'opacity:0.4' : ''}">
+        <td>${i + 1}</td>
+        <td>${p.categoria || "—"}</td>
         <td>${p.referencia || "—"}</td>
         <td>${p.nombre}</td>
-        <td>${p.categoria || "—"}</td>
-        <td>${formatMoney(p.precio)}</td>
-        <td>${p.unidad_medida}</td>
-        <td>${p.stock}</td>
-        <td><span class="badge ${p.activo ? 'badge-entregado' : 'badge-cancelado'}">${p.activo ? 'Activo' : 'Inactivo'}</span></td>
-        <td>
-          <button class="btn btn-warning btn-sm" onclick="editarProducto(${p.id})">✏️</button>
-          ${p.activo ? `<button class="btn btn-danger btn-sm" onclick="eliminarProducto(${p.id})">🗑</button>` : ''}
-        </td>
       </tr>
     `).join("");
   } catch (e) {
@@ -1620,11 +1629,7 @@ function abrirNuevoProducto() {
   document.getElementById("productoEditId").value = "";
   document.getElementById("productoReferencia").value = "";
   document.getElementById("productoNombre").value = "";
-  document.getElementById("productoCategoria").value = "";
-  document.getElementById("productoDescripcion").value = "";
-  document.getElementById("productoPrecio").value = "";
-  document.getElementById("productoUnidad").value = "UNIDAD";
-  document.getElementById("productoStock").value = "0";
+  document.getElementById("productoCategoria").value = "BOVINO";
   document.getElementById("modalProducto").classList.add("active");
 }
 
@@ -1639,11 +1644,7 @@ async function editarProducto(id) {
     document.getElementById("productoEditId").value = id;
     document.getElementById("productoReferencia").value = p.referencia || "";
     document.getElementById("productoNombre").value = p.nombre;
-    document.getElementById("productoCategoria").value = p.categoria || "";
-    document.getElementById("productoDescripcion").value = p.descripcion || "";
-    document.getElementById("productoPrecio").value = p.precio;
-    document.getElementById("productoUnidad").value = p.unidad_medida || "UNIDAD";
-    document.getElementById("productoStock").value = p.stock || 0;
+    document.getElementById("productoCategoria").value = (p.categoria || "BOVINO").toUpperCase();
     document.getElementById("modalProducto").classList.add("active");
   } catch (e) {
     toast("Error", "error");
@@ -1660,14 +1661,14 @@ async function guardarProducto() {
     referencia: document.getElementById("productoReferencia").value,
     nombre: document.getElementById("productoNombre").value,
     categoria: document.getElementById("productoCategoria").value,
-    descripcion: document.getElementById("productoDescripcion").value,
-    precio: parseFloat(document.getElementById("productoPrecio").value),
-    unidad_medida: document.getElementById("productoUnidad").value,
-    stock: parseInt(document.getElementById("productoStock").value) || 0,
+    descripcion: "",
+    precio: 0,
+    unidad_medida: "UNIDAD",
+    stock: 0,
   };
 
-  if (!body.nombre || !body.precio) {
-    toast("Nombre y precio son requeridos", "error");
+  if (!body.nombre) {
+    toast("El producto es requerido", "error");
     return;
   }
 
@@ -1768,6 +1769,7 @@ async function cargarRutas() {
     const res = await fetch(API + "/rutas?" + params);
     const rutas = await res.json();
     rutasCache = rutas;
+    setHeaderCount("countRutas", rutas.length);
     const tbody = document.getElementById("tablaRutas");
     if (!rutas.length) {
       tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">No hay rutas registradas</div></td></tr>';
@@ -2456,6 +2458,7 @@ async function cargarAsignaciones() {
     const resV = await fetch(API + "/vehiculos");
     const todos = await resV.json();
     const vehiculos = todos.filter(v => v.disponibilidad === 'Disponible');    const tbodyV = document.getElementById("tablaVehiculosAsignacion");
+    setHeaderCount("countVehDisp", vehiculos.length);
     if (!vehiculos.length) {
       tbodyV.innerHTML = '<tr><td colspan="2"><div class="empty-state">No hay vehículos disponibles</div></td></tr>';
     } else {
@@ -2486,6 +2489,8 @@ async function cargarAsignaciones() {
       const h = new Date(hasta + "T23:59:59.999").getTime();
       data = data.filter(a => new Date(a.fecha).getTime() <= h);
     }
+
+    setHeaderCount("countAsignaciones", data.length);
 
     if (!data.length) {
       container.innerHTML = '<div class="card"><div class="empty-state">No hay asignaciones para el filtro seleccionado</div></div>';
@@ -2596,6 +2601,7 @@ async function cargarHistorialAsignaciones() {
     const res = await fetch(API + "/asignaciones/historial-grupos?" + params.toString());
     if (!res.ok) throw new Error("http " + res.status);
     const grupos = await res.json();
+    setHeaderCount("countHistExp", grupos.length);
     if (!grupos.length) {
       tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">Sin exportaciones en el rango</div></td></tr>';
       return;
@@ -3064,6 +3070,7 @@ async function cargarVehiculos() {
       if (tbody) tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state">Respuesta inválida del servidor</div></td></tr>`;
       return;
     }
+    setHeaderCount("countVehiculos", data.length);
     if (!data.length) {
       tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">No hay vehículos registrados</div></td></tr>';
       return;
@@ -3215,6 +3222,7 @@ async function cargarClientes() {
     const res = await fetch(API + "/clientes" + (buscar ? "?buscar=" + encodeURIComponent(buscar) : ""));
     const data = await res.json();
     const tbody = document.getElementById("tablaClientes");
+    setHeaderCount("countClientes", data.length);
     if (!data.length) {
       tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state">No hay clientes registrados</div></td></tr>';
       return;
@@ -3444,6 +3452,17 @@ const OBSERVACIONES_SERVICIO = [
   "Reenvio"
 ];
 
+// Color del estado de servicio: verde / rojo / naranja / azul
+function colorObservacion(obs) {
+  switch (obs) {
+    case "Sin Novedad":   return "#2ecc71"; // verde
+    case "Con Novedad":   return "#e74c3c"; // rojo
+    case "Doc.Pendiente": return "#f39c12"; // naranja
+    case "Reenvio":       return "#3498db"; // azul
+    default:              return "#2ecc71";
+  }
+}
+
 const NOVEDADES_OPCIONES = [
   "",
   "Averías",
@@ -3523,11 +3542,13 @@ async function cargarHistorialDespachos() {
       });
     });
     if (!data.length) {
+      setHeaderCount("countHistDesp", 0);
       tbody.innerHTML = '<tr><td colspan="12"><div class="empty-state">No hay facturas exportadas</div></td></tr>';
       return;
     }
     // Solo mostrar facturas que tengan plantilla creada en Planificación D.L.
     const dataConPlantilla = data.filter(r => ordenAConsec.has(String(r.numero_orden || "").trim()));
+    setHeaderCount("countHistDesp", dataConPlantilla.length);
     if (!dataConPlantilla.length) {
       tbody.innerHTML = '<tr><td colspan="12"><div class="empty-state">No hay facturas con plantilla creada en Planificación D.L.</div></td></tr>';
       return;
@@ -3538,7 +3559,7 @@ async function cargarHistorialDespachos() {
       const opts = OBSERVACIONES_SERVICIO.map(o =>
         `<option value="${o}" ${o === obsActual ? "selected" : ""}>${o}</option>`
       ).join("");
-      const badgeColor = obsActual === "Sin Novedad" ? "#2ecc71" : "#f39c12";
+      const badgeColor = colorObservacion(obsActual);
       const inputStyle = "background:var(--card);border:1px solid var(--border);border-radius:6px;padding:0.35rem 0.5rem;color:var(--foreground);font-size:0.82rem;width:100%;";
       const consec = ordenAConsec.get(String(r.numero_orden || "").trim()) || "—";
       const docFisico = Number(r.doc_fisico) === 1;
@@ -3561,10 +3582,13 @@ async function cargarHistorialDespachos() {
           <td>${r.auxiliar || "—"}</td>
           <td style="text-align:right;">${formatMoney(r.total)}</td>
           <td>
-            <select onchange="actualizarObservacionOrden(${r.orden_id}, this.value, this)"
-              style="background:var(--card);border:1px solid ${badgeColor};border-radius:6px;padding:0.35rem 0.5rem;color:${badgeColor};font-size:0.82rem;font-weight:600;width:100%;">
-              ${opts}
-            </select>
+            <div style="display:flex;align-items:center;gap:0.35rem;">
+              <select onchange="actualizarObservacionOrden(${r.orden_id}, this.value, this)"
+                style="background:var(--card);border:1px solid ${badgeColor};border-radius:6px;padding:0.35rem 0.5rem;color:${badgeColor};font-size:0.82rem;font-weight:600;flex:1;">
+                ${opts}
+              </select>
+              <button class="btn btn-secondary btn-sm" title="Ver/editar productos y faltantes" onclick="abrirModalFaltantes(${r.orden_id})" style="padding:0.3rem 0.5rem;">📦</button>
+            </div>
           </td>
           <td>
             <select onchange="actualizarHistorialOrden(${r.orden_id}, 'novedades', this.value)"
@@ -3627,11 +3651,15 @@ async function actualizarObservacionOrden(ordenId, observacion, selectEl) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Error");
     if (selectEl) {
-      const color = observacion === "Sin Novedad" ? "#2ecc71" : "#f39c12";
+      const color = colorObservacion(observacion);
       selectEl.style.borderColor = color;
       selectEl.style.color = color;
     }
     toast("Observación actualizada", "success");
+    // Si se marca una novedad, abrir el detalle de productos para reportar faltantes
+    if (observacion && observacion !== "Sin Novedad") {
+      abrirModalFaltantes(ordenId);
+    }
   } catch (e) {
     toast(e.message || "Error al actualizar", "error");
     cargarHistorialDespachos();
@@ -3784,6 +3812,84 @@ async function guardarEntrega() {
     toast("Entrega registrada", "success");
     cargarOrdenes();
     if (document.getElementById("tab-nivel-servicio").classList.contains("active")) cargarNivelServicio();
+  } catch (e) {
+    toast("Error de conexión", "error");
+  }
+}
+
+// ========== REPORTAR FALTANTES (CON NOVEDAD) ==========
+function cerrarModalFaltantes() {
+  document.getElementById("modalFaltantes").classList.remove("active");
+}
+
+function _recalcRecibido(tr) {
+  const desp = parseFloat(tr.querySelector(".falt-desp").value) || 0;
+  let noLlego = parseFloat(tr.querySelector(".falt-no").value) || 0;
+  if (noLlego < 0) noLlego = 0;
+  if (noLlego > desp) noLlego = desp;
+  tr.querySelector(".falt-rec").textContent = formatMoney(Math.round((desp - noLlego) * 100) / 100);
+}
+
+async function abrirModalFaltantes(ordenId) {
+  try {
+    const res = await fetch(API + "/ordenes/" + ordenId);
+    const orden = await res.json();
+    document.getElementById("faltOrdenId").value = orden.id;
+    document.getElementById("faltOrdenNum").textContent = orden.numero_orden || "";
+    const items = orden.items || [];
+    const yaRegistrada = Number(orden.entrega_registrada) === 1;
+    const tbody = document.getElementById("faltItemsTabla");
+    if (!items.length) {
+      tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">Esta factura no tiene productos cargados</div></td></tr>';
+    } else {
+      tbody.innerHTML = items.map(it => {
+        const desp = Math.round((Number(it.cantidad) || 0) * 100) / 100;
+        // Si la entrega aún no se ha confirmado, se asume que todo llegó (No llegó = 0).
+        // Si ya se registró, se muestra lo que realmente faltó (despachado - recibido).
+        const recibido = Number(it.cantidad_entregada);
+        const noLlego = yaRegistrada && !isNaN(recibido) ? Math.round(Math.max(0, desp - recibido) * 100) / 100 : 0;
+        const inp = "background:var(--card);border:1px solid var(--border);border-radius:6px;padding:0.4rem 0.6rem;color:var(--foreground);text-align:right;width:110px;";
+        return `
+          <tr data-item-id="${it.id}">
+            <td>${it.producto_nombre}</td>
+            <td style="text-align:right;"><input type="number" min="0" step="any" class="falt-desp" value="${desp}" oninput="_recalcRecibido(this.closest('tr'))" style="${inp}" /></td>
+            <td style="text-align:right;"><input type="number" min="0" step="any" class="falt-no" value="${noLlego}" oninput="_recalcRecibido(this.closest('tr'))" style="${inp}" /></td>
+            <td style="text-align:right;font-weight:600;color:#2ecc71;" class="falt-rec">${formatMoney(desp - noLlego)}</td>
+          </tr>`;
+      }).join("");
+    }
+    document.getElementById("modalFaltantes").classList.add("active");
+  } catch (e) {
+    toast("Error al cargar los productos de la factura", "error");
+  }
+}
+
+async function guardarFaltantes() {
+  const ordenId = document.getElementById("faltOrdenId").value;
+  if (!ordenId) return;
+  const rows = document.querySelectorAll("#faltItemsTabla tr[data-item-id]");
+  const items = Array.from(rows).map(tr => ({
+    id: parseInt(tr.dataset.itemId),
+    cantidad: parseFloat(tr.querySelector(".falt-desp").value) || 0,
+    faltante: parseFloat(tr.querySelector(".falt-no").value) || 0
+  }));
+  if (!items.length) {
+    cerrarModalFaltantes();
+    return;
+  }
+  try {
+    const res = await fetch(API + "/ordenes/" + ordenId + "/entrega", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      toast(data.error || "Error al guardar la novedad", "error");
+      return;
+    }
+    cerrarModalFaltantes();
+    toast("Novedad registrada", "success");
   } catch (e) {
     toast("Error de conexión", "error");
   }
@@ -4098,6 +4204,7 @@ async function cargarHistorialPlantillas() {
   try {
     const res = await fetch(API + "/plantillas?" + params.toString());
     const rows = await res.json();
+    setHeaderCount("countHistPlant", rows.length);
     if (!rows.length) {
       tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state">Sin plantillas en el rango</div></td></tr>`;
       return;
@@ -4487,15 +4594,15 @@ function _generarPlantillaHTML(opts) {
     const der = cellOrden(i * 2 + 1);
     return `
       <tr>
-        <td style="width:13%;">${izq.docto}</td>
-        <td class="center" style="width:4%;"></td>
-        <td style="width:9%;">${izq.area}</td>
-        <td style="width:22%;">${izq.destino}</td>
+        <td style="width:10%;">${izq.docto}</td>
+        <td class="center" style="width:3%;"></td>
+        <td style="width:8%;">${izq.area}</td>
+        <td style="width:29%;">${izq.destino}</td>
         <td class="sep"></td>
-        <td style="width:13%;">${der.docto}</td>
-        <td class="center" style="width:4%;"></td>
-        <td style="width:9%;">${der.area}</td>
-        <td style="width:22%;">${der.destino}</td>
+        <td style="width:10%;">${der.docto}</td>
+        <td class="center" style="width:3%;"></td>
+        <td style="width:8%;">${der.area}</td>
+        <td style="width:29%;">${der.destino}</td>
       </tr>
     `;
   }).join("");
@@ -4530,7 +4637,7 @@ function _generarPlantillaHTML(opts) {
   table.items td:nth-child(6) { border-left: 1px solid #000; }
   table.items td.bl { border-left: 1px solid #000 !important; }
   table.items td.br { border-right: 1px solid #000 !important; }
-  table.items td.sep { border: 0 !important; background: #fff !important; width: 0.3cm; padding: 0; }
+  table.items td.sep { border: 0 !important; background: #fff !important; width: 0.7cm; padding: 0; }
   table.items tr:first-child td:first-child { border-top-left-radius: 6px; }
   table.items tr:first-child td:last-child { border-top-right-radius: 6px; }
   table.items tr:last-child td:first-child { border-bottom-left-radius: 6px; }

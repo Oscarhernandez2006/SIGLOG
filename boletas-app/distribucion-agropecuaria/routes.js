@@ -200,11 +200,17 @@ router.post("/productos/carga-masiva", upload.single("archivo"), (req, res) => {
 
   try {
     const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
-    const sheetName = workbook.SheetNames[0];
-    const sheet = workbook.Sheets[sheetName];
-    const datos = XLSX.utils.sheet_to_json(sheet);
 
-    if (!datos || datos.length === 0) return res.status(400).json({ error: "El archivo está vacío" });
+    // Recorrer TODAS las hojas (ej: BOVINO, PORCINO). El nombre de la hoja
+    // se usa como categoría cuando la fila no trae una columna categoría.
+    const filas = [];
+    workbook.SheetNames.forEach((sheetName) => {
+      const sheet = workbook.Sheets[sheetName];
+      const datosHoja = XLSX.utils.sheet_to_json(sheet);
+      datosHoja.forEach((fila) => filas.push({ fila, hoja: sheetName }));
+    });
+
+    if (!filas || filas.length === 0) return res.status(400).json({ error: "El archivo está vacío" });
 
     function norm(key) {
       return key.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\./g, "").trim();
@@ -221,21 +227,21 @@ router.post("/productos/carga-masiva", upload.single("archivo"), (req, res) => {
     let insertados = 0;
     let actualizados = 0;
     let errores = [];
-    let pendientes = datos.length;
+    let pendientes = filas.length;
 
-    datos.forEach((fila, i) => {
+    filas.forEach(({ fila, hoja }, i) => {
       const referenciaRaw = getVal(fila, "referencia", "ref", "codigo", "cod");
       const referencia = referenciaRaw.replace(/\.0$/, "");
       const nombre = getVal(fila, "nombre", "producto", "descripcion", "item");
-      const categoria = getVal(fila, "categoria", "tipo", "linea");
+      const categoria = getVal(fila, "categoria", "tipo", "linea") || String(hoja || "").trim().toUpperCase();
       const precioRaw = getVal(fila, "precio", "valor", "precio_unitario");
       const precio = parseFloat(String(precioRaw).replace(/[,$\s]/g, "")) || 0;
       const unidad_medida = getVal(fila, "unidad_medida", "unidad", "um", "medida").toUpperCase() || "UNIDAD";
       const stockRaw = getVal(fila, "stock", "cantidad", "inventario");
       const stock = parseInt(stockRaw) || 0;
 
-      if (!nombre || !precio) {
-        errores.push("Fila " + (i + 2) + ": sin nombre o precio");
+      if (!nombre) {
+        errores.push("Fila " + (i + 2) + " (" + hoja + "): sin nombre/producto");
         pendientes--;
         if (pendientes === 0) enviarRespuesta();
         return;
@@ -248,7 +254,7 @@ router.post("/productos/carga-masiva", upload.single("archivo"), (req, res) => {
               "UPDATE agro_productos SET nombre = ?, categoria = ?, precio = ?, unidad_medida = ?, stock = ?, activo = 1 WHERE id = ?",
               [nombre, categoria, precio, unidad_medida, stock, existe.id],
               (err2) => {
-                if (err2) errores.push("Fila " + (i + 2) + ": " + err2.message);
+                if (err2) errores.push("Fila " + (i + 2) + " (" + hoja + "): " + err2.message);
                 else actualizados++;
                 pendientes--;
                 if (pendientes === 0) enviarRespuesta();
@@ -267,7 +273,7 @@ router.post("/productos/carga-masiva", upload.single("archivo"), (req, res) => {
           "INSERT INTO agro_productos (referencia, nombre, descripcion, categoria, precio, unidad_medida, stock) VALUES (?, ?, ?, ?, ?, ?, ?)",
           [referencia, nombre, "", categoria, precio, unidad_medida, stock],
           (err) => {
-            if (err) errores.push("Fila " + (i + 2) + ": " + err.message);
+            if (err) errores.push("Fila " + (i + 2) + " (" + hoja + "): " + err.message);
             else insertados++;
             pendientes--;
             if (pendientes === 0) enviarRespuesta();
@@ -279,7 +285,7 @@ router.post("/productos/carga-masiva", upload.single("archivo"), (req, res) => {
     function enviarRespuesta() {
       res.json({
         message: "Carga completada",
-        total: datos.length,
+        total: filas.length,
         insertados,
         actualizados,
         errores: errores.length,
@@ -675,21 +681,38 @@ router.post("/ordenes/:id/entrega", (req, res) => {
     db.all("SELECT * FROM agro_orden_items WHERE orden_id = ?", [id], (err2, currentItems) => {
       if (err2) return res.status(500).json({ error: "Error del servidor" });
 
-      const stmt = db.prepare("UPDATE agro_orden_items SET cantidad_entregada = ? WHERE id = ? AND orden_id = ?");
+      const stmt = db.prepare("UPDATE agro_orden_items SET cantidad = ?, cantidad_entregada = ? WHERE id = ? AND orden_id = ?");
       items.forEach((it) => {
         const itemId = parseInt(it.id);
-        let entregada = parseInt(it.cantidad_entregada);
-        if (isNaN(entregada) || entregada < 0) entregada = 0;
-
-        // No permitir entregar más de lo pedido
         const current = currentItems.find((c) => c.id === itemId);
-        if (current && entregada > current.cantidad) entregada = current.cantidad;
+        if (!current) return;
 
-        stmt.run([entregada, itemId, id]);
+        // Despachado: si llega "cantidad" se actualiza, si no se conserva el actual
+        let despachado = it.cantidad !== undefined ? parseFloat(it.cantidad) : current.cantidad;
+        if (isNaN(despachado) || despachado < 0) despachado = current.cantidad;
+
+        // Cantidad entregada: dos modos.
+        //  - Si llega "faltante" (lo que nunca llegó): entregado = despachado - faltante
+        //  - Si llega "cantidad_entregada" directa: se usa tal cual
+        let entregada;
+        if (it.faltante !== undefined) {
+          let faltante = parseFloat(it.faltante);
+          if (isNaN(faltante) || faltante < 0) faltante = 0;
+          if (faltante > despachado) faltante = despachado;
+          entregada = despachado - faltante;
+        } else {
+          entregada = parseFloat(it.cantidad_entregada);
+          if (isNaN(entregada) || entregada < 0) entregada = 0;
+        }
+
+        // No permitir entregar más de lo despachado
+        if (entregada > despachado) entregada = despachado;
+
+        stmt.run([despachado, entregada, itemId, id]);
       });
 
       stmt.finalize(() => {
-        db.run("UPDATE agro_ordenes SET estado = 'ENTREGADO' WHERE id = ?", [id], function (err3) {
+        db.run("UPDATE agro_ordenes SET estado = 'ENTREGADO', entrega_registrada = 1 WHERE id = ?", [id], function (err3) {
           if (err3) return res.status(500).json({ error: "Error al actualizar estado" });
           res.json({ message: "Entrega registrada" });
         });
@@ -1095,7 +1118,24 @@ router.post("/vehiculos/carga-masiva", upload.single("archivo"), (req, res) => {
     let errores = [];
     let pendientes = 0;
 
-    const filasValidas = dataRows.filter(r => String(r[1] || "").trim() && String(r[2] || "").trim());
+    // Solo aceptar filas con placa válida (alfanumérica con al menos un dígito) y conductor.
+    // Esto evita que se cuelen encabezados/textos (p. ej. "HORA", "PLACA") al subir otra plantilla por error.
+    const esPlacaValida = (p) => {
+      const s = String(p || "").trim().toUpperCase();
+      if (s.length < 4 || s.length > 10) return false;
+      if (!/^[A-Z0-9-]+$/.test(s)) return false; // solo letras, números y guion
+      if (!/[0-9]/.test(s)) return false; // debe tener al menos un dígito
+      if (!/[A-Z]/.test(s)) return false; // debe tener al menos una letra
+      return true;
+    };
+    const ENCABEZADOS = new Set(["PLACA", "HORA", "FECHA", "VEHICULO", "VEHÍCULO", "CONDUCTOR", "ORDEN", "CLIENTE", "DESTINO", "PRODUCTO", "CANTIDAD"]);
+    const filasValidas = dataRows.filter(r => {
+      const placa = String(r[1] || "").trim().toUpperCase();
+      const conductor = String(r[2] || "").trim();
+      if (!placa || !conductor) return false;
+      if (ENCABEZADOS.has(placa)) return false;
+      return esPlacaValida(placa);
+    });
     pendientes = filasValidas.length;
 
     if (pendientes === 0) return res.json({ message: "No se encontraron vehículos válidos", insertados: 0 });
@@ -1390,7 +1430,8 @@ router.post("/ordenes/carga-excel", upload.single("archivo"), (req, res) => {
       const cliente = String(fila[3] || "").trim();
       const destino = String(fila[4] || "").trim();
       const concatenado = destino ? cliente + "-" + destino : cliente;
-      const cantidad = parseFloat(fila[13]) || 0;
+      const producto = String(fila[12] || "").trim(); // columna M = PRODUCTO
+      const cantidad = parseFloat(fila[13]) || 0;       // columna N = CANTIDAD
 
       if (!numOrden) return;
 
@@ -1402,10 +1443,14 @@ router.post("/ordenes/carga-excel", upload.single("archivo"), (req, res) => {
           cliente: concatenado,
           destino,
           cantidad: 0,
+          items: {}, // producto_nombre -> cantidad
         };
       }
 
       ordenesMap[key].cantidad += cantidad;
+      if (producto) {
+        ordenesMap[key].items[producto] = (ordenesMap[key].items[producto] || 0) + cantidad;
+      }
     });
 
     const ordenesArr = Object.values(ordenesMap);
@@ -1468,23 +1513,46 @@ router.post("/ordenes/carga-excel", upload.single("archivo"), (req, res) => {
             function (err2) {
               if (err2) {
                 errores.push("Orden " + (ord.numero_orden_ext || idx) + ": " + err2.message);
-              } else {
-                creadas++;
+                finalizarOrden();
+                return;
               }
-              pendientes--;
-              if (pendientes === 0) {
-                res.json({
-                  message: "Carga completada",
-                  totalFilas: dataRows.length,
-                  ordenesCreadas: creadas,
-                  errores: errores.length,
-                  omitidas: omitidas.length,
-                  detalleOmitidas: omitidas.slice(0, 15),
-                  detalleErrores: errores.slice(0, 15),
-                });
+              creadas++;
+              const ordenId = this.lastID;
+              const itemsEntries = Object.entries(ord.items || {});
+              if (!itemsEntries.length || !ordenId) {
+                finalizarOrden();
+                return;
               }
+              // Insertar un item por cada producto de la orden (nombre tal cual del Excel)
+              // cantidad_entregada arranca en 0: la orden solo está asignada, aún no entregada.
+              let itemsPend = itemsEntries.length;
+              itemsEntries.forEach(([prodNombre, cant]) => {
+                db.run(
+                  "INSERT INTO agro_orden_items (orden_id, producto_nombre, cantidad, precio_unitario, subtotal, cantidad_entregada) VALUES (?, ?, ?, 0, 0, 0)",
+                  [ordenId, prodNombre, cant],
+                  () => {
+                    itemsPend--;
+                    if (itemsPend === 0) finalizarOrden();
+                  }
+                );
+              });
             }
           );
+
+          function finalizarOrden() {
+            pendientes--;
+            if (pendientes === 0) {
+              res.json({
+                message: "Carga completada",
+                totalFilas: dataRows.length,
+                ordenesCreadas: creadas,
+                errores: errores.length,
+                omitidas: omitidas.length,
+                detalleOmitidas: omitidas.slice(0, 15),
+                detalleErrores: errores.slice(0, 15),
+              });
+            }
+          }
         });
       }
     );

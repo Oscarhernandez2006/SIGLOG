@@ -477,11 +477,16 @@ db.serialize(() => {
   `);
 
   db.run(`ALTER TABLE agro_orden_items ADD COLUMN cantidad_entregada INTEGER DEFAULT 0`, (err) => {});
+  // Permitir cantidades con decimales (kilos) en los items de la orden
+  db.run(`ALTER TABLE agro_orden_items ALTER COLUMN cantidad TYPE DOUBLE PRECISION`, (err) => {});
+  db.run(`ALTER TABLE agro_orden_items ALTER COLUMN cantidad_entregada TYPE DOUBLE PRECISION`, (err) => {});
   db.run(`ALTER TABLE agro_ordenes ADD COLUMN observacion_servicio TEXT DEFAULT 'Sin Novedad'`, (err) => {});
   db.run(`ALTER TABLE agro_ordenes ADD COLUMN novedades TEXT`, (err) => {});
   db.run(`ALTER TABLE agro_ordenes ADD COLUMN responsabilidades TEXT`, (err) => {});
   db.run(`ALTER TABLE agro_ordenes ADD COLUMN detalles TEXT`, (err) => {});
   db.run(`ALTER TABLE agro_ordenes ADD COLUMN doc_fisico INTEGER DEFAULT 0`, (err) => {});
+  // Marca si la entrega ya fue confirmada/reportada (0 = solo asignada, no entregada aún)
+  db.run(`ALTER TABLE agro_ordenes ADD COLUMN entrega_registrada INTEGER DEFAULT 0`, (err) => {});
   // Estos ALTER se ejecutan antes de crear agro_asignaciones; el shim
   // ignora el error "tabla no existe" durante migraciones.
   db.run(`ALTER TABLE agro_asignaciones ADD COLUMN estado TEXT DEFAULT 'ACTIVA'`, (err) => {});

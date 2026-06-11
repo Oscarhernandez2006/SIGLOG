@@ -4,3 +4,7 @@ node_modules/
 boletas.db
 npm-debug.log*
 .DS_Store
+.vscode/
+server.stdout.log
+server.stderr.log
+backup-historial-*.json
