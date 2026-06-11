@@ -404,6 +404,83 @@ db.serialize(() => {
 
   db.run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_clientes_cedula ON clientes(cedula) WHERE cedula IS NOT NULL AND cedula != ''`, (err) => {});
 
+  // ============ TOMA DE PEDIDOS (tablas propias, separadas de Run Errands) ============
+
+  // Productos
+  db.run(`
+    CREATE TABLE IF NOT EXISTS tp_productos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      referencia TEXT,
+      nombre TEXT NOT NULL,
+      descripcion TEXT,
+      precio REAL NOT NULL,
+      unidad_medida TEXT DEFAULT 'UNIDAD',
+      activo INTEGER DEFAULT 1
+    )
+  `);
+
+  // Puntos de Venta
+  db.run(`
+    CREATE TABLE IF NOT EXISTS tp_puntos_venta (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      indicador INTEGER NOT NULL UNIQUE,
+      nombre TEXT NOT NULL,
+      activo INTEGER DEFAULT 1
+    )
+  `);
+
+  // Pedidos
+  db.run(`
+    CREATE TABLE IF NOT EXISTS tp_pedidos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cliente_nombre TEXT NOT NULL,
+      cliente_cedula TEXT,
+      fecha TEXT NOT NULL,
+      estado TEXT DEFAULT 'PENDIENTE',
+      total REAL DEFAULT 0,
+      observaciones TEXT,
+      punto_venta_id INTEGER,
+      numero_pedido TEXT,
+      kilos REAL DEFAULT 0,
+      editado_de TEXT
+    )
+  `);
+
+  // Items de cada pedido
+  db.run(`
+    CREATE TABLE IF NOT EXISTS tp_pedido_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      pedido_id INTEGER NOT NULL,
+      producto_nombre TEXT NOT NULL,
+      cantidad INTEGER NOT NULL DEFAULT 1,
+      precio_unitario REAL NOT NULL,
+      subtotal REAL NOT NULL,
+      FOREIGN KEY (pedido_id) REFERENCES tp_pedidos(id) ON DELETE CASCADE
+    )
+  `);
+
+  // Clientes
+  db.run(`
+    CREATE TABLE IF NOT EXISTS tp_clientes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nombre TEXT NOT NULL,
+      cedula TEXT,
+      telefono TEXT,
+      direccion TEXT,
+      referencia TEXT,
+      barrio TEXT,
+      ciudad TEXT,
+      region TEXT,
+      punto_venta TEXT,
+      email TEXT,
+      observaciones TEXT,
+      activo INTEGER DEFAULT 1,
+      fecha_registro TEXT,
+      confirmacion_codigo TEXT
+    )
+  `);
+  db.run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_tp_clientes_cedula ON tp_clientes(cedula) WHERE cedula IS NOT NULL AND cedula != ''`, (err) => {});
+
   // ============ DISTRIBUCIÓN AGROPECUARIA ============
 
   db.run(`
@@ -792,6 +869,193 @@ db.serialize(() => {
   db.run(`ALTER TABLE agro_plantillas_dl ADD COLUMN municipios_recorre TEXT DEFAULT ''`, () => {});
   db.run(`ALTER TABLE agro_plantillas_dl ADD COLUMN fecha_hora_llegada TEXT DEFAULT ''`, () => {});
   db.run(`ALTER TABLE agro_plantillas_dl ADD COLUMN editado INTEGER DEFAULT 0`, () => {});
+
+  // ============ DISTRIBUCIÓN TaT (Tienda a Tienda) ============
+  // Módulo independiente: mismas funciones que Agropecuaria pero con datos
+  // 100% separados (no comparte clientes, productos, tripulación ni rutas).
+  // Arranca vacío (sin seeds).
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS tat_productos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      referencia TEXT,
+      nombre TEXT NOT NULL,
+      descripcion TEXT,
+      categoria TEXT,
+      precio REAL NOT NULL,
+      unidad_medida TEXT DEFAULT 'UNIDAD',
+      stock INTEGER DEFAULT 0,
+      activo INTEGER DEFAULT 1
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS tat_rutas (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nombre TEXT NOT NULL,
+      recorrido TEXT,
+      ciudad TEXT,
+      kls_recorridos REAL DEFAULT 0,
+      tiempo TEXT,
+      horas REAL DEFAULT 0,
+      activo INTEGER DEFAULT 1
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS tat_distribuidores (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nombre TEXT NOT NULL,
+      cedula_nit TEXT,
+      telefono TEXT,
+      direccion TEXT,
+      ciudad TEXT,
+      zona TEXT,
+      email TEXT,
+      observaciones TEXT,
+      activo INTEGER DEFAULT 1,
+      fecha_registro TEXT
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS tat_ordenes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      numero_orden TEXT,
+      distribuidor_id INTEGER,
+      distribuidor_nombre TEXT NOT NULL,
+      fecha TEXT NOT NULL,
+      estado TEXT DEFAULT 'PENDIENTE',
+      total REAL DEFAULT 0,
+      observaciones TEXT,
+      FOREIGN KEY (distribuidor_id) REFERENCES tat_distribuidores(id)
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS tat_orden_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      orden_id INTEGER NOT NULL,
+      producto_nombre TEXT NOT NULL,
+      cantidad INTEGER NOT NULL DEFAULT 1,
+      precio_unitario REAL NOT NULL,
+      subtotal REAL NOT NULL,
+      cantidad_entregada INTEGER DEFAULT 0,
+      FOREIGN KEY (orden_id) REFERENCES tat_ordenes(id) ON DELETE CASCADE
+    )
+  `);
+
+  db.run(`ALTER TABLE tat_orden_items ADD COLUMN cantidad_entregada INTEGER DEFAULT 0`, (err) => {});
+  db.run(`ALTER TABLE tat_orden_items ALTER COLUMN cantidad TYPE DOUBLE PRECISION`, (err) => {});
+  db.run(`ALTER TABLE tat_orden_items ALTER COLUMN cantidad_entregada TYPE DOUBLE PRECISION`, (err) => {});
+  db.run(`ALTER TABLE tat_ordenes ADD COLUMN observacion_servicio TEXT DEFAULT 'Sin Novedad'`, (err) => {});
+  db.run(`ALTER TABLE tat_ordenes ADD COLUMN novedades TEXT`, (err) => {});
+  db.run(`ALTER TABLE tat_ordenes ADD COLUMN responsabilidades TEXT`, (err) => {});
+  db.run(`ALTER TABLE tat_ordenes ADD COLUMN detalles TEXT`, (err) => {});
+  db.run(`ALTER TABLE tat_ordenes ADD COLUMN doc_fisico INTEGER DEFAULT 0`, (err) => {});
+  db.run(`ALTER TABLE tat_ordenes ADD COLUMN entrega_registrada INTEGER DEFAULT 0`, (err) => {});
+  db.run(`ALTER TABLE tat_asignaciones ADD COLUMN estado TEXT DEFAULT 'ACTIVA'`, (err) => {});
+  db.run(`ALTER TABLE tat_asignaciones ADD COLUMN observacion_servicio TEXT DEFAULT 'Sin Novedad'`, (err) => {});
+  db.run(`ALTER TABLE tat_asignaciones ADD COLUMN fecha_exportacion TEXT`, (err) => {});
+  db.run(`ALTER TABLE tat_asignaciones ADD COLUMN auxiliar TEXT DEFAULT ''`, (err) => {});
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS tat_vehiculos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      placa TEXT NOT NULL,
+      conductor TEXT NOT NULL,
+      disponibilidad TEXT DEFAULT '',
+      activo INTEGER DEFAULT 1
+    )
+  `);
+  db.run(`ALTER TABLE tat_vehiculos ADD COLUMN tripulacion_id INTEGER`, (err) => {});
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS tat_tripulacion (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nombre TEXT,
+      cedula TEXT DEFAULT '',
+      telefono TEXT DEFAULT '',
+      rol TEXT DEFAULT 'Conductor',
+      nombres TEXT DEFAULT '',
+      apellidos TEXT DEFAULT ''
+    )
+  `);
+  db.run(`ALTER TABLE tat_tripulacion ADD COLUMN rol TEXT DEFAULT 'Conductor'`, (err) => {});
+  db.run(`ALTER TABLE tat_tripulacion ADD COLUMN nombres TEXT DEFAULT ''`, (err) => {});
+  db.run(`ALTER TABLE tat_tripulacion ADD COLUMN apellidos TEXT DEFAULT ''`, (err) => {});
+  db.run(`ALTER TABLE tat_tripulacion ADD COLUMN tipo TEXT DEFAULT ''`, (err) => {});
+  db.run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_tat_tripulacion_cedula ON tat_tripulacion(cedula)`, (err) => {});
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS tat_clientes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      codigo BIGINT,
+      codigo_concatenado TEXT,
+      nombre TEXT NOT NULL,
+      direccion TEXT,
+      barrio TEXT,
+      ciudad TEXT,
+      departamento TEXT,
+      telefono TEXT,
+      activo INTEGER DEFAULT 1
+    )
+  `);
+  db.run(`ALTER TABLE tat_clientes ALTER COLUMN codigo TYPE BIGINT`, () => {});
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS tat_asignaciones (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      vehiculo_id INTEGER NOT NULL,
+      vehiculo_placa TEXT,
+      vehiculo_conductor TEXT,
+      fecha TEXT NOT NULL,
+      observaciones TEXT,
+      FOREIGN KEY (vehiculo_id) REFERENCES tat_vehiculos(id)
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS tat_asignacion_ordenes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      asignacion_id INTEGER NOT NULL,
+      orden_id INTEGER NOT NULL,
+      FOREIGN KEY (asignacion_id) REFERENCES tat_asignaciones(id) ON DELETE CASCADE,
+      FOREIGN KEY (orden_id) REFERENCES tat_ordenes(id)
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS tat_contadores (
+      nombre TEXT PRIMARY KEY,
+      valor INTEGER NOT NULL DEFAULT 0
+    )
+  `, () => {
+    db.run(`INSERT OR IGNORE INTO tat_contadores (nombre, valor) VALUES ('plantilla_dl', 0)`);
+  });
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS tat_plantillas_dl (
+      consecutivo INTEGER PRIMARY KEY AUTOINCREMENT,
+      placa TEXT NOT NULL,
+      conductor TEXT,
+      auxiliar TEXT DEFAULT '',
+      fecha_despacho TEXT,
+      origen TEXT,
+      hora_salida TEXT,
+      ruta TEXT,
+      total_documentos INTEGER DEFAULT 0,
+      total_kilos REAL DEFAULT 0,
+      ordenes_json TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  db.run(`ALTER TABLE tat_plantillas_dl ADD COLUMN auxiliar TEXT DEFAULT ''`, () => {});
+  db.run(`ALTER TABLE tat_plantillas_dl ADD COLUMN kms_recorridos TEXT DEFAULT ''`, () => {});
+  db.run(`ALTER TABLE tat_plantillas_dl ADD COLUMN tiempo_recorrido TEXT DEFAULT ''`, () => {});
+  db.run(`ALTER TABLE tat_plantillas_dl ADD COLUMN municipios_recorre TEXT DEFAULT ''`, () => {});
+  db.run(`ALTER TABLE tat_plantillas_dl ADD COLUMN fecha_hora_llegada TEXT DEFAULT ''`, () => {});
+  db.run(`ALTER TABLE tat_plantillas_dl ADD COLUMN editado INTEGER DEFAULT 0`, () => {});
 
 });
 

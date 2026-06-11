@@ -10,7 +10,7 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 *
 // Listar puntos de venta
 router.get("/puntos-venta", (req, res) => {
   const todos = req.query.todos === "1";
-  let query = "SELECT * FROM puntos_venta";
+  let query = "SELECT * FROM tp_puntos_venta";
   if (!todos) query += " WHERE activo = 1";
   query += " ORDER BY indicador";
 
@@ -26,11 +26,11 @@ router.post("/puntos-venta", (req, res) => {
   if (!nombre) return res.status(400).json({ error: "El nombre es requerido" });
 
   // Obtener el siguiente indicador disponible
-  db.get("SELECT COALESCE(MAX(indicador), 0) + 1 as siguiente FROM puntos_venta", [], (err, row) => {
+  db.get("SELECT COALESCE(MAX(indicador), 0) + 1 as siguiente FROM tp_puntos_venta", [], (err, row) => {
     if (err) return res.status(500).json({ error: "Error del servidor" });
     const indicador = row.siguiente;
 
-    db.run("INSERT INTO puntos_venta (indicador, nombre) VALUES (?, ?)", [indicador, nombre.trim()], function (err) {
+    db.run("INSERT INTO tp_puntos_venta (indicador, nombre) VALUES (?, ?)", [indicador, nombre.trim()], function (err) {
       if (err) return res.status(500).json({ error: "Error al crear punto de venta" });
       res.json({ message: "Punto de venta creado", id: this.lastID, indicador });
     });
@@ -42,12 +42,12 @@ router.put("/puntos-venta/:id", (req, res) => {
   const { id } = req.params;
   const { nombre, activo } = req.body;
 
-  db.get("SELECT * FROM puntos_venta WHERE id = ?", [id], (err, pdv) => {
+  db.get("SELECT * FROM tp_puntos_venta WHERE id = ?", [id], (err, pdv) => {
     if (err) return res.status(500).json({ error: "Error del servidor" });
     if (!pdv) return res.status(404).json({ error: "Punto de venta no encontrado" });
 
     db.run(
-      "UPDATE puntos_venta SET nombre = ?, activo = ? WHERE id = ?",
+      "UPDATE tp_puntos_venta SET nombre = ?, activo = ? WHERE id = ?",
       [nombre || pdv.nombre, activo !== undefined ? (activo ? 1 : 0) : pdv.activo, id],
       function (err) {
         if (err) return res.status(500).json({ error: "Error al actualizar" });
@@ -60,7 +60,7 @@ router.put("/puntos-venta/:id", (req, res) => {
 // Desactivar punto de venta
 router.delete("/puntos-venta/:id", (req, res) => {
   const { id } = req.params;
-  db.run("UPDATE puntos_venta SET activo = 0 WHERE id = ?", [id], function (err) {
+  db.run("UPDATE tp_puntos_venta SET activo = 0 WHERE id = ?", [id], function (err) {
     if (err) return res.status(500).json({ error: "Error al desactivar" });
     res.json({ message: "Punto de venta desactivado" });
   });
@@ -72,7 +72,7 @@ router.delete("/puntos-venta/:id", (req, res) => {
 router.get("/productos", (req, res) => {
   const mostrarTodos = req.query.todos === "1";
   const { buscar } = req.query;
-  let query = "SELECT * FROM productos";
+  let query = "SELECT * FROM tp_productos";
   const params = [];
 
   if (mostrarTodos !== true && req.query.todos !== "1") {
@@ -100,7 +100,7 @@ router.post("/productos", (req, res) => {
   if (!nombre || precio == null) return res.status(400).json({ error: "Nombre y precio son requeridos" });
 
   db.run(
-    "INSERT INTO productos (referencia, nombre, descripcion, precio, unidad_medida) VALUES (?, ?, ?, ?, ?)",
+    "INSERT INTO tp_productos (referencia, nombre, descripcion, precio, unidad_medida) VALUES (?, ?, ?, ?, ?)",
     [referencia || "", nombre.trim(), descripcion || "", parseFloat(precio), unidad_medida || "UNIDAD"],
     function (err) {
       if (err) return res.status(500).json({ error: "Error al crear producto" });
@@ -114,12 +114,12 @@ router.put("/productos/:id", (req, res) => {
   const { id } = req.params;
   const { referencia, nombre, descripcion, precio, unidad_medida, activo } = req.body;
 
-  db.get("SELECT * FROM productos WHERE id = ?", [id], (err, prod) => {
+  db.get("SELECT * FROM tp_productos WHERE id = ?", [id], (err, prod) => {
     if (err) return res.status(500).json({ error: "Error del servidor" });
     if (!prod) return res.status(404).json({ error: "Producto no encontrado" });
 
     db.run(
-      "UPDATE productos SET referencia = ?, nombre = ?, descripcion = ?, precio = ?, unidad_medida = ?, activo = ? WHERE id = ?",
+      "UPDATE tp_productos SET referencia = ?, nombre = ?, descripcion = ?, precio = ?, unidad_medida = ?, activo = ? WHERE id = ?",
       [
         referencia !== undefined ? referencia : prod.referencia,
         nombre || prod.nombre,
@@ -140,7 +140,7 @@ router.put("/productos/:id", (req, res) => {
 // Eliminar producto (desactivar)
 router.delete("/productos/:id", (req, res) => {
   const { id } = req.params;
-  db.run("UPDATE productos SET activo = 0 WHERE id = ?", [id], function (err) {
+  db.run("UPDATE tp_productos SET activo = 0 WHERE id = ?", [id], function (err) {
     if (err) return res.status(500).json({ error: "Error al eliminar producto" });
     res.json({ message: "Producto desactivado" });
   });
@@ -192,10 +192,10 @@ router.post("/productos/carga-masiva", upload.single("archivo"), (req, res) => {
 
       // Si tiene referencia, verificar si ya existe para actualizar
       if (referencia) {
-        db.get("SELECT id FROM productos WHERE referencia = ?", [referencia], (err, existe) => {
+        db.get("SELECT id FROM tp_productos WHERE referencia = ?", [referencia], (err, existe) => {
           if (existe) {
             db.run(
-              "UPDATE productos SET nombre = ?, precio = ?, unidad_medida = ?, activo = 1 WHERE id = ?",
+              "UPDATE tp_productos SET nombre = ?, precio = ?, unidad_medida = ?, activo = 1 WHERE id = ?",
               [nombre, precio, unidad_medida, existe.id],
               (err2) => {
                 if (err2) errores.push("Fila " + (i + 2) + ": " + err2.message);
@@ -214,7 +214,7 @@ router.post("/productos/carga-masiva", upload.single("archivo"), (req, res) => {
 
       function insertarProducto() {
         db.run(
-          "INSERT INTO productos (referencia, nombre, descripcion, precio, unidad_medida) VALUES (?, ?, ?, ?, ?)",
+          "INSERT INTO tp_productos (referencia, nombre, descripcion, precio, unidad_medida) VALUES (?, ?, ?, ?, ?)",
           [referencia, nombre, "", precio, unidad_medida],
           (err) => {
             if (err) errores.push("Fila " + (i + 2) + ": " + err.message);
@@ -247,7 +247,7 @@ router.post("/productos/carga-masiva", upload.single("archivo"), (req, res) => {
 router.get("/pedidos", (req, res) => {
   const { estado, desde, hasta, pdv } = req.query;
 
-  let query = "SELECT * FROM pedidos WHERE 1=1";
+  let query = "SELECT * FROM tp_pedidos WHERE 1=1";
   const params = [];
 
   if (pdv && pdv !== "TODOS") {
@@ -281,11 +281,11 @@ router.get("/pedidos", (req, res) => {
 router.get("/pedidos/:id", (req, res) => {
   const { id } = req.params;
 
-  db.get("SELECT * FROM pedidos WHERE id = ?", [id], (err, pedido) => {
+  db.get("SELECT * FROM tp_pedidos WHERE id = ?", [id], (err, pedido) => {
     if (err) return res.status(500).json({ error: "Error del servidor" });
     if (!pedido) return res.status(404).json({ error: "Pedido no encontrado" });
 
-    db.all("SELECT * FROM pedido_items WHERE pedido_id = ?", [id], (err2, items) => {
+    db.all("SELECT * FROM tp_pedido_items WHERE pedido_id = ?", [id], (err2, items) => {
       if (err2) return res.status(500).json({ error: "Error del servidor" });
       res.json({ ...pedido, items: items || [] });
     });
@@ -302,10 +302,10 @@ router.post("/pedidos", (req, res) => {
   // Buscar el cliente por cédula para obtener su punto de venta
   const buscarPDV = (callback) => {
     if (!cliente_cedula) return callback(null);
-    db.get("SELECT punto_venta FROM clientes WHERE cedula = ?", [cliente_cedula.trim()], (err, cli) => {
+    db.get("SELECT punto_venta FROM tp_clientes WHERE cedula = ?", [cliente_cedula.trim()], (err, cli) => {
       if (err || !cli || !cli.punto_venta) return callback(null);
       // Buscar el PDV que coincida con el nombre del punto de venta del cliente
-      db.get("SELECT * FROM puntos_venta WHERE nombre LIKE ? AND activo = 1", ["%" + cli.punto_venta.trim() + "%"], (err2, pdv) => {
+      db.get("SELECT * FROM tp_puntos_venta WHERE nombre LIKE ? AND activo = 1", ["%" + cli.punto_venta.trim() + "%"], (err2, pdv) => {
         if (err2 || !pdv) return callback(null);
         callback(pdv);
       });
@@ -318,7 +318,7 @@ router.post("/pedidos", (req, res) => {
 
     // Generar número de pedido con prefijo OS
     db.get(
-      "SELECT COALESCE(MAX(CAST(SUBSTR(numero_pedido, INSTR(numero_pedido, '-') + 1) AS INTEGER)), 0) as ultimo FROM pedidos WHERE numero_pedido LIKE ?",
+      "SELECT COALESCE(MAX(CAST(SUBSTR(numero_pedido, INSTR(numero_pedido, '-') + 1) AS INTEGER)), 0) as ultimo FROM tp_pedidos WHERE numero_pedido LIKE ?",
       ["OS" + indicador + "-%"],
       (err, row) => {
         if (err) return res.status(500).json({ error: "Error del servidor" });
@@ -332,14 +332,14 @@ router.post("/pedidos", (req, res) => {
       });
 
       db.run(
-        "INSERT INTO pedidos (cliente_nombre, cliente_cedula, fecha, estado, total, observaciones, punto_venta_id, numero_pedido) VALUES (?, ?, ?, 'PENDIENTE', ?, ?, ?, ?)",
+        "INSERT INTO tp_pedidos (cliente_nombre, cliente_cedula, fecha, estado, total, observaciones, punto_venta_id, numero_pedido) VALUES (?, ?, ?, 'PENDIENTE', ?, ?, ?, ?)",
         [cliente_nombre.trim(), cliente_cedula || "", fecha, total, observaciones || "", punto_venta_id, numero_pedido],
         function (err) {
           if (err) return res.status(500).json({ error: "Error al crear pedido" });
 
           const pedidoId = this.lastID;
           const stmt = db.prepare(
-            "INSERT INTO pedido_items (pedido_id, producto_nombre, cantidad, precio_unitario, subtotal) VALUES (?, ?, ?, ?, ?)"
+            "INSERT INTO tp_pedido_items (pedido_id, producto_nombre, cantidad, precio_unitario, subtotal) VALUES (?, ?, ?, ?, ?)"
           );
 
           items.forEach((item) => {
@@ -368,7 +368,7 @@ router.put("/pedidos/:id/estado", (req, res) => {
     return res.status(400).json({ error: "Estado no válido. Use: " + estadosValidos.join(", ") });
   }
 
-  db.run("UPDATE pedidos SET estado = ? WHERE id = ?", [estado, id], function (err) {
+  db.run("UPDATE tp_pedidos SET estado = ? WHERE id = ?", [estado, id], function (err) {
     if (err) return res.status(500).json({ error: "Error al actualizar estado" });
     if (this.changes === 0) return res.status(404).json({ error: "Pedido no encontrado" });
     res.json({ message: "Estado actualizado a " + estado });
@@ -382,7 +382,7 @@ router.put("/pedidos/:id/completo", (req, res) => {
 
   if (!items || items.length === 0) return res.status(400).json({ error: "Debe agregar al menos un producto" });
 
-  db.get("SELECT * FROM pedidos WHERE id = ?", [id], (err, pedido) => {
+  db.get("SELECT * FROM tp_pedidos WHERE id = ?", [id], (err, pedido) => {
     if (err) return res.status(500).json({ error: "Error del servidor" });
     if (!pedido) return res.status(404).json({ error: "Pedido no encontrado" });
 
@@ -392,7 +392,7 @@ router.put("/pedidos/:id/completo", (req, res) => {
     });
 
     db.run(
-      "UPDATE pedidos SET cliente_nombre = ?, cliente_cedula = ?, observaciones = ?, total = ? WHERE id = ?",
+      "UPDATE tp_pedidos SET cliente_nombre = ?, cliente_cedula = ?, observaciones = ?, total = ? WHERE id = ?",
       [
         cliente_nombre || pedido.cliente_nombre,
         cliente_cedula !== undefined ? cliente_cedula : pedido.cliente_cedula,
@@ -404,11 +404,11 @@ router.put("/pedidos/:id/completo", (req, res) => {
         if (err) return res.status(500).json({ error: "Error al actualizar pedido" });
 
         // Eliminar items anteriores y crear los nuevos
-        db.run("DELETE FROM pedido_items WHERE pedido_id = ?", [id], (err2) => {
+        db.run("DELETE FROM tp_pedido_items WHERE pedido_id = ?", [id], (err2) => {
           if (err2) return res.status(500).json({ error: "Error al actualizar items" });
 
           const stmt = db.prepare(
-            "INSERT INTO pedido_items (pedido_id, producto_nombre, cantidad, precio_unitario, subtotal) VALUES (?, ?, ?, ?, ?)"
+            "INSERT INTO tp_pedido_items (pedido_id, producto_nombre, cantidad, precio_unitario, subtotal) VALUES (?, ?, ?, ?, ?)"
           );
 
           items.forEach((item) => {
@@ -431,12 +431,12 @@ router.put("/pedidos/:id", (req, res) => {
   const { id } = req.params;
   const { cliente_nombre, cliente_cedula, observaciones } = req.body;
 
-  db.get("SELECT * FROM pedidos WHERE id = ?", [id], (err, pedido) => {
+  db.get("SELECT * FROM tp_pedidos WHERE id = ?", [id], (err, pedido) => {
     if (err) return res.status(500).json({ error: "Error del servidor" });
     if (!pedido) return res.status(404).json({ error: "Pedido no encontrado" });
 
     db.run(
-      "UPDATE pedidos SET cliente_nombre = ?, cliente_cedula = ?, observaciones = ? WHERE id = ?",
+      "UPDATE tp_pedidos SET cliente_nombre = ?, cliente_cedula = ?, observaciones = ? WHERE id = ?",
       [
         cliente_nombre || pedido.cliente_nombre,
         cliente_cedula !== undefined ? cliente_cedula : pedido.cliente_cedula,
@@ -455,14 +455,14 @@ router.put("/pedidos/:id", (req, res) => {
 router.delete("/pedidos/:id", (req, res) => {
   const { id } = req.params;
 
-  db.get("SELECT * FROM pedidos WHERE id = ?", [id], (err, pedido) => {
+  db.get("SELECT * FROM tp_pedidos WHERE id = ?", [id], (err, pedido) => {
     if (err) return res.status(500).json({ error: "Error del servidor" });
     if (!pedido) return res.status(404).json({ error: "Pedido no encontrado" });
 
-    db.run("DELETE FROM pedido_items WHERE pedido_id = ?", [id], (err2) => {
+    db.run("DELETE FROM tp_pedido_items WHERE pedido_id = ?", [id], (err2) => {
       if (err2) return res.status(500).json({ error: "Error al eliminar items" });
 
-      db.run("DELETE FROM pedidos WHERE id = ?", [id], function (err3) {
+      db.run("DELETE FROM tp_pedidos WHERE id = ?", [id], function (err3) {
         if (err3) return res.status(500).json({ error: "Error al eliminar pedido" });
         res.json({ message: "Pedido eliminado" });
       });
@@ -479,12 +479,12 @@ router.post("/pedidos/borrar-todos", (req, res) => {
     if (err) return res.status(500).json({ error: "Error del servidor" });
     if (!user) return res.status(401).json({ error: "Contraseña de administrador incorrecta" });
 
-    db.run("DELETE FROM pedido_items", [], (err2) => {
+    db.run("DELETE FROM tp_pedido_items", [], (err2) => {
       if (err2) return res.status(500).json({ error: "Error al eliminar items" });
-      db.run("DELETE FROM pedidos", [], function (err3) {
+      db.run("DELETE FROM tp_pedidos", [], function (err3) {
         if (err3) return res.status(500).json({ error: "Error al eliminar pedidos" });
         const eliminados = this.changes;
-        db.run("DELETE FROM sqlite_sequence WHERE name IN ('pedidos','pedido_items')", [], () => {
+        db.run("DELETE FROM sqlite_sequence WHERE name IN ('tp_pedidos','tp_pedido_items')", [], () => {
           res.json({ message: "Todos los pedidos han sido eliminados", eliminados });
         });
       });
@@ -497,7 +497,7 @@ router.post("/pedidos/borrar-todos", (req, res) => {
 // Listar clientes
 router.get("/clientes", (req, res) => {
   const { buscar, todos } = req.query;
-  let query = "SELECT * FROM clientes";
+  let query = "SELECT * FROM tp_clientes";
   const params = [];
 
   if (todos !== "1") {
@@ -521,7 +521,7 @@ router.get("/clientes", (req, res) => {
 
 // Obtener un cliente
 router.get("/clientes/:id", (req, res) => {
-  db.get("SELECT * FROM clientes WHERE id = ?", [req.params.id], (err, row) => {
+  db.get("SELECT * FROM tp_clientes WHERE id = ?", [req.params.id], (err, row) => {
     if (err) return res.status(500).json({ error: "Error del servidor" });
     if (!row) return res.status(404).json({ error: "Cliente no encontrado" });
     res.json(row);
@@ -534,12 +534,12 @@ router.post("/clientes", (req, res) => {
   if (!nombre) return res.status(400).json({ error: "El nombre es requerido" });
   if (!cedula || !cedula.trim()) return res.status(400).json({ error: "La cédula/NIT es requerida" });
 
-  db.get("SELECT id FROM clientes WHERE cedula = ?", [cedula.trim()], (err, existe) => {
+  db.get("SELECT id FROM tp_clientes WHERE cedula = ?", [cedula.trim()], (err, existe) => {
     if (err) return res.status(500).json({ error: "Error del servidor" });
     if (existe) return res.status(400).json({ error: "Ya existe un cliente con esta cédula/NIT" });
 
     db.run(
-      "INSERT INTO clientes (nombre, cedula, telefono, direccion, referencia, barrio, ciudad, punto_venta, email, observaciones, confirmacion_codigo, fecha_registro) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO tp_clientes (nombre, cedula, telefono, direccion, referencia, barrio, ciudad, punto_venta, email, observaciones, confirmacion_codigo, fecha_registro) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [nombre.trim(), cedula.trim(), telefono || "", direccion || "", referencia || "", barrio || "", ciudad || "", punto_venta || "", email || "", observaciones || "", confirmacion_codigo || "", new Date().toISOString()],
       function (err) {
         if (err) return res.status(500).json({ error: "Error al crear cliente" });
@@ -554,12 +554,12 @@ router.put("/clientes/:id", (req, res) => {
   const { id } = req.params;
   const { nombre, cedula, telefono, direccion, referencia, barrio, ciudad, punto_venta, email, observaciones, confirmacion_codigo, activo } = req.body;
 
-  db.get("SELECT * FROM clientes WHERE id = ?", [id], (err, cli) => {
+  db.get("SELECT * FROM tp_clientes WHERE id = ?", [id], (err, cli) => {
     if (err) return res.status(500).json({ error: "Error del servidor" });
     if (!cli) return res.status(404).json({ error: "Cliente no encontrado" });
 
     db.run(
-      "UPDATE clientes SET nombre=?, cedula=?, telefono=?, direccion=?, referencia=?, barrio=?, ciudad=?, punto_venta=?, email=?, observaciones=?, confirmacion_codigo=?, activo=? WHERE id=?",
+      "UPDATE tp_clientes SET nombre=?, cedula=?, telefono=?, direccion=?, referencia=?, barrio=?, ciudad=?, punto_venta=?, email=?, observaciones=?, confirmacion_codigo=?, activo=? WHERE id=?",
       [
         nombre || cli.nombre,
         cedula !== undefined ? cedula : cli.cedula,
@@ -582,24 +582,24 @@ router.put("/clientes/:id", (req, res) => {
         const nuevoPV = punto_venta !== undefined ? punto_venta : cli.punto_venta;
         const cedulaCliente = cedula !== undefined ? cedula : cli.cedula;
         if (nuevoPV && cedulaCliente) {
-          db.get("SELECT * FROM puntos_venta WHERE nombre LIKE ? AND activo = 1", ["%" + nuevoPV.trim() + "%"], (err2, pdv) => {
+          db.get("SELECT * FROM tp_puntos_venta WHERE nombre LIKE ? AND activo = 1", ["%" + nuevoPV.trim() + "%"], (err2, pdv) => {
             if (!err2 && pdv) {
               // Buscar pedidos OS0 de este cliente
               db.all(
-                "SELECT id FROM pedidos WHERE cliente_cedula = ? AND numero_pedido LIKE 'OS0-%'",
+                "SELECT id FROM tp_pedidos WHERE cliente_cedula = ? AND numero_pedido LIKE 'OS0-%'",
                 [cedulaCliente.trim()],
                 (err3, pedidos) => {
                   if (!err3 && pedidos && pedidos.length > 0) {
                     // Obtener el último consecutivo del PDV destino
                     db.get(
-                      "SELECT COALESCE(MAX(CAST(SUBSTR(numero_pedido, INSTR(numero_pedido, '-') + 1) AS INTEGER)), 0) as ultimo FROM pedidos WHERE numero_pedido LIKE ?",
+                      "SELECT COALESCE(MAX(CAST(SUBSTR(numero_pedido, INSTR(numero_pedido, '-') + 1) AS INTEGER)), 0) as ultimo FROM tp_pedidos WHERE numero_pedido LIKE ?",
                       ["OS" + pdv.indicador + "-%"],
                       (err4, row) => {
                         let consecutivo = (row && row.ultimo || 0);
                         pedidos.forEach(p => {
                           consecutivo++;
                           const nuevoNumero = "OS" + pdv.indicador + "-" + String(consecutivo).padStart(5, "0");
-                          db.run("UPDATE pedidos SET numero_pedido = ?, punto_venta_id = ? WHERE id = ?", [nuevoNumero, pdv.id, p.id]);
+                          db.run("UPDATE tp_pedidos SET numero_pedido = ?, punto_venta_id = ? WHERE id = ?", [nuevoNumero, pdv.id, p.id]);
                         });
                       }
                     );
@@ -618,7 +618,7 @@ router.put("/clientes/:id", (req, res) => {
 
 // Eliminar (desactivar) cliente
 router.delete("/clientes/:id", (req, res) => {
-  db.run("UPDATE clientes SET activo = 0 WHERE id = ?", [req.params.id], function (err) {
+  db.run("UPDATE tp_clientes SET activo = 0 WHERE id = ?", [req.params.id], function (err) {
     if (err) return res.status(500).json({ error: "Error al desactivar cliente" });
     res.json({ message: "Cliente desactivado" });
   });
@@ -632,9 +632,9 @@ router.post("/clientes/borrar-todos", (req, res) => {  const { password } = req.
     if (err) return res.status(500).json({ error: "Error del servidor" });
     if (!user) return res.status(401).json({ error: "Contraseña de administrador incorrecta" });
 
-    db.run("DELETE FROM clientes", [], function (err2) {
+    db.run("DELETE FROM tp_clientes", [], function (err2) {
       if (err2) return res.status(500).json({ error: "Error al eliminar clientes" });
-      db.run("DELETE FROM sqlite_sequence WHERE name='clientes'", [], () => {
+      db.run("DELETE FROM sqlite_sequence WHERE name='tp_clientes'", [], () => {
         res.json({ message: "Todos los clientes han sido eliminados", eliminados: this.changes });
       });
     });
@@ -695,10 +695,10 @@ router.post("/clientes/carga-masiva", upload.single("archivo"), (req, res) => {
 
       // Si tiene cédula, verificar si ya existe
       if (cedula) {
-        db.get("SELECT id FROM clientes WHERE cedula = ?", [cedula], (err, existe) => {
+        db.get("SELECT id FROM tp_clientes WHERE cedula = ?", [cedula], (err, existe) => {
           if (existe) {
             db.run(
-              "UPDATE clientes SET nombre=?, telefono=COALESCE(NULLIF(?,''),(SELECT telefono FROM clientes WHERE id=?)), direccion=COALESCE(NULLIF(?,''),(SELECT direccion FROM clientes WHERE id=?)), referencia=COALESCE(NULLIF(?,''),(SELECT referencia FROM clientes WHERE id=?)), barrio=COALESCE(NULLIF(?,''),(SELECT barrio FROM clientes WHERE id=?)), ciudad=COALESCE(NULLIF(?,''),(SELECT ciudad FROM clientes WHERE id=?)), punto_venta=COALESCE(NULLIF(?,''),(SELECT punto_venta FROM clientes WHERE id=?)), email=COALESCE(NULLIF(?,''),(SELECT email FROM clientes WHERE id=?)), confirmacion_codigo=COALESCE(NULLIF(?,''),(SELECT confirmacion_codigo FROM clientes WHERE id=?)), activo=1 WHERE id=?",
+              "UPDATE tp_clientes SET nombre=?, telefono=COALESCE(NULLIF(?,''),(SELECT telefono FROM tp_clientes WHERE id=?)), direccion=COALESCE(NULLIF(?,''),(SELECT direccion FROM tp_clientes WHERE id=?)), referencia=COALESCE(NULLIF(?,''),(SELECT referencia FROM tp_clientes WHERE id=?)), barrio=COALESCE(NULLIF(?,''),(SELECT barrio FROM tp_clientes WHERE id=?)), ciudad=COALESCE(NULLIF(?,''),(SELECT ciudad FROM tp_clientes WHERE id=?)), punto_venta=COALESCE(NULLIF(?,''),(SELECT punto_venta FROM tp_clientes WHERE id=?)), email=COALESCE(NULLIF(?,''),(SELECT email FROM tp_clientes WHERE id=?)), confirmacion_codigo=COALESCE(NULLIF(?,''),(SELECT confirmacion_codigo FROM tp_clientes WHERE id=?)), activo=1 WHERE id=?",
               [nombre, telefono, existe.id, direccion, existe.id, referencia, existe.id, barrio, existe.id, ciudad, existe.id, punto_venta, existe.id, email, existe.id, confirmacion_codigo, existe.id, existe.id],
               (err2) => {
                 if (err2) errores.push("Fila " + (i + 2) + ": " + err2.message);
@@ -717,7 +717,7 @@ router.post("/clientes/carga-masiva", upload.single("archivo"), (req, res) => {
 
       function insertarCliente() {
         db.run(
-          "INSERT INTO clientes (nombre, cedula, telefono, direccion, referencia, barrio, ciudad, punto_venta, email, observaciones, confirmacion_codigo, fecha_registro) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          "INSERT INTO tp_clientes (nombre, cedula, telefono, direccion, referencia, barrio, ciudad, punto_venta, email, observaciones, confirmacion_codigo, fecha_registro) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
           [nombre, cedula, telefono, direccion, referencia, barrio, ciudad, punto_venta, email, observaciones, confirmacion_codigo, fecha],
           (err) => {
             if (err) errores.push("Fila " + (i + 2) + ": " + err.message);
