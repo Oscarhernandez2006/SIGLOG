@@ -866,8 +866,14 @@
     destinoBuscarTimer = setTimeout(async () => {
       try {
         const res = await fetch(API + "/clientes?buscar=" + encodeURIComponent(texto));
-        const clientes = await res.json();
-        if (!Array.isArray(clientes) || clientes.length === 0) {
+        let clientes = await res.json();
+        // Búsqueda exacta: solo coincidencias por nombre o cédula (no barrio/dirección/ciudad/etc.)
+        const t = texto.toLowerCase();
+        clientes = (Array.isArray(clientes) ? clientes : []).filter(c =>
+          (c.nombre || "").toLowerCase().includes(t) ||
+          (c.cedula || "").toLowerCase().includes(t)
+        );
+        if (clientes.length === 0) {
           dropdown.style.display = "none";
           document.getElementById("destinoNoEncontrado").style.display = "flex";
           return;
@@ -1121,11 +1127,16 @@
 
     // Modo nuevo: junta cola + formulario actual (si tiene datos)
     const aGuardar = [...pedidosCola];
-    if (cliente_nombre_actual || punto_venta_id_actual) {
-      if (!cliente_nombre_actual) return toast("Debe seleccionar un destino", "error");
+    // El formulario solo cuenta como pedido si tiene un destino seleccionado.
+    // (Tras agregar a la cola con "+", el PDV de origen queda fijo pero el destino
+    //  vacío; en ese caso no debe bloquear el guardado de la cola.)
+    if (cliente_nombre_actual) {
       if (!punto_venta_id_actual) return toast("Debe seleccionar el PDV de Despacho", "error");
       if (kilos_actual <= 0) return toast("Debe indicar los kilos del pedido", "error");
       aGuardar.push({ cliente_nombre: cliente_nombre_actual, cliente_cedula: cliente_cedula_actual, kilos: kilos_actual, estado: estado_actual, punto_venta_id: punto_venta_id_actual });
+    } else if (punto_venta_id_actual && pedidosCola.length === 0) {
+      // Solo origen sin destino y sin cola => falta el destino.
+      return toast("Debe seleccionar un destino", "error");
     }
 
     if (aGuardar.length === 0) return toast("No hay pedidos para guardar", "error");
@@ -1234,9 +1245,32 @@
     `).join("");
   }
 
-  function quitarPedidoCola(idx) {
+  async function quitarPedidoCola(idx) {
     pedidosCola.splice(idx, 1);
     renderPedidosCola();
+    await resecuenciarConsecutivos();
+  }
+
+  // Recalcula los consecutivos de previsualización de la cola y del formulario
+  // para que no queden huecos al borrar un pedido pendiente.
+  async function resecuenciarConsecutivos() {
+    if (document.getElementById("pedidoEditId").value) return; // no aplica en edición
+    try {
+      const res = await fetch(API + "/pedidos-next-numero");
+      const data = await res.json();
+      if (!data || !data.numero_pedido) return;
+      const m = data.numero_pedido.match(/^(\D*)(\d+)$/);
+      if (!m) return;
+      const prefijo = m[1];
+      const baseNum = parseInt(m[2], 10);
+      const ancho = m[2].length;
+      const fmt = (n) => prefijo + String(n).padStart(ancho, "0");
+      // Reasignar consecutivos a cada pedido en cola
+      pedidosCola.forEach((p, i) => { p._numero = fmt(baseNum + i); });
+      renderPedidosCola();
+      // Actualizar el consecutivo del formulario actual
+      document.getElementById("pedidoNumero").value = fmt(baseNum + pedidosCola.length);
+    } catch (e) { /* silencioso */ }
   }
 
   function cerrarModalPedido() {
