@@ -481,6 +481,7 @@ db.serialize(() => {
   db.run(`ALTER TABLE agro_ordenes ADD COLUMN novedades TEXT`, (err) => {});
   db.run(`ALTER TABLE agro_ordenes ADD COLUMN responsabilidades TEXT`, (err) => {});
   db.run(`ALTER TABLE agro_ordenes ADD COLUMN detalles TEXT`, (err) => {});
+  db.run(`ALTER TABLE agro_ordenes ADD COLUMN doc_fisico INTEGER DEFAULT 0`, (err) => {});
   // Estos ALTER se ejecutan antes de crear agro_asignaciones; el shim
   // ignora el error "tabla no existe" durante migraciones.
   db.run(`ALTER TABLE agro_asignaciones ADD COLUMN estado TEXT DEFAULT 'ACTIVA'`, (err) => {});

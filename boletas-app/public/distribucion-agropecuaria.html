@@ -17,7 +17,16 @@
 /* Barra de desplazamiento vertical en las tablas de cada pestaña (igual que en run-errands) */
 .tab-panel .table-wrapper {
   max-height: 60vh;
-  overflow-y: auto;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+/* Barra de desplazamiento horizontal espejo, colocada ARRIBA de la tabla */
+.table-scroll-top {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.table-scroll-top > div {
+  height: 1px;
 }
 .tab-panel .table-wrapper table thead th {
   position: sticky;
@@ -119,7 +128,7 @@
         </div>
       </div>
     </div>
-    <button class="btn btn-danger" onclick="document.getElementById('modalBorrarTodas').classList.add('active')">🗑 Borrar Todas</button>
+    <button class="btn btn-danger" onclick="document.getElementById('modalBorrarTodas').classList.add('active')" title="Borrar Todas las Órdenes">✕</button>
     <button class="btn btn-warning" onclick="document.getElementById('modalCargaOrdenes').classList.add('active')">📁 Cargar Excel</button>
   </div>
 </div>
@@ -596,7 +605,8 @@
         <button class="btn btn-secondary btn-sm" onclick="cargarHistorialDespachos()">↻ Actualizar</button>
       </div>
     </div>
-    <div class="table-wrapper">
+    <div class="table-scroll-top" id="histScrollTop"><div></div></div>
+    <div class="table-wrapper" id="histTableWrapper">
       <table>
         <thead>
           <tr>
@@ -606,6 +616,7 @@
             <th>Cliente</th>
             <th>Vehículo</th>
             <th>Conductor</th>
+            <th>Auxiliar</th>
             <th style="text-align:right;">Kilos</th>
             <th style="min-width:160px;">Estado</th>
             <th style="min-width:200px;">Novedades</th>
@@ -614,7 +625,7 @@
           </tr>
         </thead>
         <tbody id="tablaHistorialDespachos">
-          <tr><td colspan="11"><div class="empty-state">—</div></td></tr>
+          <tr><td colspan="12"><div class="empty-state">—</div></td></tr>
         </tbody>
       </table>
     </div>
@@ -1285,7 +1296,9 @@ function actualizarBarraAsignar() {
 
 function toggleTodas(el) {
   const toggles = document.querySelectorAll('#tablaOrdenes .toggle-preparar');
-  if (ordenesPreparar.size > 0 && ordenesPreparar.size === toggles.length) {
+  // Usar el estado del propio círculo del encabezado para decidir la acción
+  const deseleccionar = el.classList.contains('activo');
+  if (deseleccionar) {
     // Deseleccionar todas
     toggles.forEach(t => {
       const tr = t.closest('tr');
@@ -3510,11 +3523,17 @@ async function cargarHistorialDespachos() {
       });
     });
     if (!data.length) {
-      tbody.innerHTML = '<tr><td colspan="11"><div class="empty-state">No hay facturas exportadas</div></td></tr>';
+      tbody.innerHTML = '<tr><td colspan="12"><div class="empty-state">No hay facturas exportadas</div></td></tr>';
+      return;
+    }
+    // Solo mostrar facturas que tengan plantilla creada en Planificación D.L.
+    const dataConPlantilla = data.filter(r => ordenAConsec.has(String(r.numero_orden || "").trim()));
+    if (!dataConPlantilla.length) {
+      tbody.innerHTML = '<tr><td colspan="12"><div class="empty-state">No hay facturas con plantilla creada en Planificación D.L.</div></td></tr>';
       return;
     }
     const esc = s => (s || "").toString().replace(/"/g, "&quot;");
-    tbody.innerHTML = data.map(r => {
+    tbody.innerHTML = dataConPlantilla.map(r => {
       const obsActual = r.observacion_servicio || "Sin Novedad";
       const opts = OBSERVACIONES_SERVICIO.map(o =>
         `<option value="${o}" ${o === obsActual ? "selected" : ""}>${o}</option>`
@@ -3522,14 +3541,24 @@ async function cargarHistorialDespachos() {
       const badgeColor = obsActual === "Sin Novedad" ? "#2ecc71" : "#f39c12";
       const inputStyle = "background:var(--card);border:1px solid var(--border);border-radius:6px;padding:0.35rem 0.5rem;color:var(--foreground);font-size:0.82rem;width:100%;";
       const consec = ordenAConsec.get(String(r.numero_orden || "").trim()) || "—";
+      const docFisico = Number(r.doc_fisico) === 1;
       return `
         <tr>
           <td><strong style="color:var(--brand);">${consec}</strong></td>
           <td>${formatDate(r.fecha_exportacion)}</td>
-          <td><strong>${r.numero_orden || "—"}</strong></td>
+          <td>
+            <div style="display:flex;align-items:center;gap:0.4rem;">
+              <span title="${docFisico ? "Confirmado: la factura realmente está Sin Novedad" : "Marcar para confirmar que la factura realmente está Sin Novedad"}"
+                onclick="toggleDocFisico(${r.orden_id}, this)"
+                data-on="${docFisico ? "1" : "0"}"
+                style="cursor:pointer;width:14px;height:14px;border-radius:50%;border:2px solid ${docFisico ? "#2ecc71" : "var(--border)"};background:${docFisico ? "#2ecc71" : "transparent"};flex-shrink:0;display:inline-block;"></span>
+              <strong>${r.numero_orden || "—"}</strong>
+            </div>
+          </td>
           <td>${r.distribuidor_nombre || "—"}</td>
           <td><strong>${r.vehiculo_placa || "—"}</strong></td>
           <td>${r.vehiculo_conductor || "—"}</td>
+          <td>${r.auxiliar || "—"}</td>
           <td style="text-align:right;">${formatMoney(r.total)}</td>
           <td>
             <select onchange="actualizarObservacionOrden(${r.orden_id}, this.value, this)"
@@ -3557,9 +3586,35 @@ async function cargarHistorialDespachos() {
         </tr>
       `;
     }).join("");
+    sincronizarScrollHistorial();
   } catch (e) {
     toast("Error al cargar historial", "error");
   }
+}
+
+function sincronizarScrollHistorial() {
+  const top = document.getElementById("histScrollTop");
+  const wrapper = document.getElementById("histTableWrapper");
+  if (!top || !wrapper) return;
+  const table = wrapper.querySelector("table");
+  if (!table) return;
+  // Igualar el ancho de la barra espejo al ancho real de la tabla
+  top.firstElementChild.style.width = table.scrollWidth + "px";
+  if (top._synced) return;
+  top._synced = true;
+  let lock = false;
+  top.addEventListener("scroll", () => {
+    if (lock) return;
+    lock = true;
+    wrapper.scrollLeft = top.scrollLeft;
+    lock = false;
+  });
+  wrapper.addEventListener("scroll", () => {
+    if (lock) return;
+    lock = true;
+    top.scrollLeft = wrapper.scrollLeft;
+    lock = false;
+  });
 }
 
 async function actualizarObservacionOrden(ordenId, observacion, selectEl) {
@@ -3596,6 +3651,32 @@ async function actualizarHistorialOrden(ordenId, campo, valor) {
     if (!res.ok) throw new Error(data.error || "Error");
     toast("Guardado", "success");
   } catch (e) {
+    toast(e.message || "Error al guardar", "error");
+  }
+}
+
+async function toggleDocFisico(ordenId, el) {
+  const nuevoEstado = el.dataset.on === "1" ? 0 : 1;
+  // Actualizar visual de inmediato
+  el.dataset.on = nuevoEstado ? "1" : "0";
+  el.style.borderColor = nuevoEstado ? "#2ecc71" : "var(--border)";
+  el.style.background = nuevoEstado ? "#2ecc71" : "transparent";
+  el.title = nuevoEstado
+    ? "Confirmado: la factura realmente está Sin Novedad"
+    : "Marcar para confirmar que la factura realmente está Sin Novedad";
+  try {
+    const res = await fetch(API + "/ordenes/" + ordenId + "/historial", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ doc_fisico: nuevoEstado })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Error");
+  } catch (e) {
+    // Revertir visual si falla
+    el.dataset.on = nuevoEstado ? "0" : "1";
+    el.style.borderColor = nuevoEstado ? "var(--border)" : "#2ecc71";
+    el.style.background = nuevoEstado ? "transparent" : "#2ecc71";
     toast(e.message || "Error al guardar", "error");
   }
 }
@@ -4950,11 +5031,15 @@ function _generarPlantillaTransportadorHTML(opts) {
         </tr>
       </table></div>
       <div class="tbl-wrap" style="margin:0;flex:1;"><table style="height:100%;">
-        <tr><td class="seccion-tit">NOMBRE Y SELLO QUIEN DESPACHA</td></tr>
-        <tr><td style="padding:6px 8px;vertical-align:top;height:100%;">
-          <div style="height:16px;">&nbsp;</div>
-          <div style="border-top:1px solid #000;padding-top:4px;font-size:6.4pt;line-height:1.2;" class="small">Confirmo la entrega completa de los PDV y las cantidades descritas en esta planilla la cual consolida el total de los documentos anexos, que fueron certificados al momento de la entrega.</div>
-        </td></tr>
+        <tr><td class="seccion-tit" colspan="2">NOMBRE Y SELLO QUIEN DESPACHA</td></tr>
+        <tr>
+          <td style="width:42%;padding:6px 10px;vertical-align:bottom;border-right:1px solid #000;border-bottom:none;">
+            <div style="border-top:1px solid #000;text-align:center;padding-top:3px;font-size:6.5pt;" class="small">Nombre, Firma y Sello</div>
+          </td>
+          <td style="width:58%;padding:6px 10px;vertical-align:middle;border-bottom:none;">
+            <div style="font-size:6.4pt;line-height:1.25;text-align:justify;" class="small">Confirmo la entrega completa de los PDV y las cantidades descritas en esta planilla la cual consolida el total de los documentos anexos, que fueron certificados al momento de la entrega.</div>
+          </td>
+        </tr>
       </table></div>
     </div>
 

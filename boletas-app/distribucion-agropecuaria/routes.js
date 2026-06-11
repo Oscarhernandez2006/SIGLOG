@@ -1676,19 +1676,23 @@ router.get("/asignaciones/historial", (req, res) => {
     SELECT
       o.id AS orden_id,
       o.numero_orden,
-      o.distribuidor_nombre,
+      COALESCE(c.nombre, o.distribuidor_nombre) AS distribuidor_nombre,
       o.total,
       COALESCE(o.observacion_servicio, 'Sin Novedad') AS observacion_servicio,
       COALESCE(o.novedades, '') AS novedades,
       COALESCE(o.responsabilidades, '') AS responsabilidades,
       COALESCE(o.detalles, '') AS detalles,
+      COALESCE(o.doc_fisico, 0) AS doc_fisico,
       a.id AS asignacion_id,
       a.vehiculo_placa,
       a.vehiculo_conductor,
+      COALESCE(a.auxiliar, '') AS auxiliar,
       COALESCE(a.fecha_exportacion, a.fecha) AS fecha_exportacion
     FROM agro_asignaciones a
     INNER JOIN agro_asignacion_ordenes ao ON ao.asignacion_id = a.id
     INNER JOIN agro_ordenes o ON o.id = ao.orden_id
+    LEFT JOIN agro_clientes c
+      ON (c.codigo_concatenado = o.distribuidor_nombre OR c.nombre = o.distribuidor_nombre)
     WHERE a.estado = 'EXPORTADA'
   `;
   const params = [];
@@ -1890,12 +1894,13 @@ router.put("/ordenes/:id/observacion", (req, res) => {
 // Actualizar campos del historial (novedades / responsabilidades) de una ORDEN
 router.put("/ordenes/:id/historial", (req, res) => {
   const { id } = req.params;
-  const { novedades, responsabilidades, detalles } = req.body || {};
+  const { novedades, responsabilidades, detalles, doc_fisico } = req.body || {};
   const sets = [];
   const params = [];
   if (novedades !== undefined) { sets.push("novedades = ?"); params.push((novedades || "").toString()); }
   if (responsabilidades !== undefined) { sets.push("responsabilidades = ?"); params.push((responsabilidades || "").toString()); }
   if (detalles !== undefined) { sets.push("detalles = ?"); params.push((detalles || "").toString()); }
+  if (doc_fisico !== undefined) { sets.push("doc_fisico = ?"); params.push(doc_fisico ? 1 : 0); }
   if (!sets.length) return res.status(400).json({ error: "Nada que actualizar" });
   params.push(id);
   db.run("UPDATE agro_ordenes SET " + sets.join(", ") + " WHERE id = ?", params, function (err) {
