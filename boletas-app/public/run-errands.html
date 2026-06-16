@@ -15,26 +15,62 @@
 /* Page-specific overrides for run-errands.html */
 /* Casi todo viene de /assets/design-system.css?v=11 */
 
-/* Centrar el contenido de los paneles (Pedidos, Clientes, Puntos de Venta) */
-.tab-panel {
-  max-width: none;
-  margin-left: 1rem;
-  margin-right: 1rem;
+/* ===== Menú lateral en cascada ===== */
+.container {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  max-width: none !important;
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
-/* Centrar también la barra de tabs para alinearla con el contenido */
 .tabs {
+  flex: 0 0 210px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
   max-width: none;
-  margin-left: 1rem;
-  margin-right: 1rem;
-  padding-top: 8px !important;
-  margin-top: 0 !important;
-  margin-bottom: 12px !important;
+  margin: 0 !important;
+  padding: 16px 12px 16px 0 !important;
+  border-bottom: none;
+  border-right: 1px solid var(--border);
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: calc(100vh - 76px);
   box-shadow: none !important;
   background: var(--background);
 }
-.tabs .tab { padding-top: 4px; padding-bottom: 6px; }
-/* Separar el contenido de cada panel de la barra de tabs */
-.tab-panel { padding-top: 4px; }
+.tabs .tab {
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: none;
+  border-left: 3px solid transparent;
+  border-radius: 0 8px 8px 0;
+}
+.tabs .tab:hover { background: rgba(83, 172, 48, 0.08); }
+.tabs .tab.active {
+  border-bottom-color: transparent;
+  border-left-color: var(--brand);
+  background: rgba(83, 172, 48, 0.12);
+}
+/* Bloque de usuario: al fondo del menú lateral */
+.tabs .user-bottom-left {
+  position: static !important;
+  transform: none !important;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.tab-panel {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: none;
+  margin: 0;
+  padding-top: 4px;
+}
 /* Encabezado fijo dentro de las tablas con scroll (pedidos y clientes) */
 .table-wrapper[style*="overflow-y"] thead th {
   position: sticky;
@@ -73,12 +109,6 @@
   gap: 1rem;
 }
 .dash-chart-card { padding: 1.25rem; }
-/* Forzar que el contenedor de la página sea full-width en esta vista */
-.container {
-  max-width: none !important;
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
 
 /* Modal de pedido: necesita position:relative para anclar el botón flotante "+" */
 #modalPedido .modal {

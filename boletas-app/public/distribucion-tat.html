@@ -34,23 +34,65 @@
   z-index: 5;
 }
 
-/* Centrar el contenido de los paneles y la barra de tabs */
-.tab-panel {
-  max-width: 1100px;
-  margin-left: auto;
-  margin-right: auto;
-}
-.tabs {
-  max-width: 1100px;
-  margin-left: auto;
-  margin-right: auto;
+/* ==================== Menú lateral en cascada ==================== */
+/* El contenedor pasa a ser un layout de 2 columnas: menú a la izquierda y
+   el panel activo a la derecha. */
+.container {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
 }
 
-/* Excepciones: paneles con tablas anchas necesitan más espacio */
-#tab-nivel-servicio,
-#tab-asignaciones,
-#tab-planificacion-dl {
-  max-width: 100%;
+/* Barra de pestañas convertida en menú vertical (sidebar) */
+.tabs {
+  flex: 0 0 210px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  border-bottom: none;
+  border-right: 1px solid var(--border);
+  overflow-x: hidden;
+  overflow-y: auto;
+  position: sticky;
+  top: 72px;
+  max-height: calc(100vh - 88px);
+  max-width: none;
+  margin: 0;
+  padding: 16px 12px 16px 0;
+  box-shadow: none;
+}
+.tab {
+  width: 100%;
+  text-align: left;
+  border-bottom: none;
+  border-left: 3px solid transparent;
+  border-radius: 0 8px 8px 0;
+}
+.tab:hover {
+  background: rgba(83, 172, 48, 0.08);
+}
+.tab.active {
+  border-bottom-color: transparent;
+  border-left-color: var(--brand);
+  background: rgba(83, 172, 48, 0.12);
+}
+/* Separador para el segundo grupo de menús (Clientes en adelante) */
+.tabs .tab[data-tab="clientes"] {
+  margin-left: 0 !important;
+  margin-top: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* El panel activo ocupa el resto del ancho disponible */
+.tab-panel {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: none;
+  margin: 0;
 }
 
 /* Círculo de selección para órdenes / vehículos / asignaciones.
@@ -458,7 +500,6 @@
       </div>
     </div>
   </div>
-</div>
 
   <!-- ==================== TAB: VEHÍCULOS ==================== -->
   <div class="tab-panel active" id="tab-vehiculos">
@@ -559,9 +600,15 @@
     <h3 style="margin:0;">Clientes <span id="countClientes" style="font-size:0.8rem;font-weight:600;color:var(--muted-foreground);margin-left:0.35rem;">(0)</span></h3>
     <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
       <input type="search" id="buscarCliente" placeholder="Buscar por nombre, código, ciudad..." autocomplete="new-password" autocorrect="off" spellcheck="false" data-form-type="other" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.85rem;color:var(--foreground);font-size:0.85rem;min-width:250px;" oninput="cargarClientes()" />
-      <button class="btn btn-sm" style="background:#27ae60;" onclick="document.getElementById('modalCargaClientes').classList.add('active');">📁 Cargar Excel</button>
+      <button class="btn btn-sm" style="background:#27ae60;" onclick="abrirModalCargaClientes()">📁 Cargar Excel</button>
       <button class="btn btn-primary btn-sm" onclick="abrirNuevoCliente()">+ Nuevo Cliente</button>
     </div>
+  </div>
+
+  <!-- Sub-pestañas: Inversiones / TAT -->
+  <div style="display:flex;gap:0.4rem;margin-bottom:1rem;border-bottom:1px solid var(--border);">
+    <button type="button" id="subtabInversiones" class="subtab-clientes" onclick="setGrupoClientes('inversiones')" style="background:none;border:none;border-bottom:2px solid var(--brand);color:var(--brand);font-weight:600;font-size:0.88rem;padding:0.5rem 1rem;cursor:pointer;">Inversiones</button>
+    <button type="button" id="subtabTat" class="subtab-clientes" onclick="setGrupoClientes('tat')" style="background:none;border:none;border-bottom:2px solid transparent;color:var(--muted-foreground);font-weight:600;font-size:0.88rem;padding:0.5rem 1rem;cursor:pointer;">TAT</button>
   </div>
 
   <div class="card">
@@ -570,18 +617,14 @@
         <thead>
           <tr>
             <th>Código</th>
-            <th>Código Concatenado</th>
             <th>Nombre</th>
             <th>Dirección</th>
-            <th>Barrio</th>
-            <th>Ciudad</th>
-            <th>Departamento</th>
             <th>Teléfono</th>
             <th>Acciones</th>
           </tr>
         </thead>
         <tbody id="tablaClientes">
-          <tr><td colspan="9"><div class="empty-state">Cargando...</div></td></tr>
+          <tr><td colspan="5"><div class="empty-state">Cargando...</div></td></tr>
         </tbody>
       </table>
     </div>
@@ -628,6 +671,7 @@
   </div>
 
   <!-- Pendientes de entrega y nivel de servicio: ocultos por ahora -->
+</div>
 </div>
 
 <!-- ==================== MODAL: REGISTRAR ENTREGA ==================== -->
@@ -707,7 +751,9 @@
 <div class="modal-overlay" id="modalCargaClientes">
   <div class="modal">
     <h3>Cargar Clientes desde Excel</h3>
-    <p style="color:#8899a6;font-size:0.85rem;">Suba un archivo Excel con columnas: Revisión, Código Concatenado, Código, Nombre, Dirección, Barrio, Ciudad, Departamento, Teléfono</p>
+    <p style="color:#8899a6;font-size:0.85rem;">Grupo destino: <strong id="cargaClientesGrupo" style="color:var(--brand);">Inversiones</strong></p>
+    <p style="color:#8899a6;font-size:0.85rem;">Suba un archivo Excel con columnas: Código, Razón social, Dirección 1, Teléfono</p>
+    <p style="color:#e67e22;font-size:0.8rem;">⚠️ La carga <strong>reemplaza</strong> todos los terceros del grupo seleccionado.</p>
     <div class="form-group">
       <input type="file" id="archivoClientes" accept=".xlsx,.xls,.xlsm" />
     </div>
@@ -2187,7 +2233,7 @@ async function guardarClientesNuevosYCargar() {
       const res = await fetch(API + "/clientes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ codigo: parseInt(codigo) || null, codigo_concatenado, nombre, direccion, barrio, ciudad, departamento, telefono })
+        body: JSON.stringify({ codigo: parseInt(codigo) || null, codigo_concatenado, nombre, direccion, barrio, ciudad, departamento, telefono, grupo: "tat" })
       });
       if (!res.ok) {
         const d = await res.json();
@@ -3216,25 +3262,38 @@ async function subirVehiculos() {
 }
 
 // ========== CLIENTES ==========
+// Grupo de terceros activo en la pestaña Clientes: 'inversiones' | 'tat'
+let grupoClientes = "inversiones";
+
+function setGrupoClientes(g) {
+  grupoClientes = g;
+  const inv = document.getElementById("subtabInversiones");
+  const tat = document.getElementById("subtabTat");
+  if (inv && tat) {
+    const activo = (el) => { el.style.borderBottom = "2px solid var(--brand)"; el.style.color = "var(--brand)"; };
+    const inactivo = (el) => { el.style.borderBottom = "2px solid transparent"; el.style.color = "var(--muted-foreground)"; };
+    if (g === "inversiones") { activo(inv); inactivo(tat); } else { activo(tat); inactivo(inv); }
+  }
+  cargarClientes();
+}
+
 async function cargarClientes() {
   const buscar = (document.getElementById("buscarCliente")?.value || "").trim();
+  const params = new URLSearchParams({ grupo: grupoClientes });
+  if (buscar) params.set("buscar", buscar);
   try {
-    const res = await fetch(API + "/clientes" + (buscar ? "?buscar=" + encodeURIComponent(buscar) : ""));
+    const res = await fetch(API + "/clientes?" + params.toString());
     const data = await res.json();
     const tbody = document.getElementById("tablaClientes");
     setHeaderCount("countClientes", data.length);
     if (!data.length) {
-      tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state">No hay clientes registrados</div></td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No hay clientes registrados</div></td></tr>';
       return;
     }
     tbody.innerHTML = data.map(c => `<tr>
       <td>${c.codigo || "—"}</td>
-      <td style="font-size:0.8rem;">${c.codigo_concatenado || "—"}</td>
       <td><strong>${c.nombre}</strong></td>
       <td>${c.direccion || "—"}</td>
-      <td>${c.barrio || "—"}</td>
-      <td>${c.ciudad || "—"}</td>
-      <td>${c.departamento || "—"}</td>
       <td>${c.telefono || "—"}</td>
       <td>
         <button class="btn-action" onclick="editarCliente(${c.id})" title="Editar">✏️</button>
@@ -3264,7 +3323,7 @@ function abrirNuevoCliente() {
 
 async function editarCliente(id) {
   try {
-    const res = await fetch(API + "/clientes/" + id);
+    const res = await fetch(API + "/clientes/" + id + "?grupo=" + grupoClientes);
     const c = await res.json();
     document.getElementById("clienteEditId").value = c.id;
     document.getElementById("clienteCodigo").value = c.codigo || "";
@@ -3299,6 +3358,7 @@ async function guardarCliente() {
     ciudad: document.getElementById("clienteCiudad").value.trim(),
     departamento: document.getElementById("clienteDepartamento").value.trim(),
     telefono: document.getElementById("clienteTelefono").value.trim(),
+    grupo: grupoClientes,
   };
 
   if (!body.nombre) { toast("El nombre es requerido", "error"); return; }
@@ -3321,7 +3381,7 @@ async function guardarCliente() {
 async function eliminarCliente(id) {
   if (!confirm("¿Desactivar este cliente?")) return;
   try {
-    await fetch(API + "/clientes/" + id, { method: "DELETE" });
+    await fetch(API + "/clientes/" + id + "?grupo=" + grupoClientes, { method: "DELETE" });
     toast("Cliente desactivado");
     cargarClientes();
   } catch (e) {
@@ -3334,12 +3394,20 @@ function cerrarModalCargaClientes() {
   document.getElementById("resultadoCargaClientes").style.display = "none";
 }
 
+function abrirModalCargaClientes() {
+  const lbl = document.getElementById("cargaClientesGrupo");
+  if (lbl) lbl.textContent = grupoClientes === "inversiones" ? "Inversiones" : "TAT";
+  document.getElementById("resultadoCargaClientes").style.display = "none";
+  document.getElementById("modalCargaClientes").classList.add("active");
+}
+
 async function subirClientes() {
   const archivo = document.getElementById("archivoClientes").files[0];
   if (!archivo) { toast("Seleccione un archivo", "error"); return; }
 
   const formData = new FormData();
   formData.append("archivo", archivo);
+  formData.append("grupo", grupoClientes);
 
   document.getElementById("btnSubirClientes").disabled = true;
   try {

@@ -13,19 +13,52 @@
   <style>
     /* Page-specific overrides for usuarios.html */
 
-    /* Centrar el contenido de los paneles y la barra de tabs (igual que agro) */
-    .tab-panel {
-      max-width: 1100px;
-      margin-left: auto;
-      margin-right: auto;
+    /* ===== Menú lateral en cascada ===== */
+    .container {
+      display: flex;
+      align-items: flex-start;
+      gap: 24px;
+      max-width: none;
+      margin-left: 0;
+      margin-right: 0;
     }
     .tabs {
-      max-width: 1100px;
-      margin-left: auto;
-      margin-right: auto;
+      flex: 0 0 210px;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 2px;
+      max-width: none;
+      margin: 0;
+      padding: 16px 12px 16px 0;
+      border-bottom: none;
+      border-right: 1px solid var(--border);
+      overflow-x: hidden;
+      overflow-y: auto;
+      position: sticky;
+      top: 72px;
+      max-height: calc(100vh - 88px);
+      box-shadow: none;
     }
-    /* La pestaña "Lista" ocupa todo el ancho de la tabla */
-    #tab-lista { max-width: 100%; }
+    .tabs .tab {
+      width: 100%;
+      text-align: left;
+      padding: 10px 14px;
+      border-bottom: none;
+      border-left: 3px solid transparent;
+      border-radius: 0 8px 8px 0;
+    }
+    .tabs .tab:hover { background: rgba(83, 172, 48, 0.08); }
+    .tabs .tab.active {
+      border-bottom-color: transparent;
+      border-left-color: var(--brand);
+      background: rgba(83, 172, 48, 0.12);
+    }
+    .tab-panel {
+      flex: 1 1 auto;
+      min-width: 0;
+      max-width: none;
+      margin: 0;
+    }
   </style>
 </head>
 <body>

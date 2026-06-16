@@ -1003,6 +1003,53 @@ db.serialize(() => {
   `);
   db.run(`ALTER TABLE tat_clientes ALTER COLUMN codigo TYPE BIGINT`, () => {});
 
+  // Terceros TAT separados en dos grupos: INVERSIONES y TAT.
+  db.run(`
+    CREATE TABLE IF NOT EXISTS tat_clientes_inversiones (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      codigo BIGINT,
+      codigo_concatenado TEXT,
+      nombre TEXT NOT NULL,
+      direccion TEXT,
+      barrio TEXT,
+      ciudad TEXT,
+      departamento TEXT,
+      telefono TEXT,
+      activo INTEGER DEFAULT 1
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS tat_clientes_tat (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      codigo BIGINT,
+      codigo_concatenado TEXT,
+      nombre TEXT NOT NULL,
+      direccion TEXT,
+      barrio TEXT,
+      ciudad TEXT,
+      departamento TEXT,
+      telefono TEXT,
+      activo INTEGER DEFAULT 1
+    )
+  `);
+
+  // Vista unificada de ambos grupos para validar/listar órdenes contra
+  // INVERSIONES + TAT sin reescribir las consultas existentes.
+  // Se encolan en secuencia (la cola FIFO garantiza el orden) para que el
+  // CREATE VIEW siempre corra después del DROP y de los CREATE TABLE de arriba.
+  db.run(`DROP VIEW IF EXISTS tat_clientes_all`, () => {});
+  db.run(`
+    CREATE VIEW tat_clientes_all AS
+      SELECT 'inversiones' AS grupo, codigo, codigo_concatenado, nombre,
+             direccion, barrio, ciudad, departamento, telefono, activo
+        FROM tat_clientes_inversiones
+      UNION ALL
+      SELECT 'tat' AS grupo, codigo, codigo_concatenado, nombre,
+             direccion, barrio, ciudad, departamento, telefono, activo
+        FROM tat_clientes_tat
+  `, () => {});
+
   db.run(`
     CREATE TABLE IF NOT EXISTS tat_asignaciones (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

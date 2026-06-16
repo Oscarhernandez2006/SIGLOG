@@ -70,12 +70,12 @@ router.delete("/rutas/:id", (req, res) => {
 });
 
 router.post("/rutas/carga-masiva", upload.single("archivo"), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: "No se recibiÃ³ ningÃºn archivo" });
+  if (!req.file) return res.status(400).json({ error: "No se recibió ningún archivo" });
   try {
     const wb = XLSX.read(req.file.buffer, { type: "buffer" });
     const ws = wb.Sheets[wb.SheetNames[0]];
     const datos = XLSX.utils.sheet_to_json(ws, { defval: "" });
-    if (!datos.length) return res.status(400).json({ error: "El archivo estÃ¡ vacÃ­o" });
+    if (!datos.length) return res.status(400).json({ error: "El archivo está vacío" });
 
     const norm = s => String(s || "").trim().toLowerCase().replace(/\s+/g, " ");
     let insertados = 0, errores = 0, total = 0;
@@ -196,13 +196,13 @@ router.delete("/productos/:id", (req, res) => {
 
 // Carga masiva de productos desde Excel
 router.post("/productos/carga-masiva", upload.single("archivo"), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: "No se recibiÃ³ ningÃºn archivo" });
+  if (!req.file) return res.status(400).json({ error: "No se recibió ningún archivo" });
 
   try {
     const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
 
     // Recorrer TODAS las hojas (ej: BOVINO, PORCINO). El nombre de la hoja
-    // se usa como categorÃ­a cuando la fila no trae una columna categorÃ­a.
+    // se usa como categoría cuando la fila no trae una columna categoría.
     const filas = [];
     workbook.SheetNames.forEach((sheetName) => {
       const sheet = workbook.Sheets[sheetName];
@@ -210,7 +210,7 @@ router.post("/productos/carga-masiva", upload.single("archivo"), (req, res) => {
       datosHoja.forEach((fila) => filas.push({ fila, hoja: sheetName }));
     });
 
-    if (!filas || filas.length === 0) return res.status(400).json({ error: "El archivo estÃ¡ vacÃ­o" });
+    if (!filas || filas.length === 0) return res.status(400).json({ error: "El archivo está vacío" });
 
     function norm(key) {
       return key.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\./g, "").trim();
@@ -387,16 +387,16 @@ router.delete("/distribuidores/:id", (req, res) => {
   });
 });
 
-/* ============ Ã“RDENES DE DISTRIBUCIÃ“N ============ */
+/* ============ ÓRDENES DE DISTRIBUCIÓN ============ */
 
-// Listar clientes Ãºnicos de Ã³rdenes (para filtro)
+// Listar clientes únicos de órdenes (para filtro)
 // Devuelve { value: distribuidor_nombre almacenado, label: nombre visible del cliente (o stored si no hay match) }
 router.get("/ordenes/clientes", (req, res) => {
   db.all(
     `SELECT DISTINCT o.distribuidor_nombre AS value,
             COALESCE(c.nombre, o.distribuidor_nombre) AS label
      FROM tat_ordenes o
-     LEFT JOIN tat_clientes c
+     LEFT JOIN tat_clientes_all c
        ON c.activo = 1
       AND (c.codigo_concatenado = o.distribuidor_nombre OR c.nombre = o.distribuidor_nombre)
      ORDER BY label`,
@@ -408,11 +408,11 @@ router.get("/ordenes/clientes", (req, res) => {
   );
 });
 
-// Listar Ã³rdenes con filtros
+// Listar órdenes con filtros
 router.get("/ordenes", (req, res) => {
   const { estado, desde, hasta, distribuidor, tipo, todas } = req.query;
 
-  // Por defecto excluye Ã³rdenes ya asignadas (cola de pendientes).
+  // Por defecto excluye órdenes ya asignadas (cola de pendientes).
   // Pasar todas=1 para incluir TODAS (necesario para reporte de nivel de servicio).
   let query = `
     SELECT o.*,
@@ -420,7 +420,7 @@ router.get("/ordenes", (req, res) => {
       (SELECT COALESCE(SUM(cantidad), 0) FROM tat_orden_items WHERE orden_id = o.id) AS total_pedido,
       (SELECT COALESCE(SUM(cantidad_entregada), 0) FROM tat_orden_items WHERE orden_id = o.id) AS total_entregado
     FROM tat_ordenes o
-    LEFT JOIN tat_clientes c
+    LEFT JOIN tat_clientes_all c
       ON c.activo = 1
      AND (c.codigo_concatenado = o.distribuidor_nombre OR c.nombre = o.distribuidor_nombre)
     WHERE 1=1
@@ -489,7 +489,7 @@ router.post("/ordenes", (req, res) => {
   if (!distribuidor_nombre) return res.status(400).json({ error: "El distribuidor es requerido" });
   if (!items || items.length === 0) return res.status(400).json({ error: "Debe agregar al menos un producto" });
 
-  // Generar nÃºmero de orden DA-XXXXX
+  // Generar número de orden DA-XXXXX
   db.get(
     "SELECT COALESCE(MAX(CAST(SUBSTR(numero_orden, 4) AS INTEGER)), 0) as ultimo FROM tat_ordenes WHERE numero_orden LIKE 'DA-%'",
     [],
@@ -537,7 +537,7 @@ router.put("/ordenes/:id/estado", (req, res) => {
   const estadosValidos = ["PENDIENTE", "EN_PROCESO", "DESPACHADO", "ENTREGADO", "CANCELADO"];
 
   if (!estadosValidos.includes(estado)) {
-    return res.status(400).json({ error: "Estado no vÃ¡lido. Use: " + estadosValidos.join(", ") });
+    return res.status(400).json({ error: "Estado no válido. Use: " + estadosValidos.join(", ") });
   }
 
   db.run("UPDATE tat_ordenes SET estado = ? WHERE id = ?", [estado, id], function (err) {
@@ -616,14 +616,14 @@ router.delete("/ordenes/:id", (req, res) => {
   });
 });
 
-// Borrar todas las Ã³rdenes (requiere contraseÃ±a de admin)
+// Borrar todas las órdenes (requiere contraseña de admin)
 router.post("/ordenes/borrar-todas", async (req, res) => {
   const { password } = req.body;
-  if (!password) return res.status(400).json({ error: "La contraseÃ±a es requerida" });
+  if (!password) return res.status(400).json({ error: "La contraseña es requerida" });
 
   db.get("SELECT * FROM usuarios WHERE rol = 'administrador' AND password = ?", [password], async (err, user) => {
     if (err) return res.status(500).json({ error: "Error del servidor" });
-    if (!user) return res.status(401).json({ error: "ContraseÃ±a de administrador incorrecta" });
+    if (!user) return res.status(401).json({ error: "Contraseña de administrador incorrecta" });
 
     // Estrategia: contar antes, luego TRUNCATE CASCADE (Postgres) para no
     // depender de que cada FK tenga ON DELETE CASCADE.
@@ -642,13 +642,13 @@ router.post("/ordenes/borrar-todas", async (req, res) => {
         await tryRun("TRUNCATE TABLE tat_ordenes RESTART IDENTITY CASCADE");
       } catch (eTrunc) {
         // Fallback (motores que no soporten TRUNCATE CASCADE): borrado en orden
-        console.warn("[borrar-todas] TRUNCATE CASCADE fallÃ³, usando DELETE en orden:", eTrunc.message);
+        console.warn("[borrar-todas] TRUNCATE CASCADE falló, usando DELETE en orden:", eTrunc.message);
         await tryRun("DELETE FROM tat_asignacion_ordenes");
         await tryRun("DELETE FROM tat_orden_items");
         await tryRun("DELETE FROM tat_ordenes");
       }
 
-      // TambiÃ©n borrar todas las asignaciones (quedarÃ­an vacÃ­as sin Ã³rdenes).
+      // También borrar todas las asignaciones (quedarían vacías sin órdenes).
       // Se borran solo las ACTIVAS para conservar el historial de exportadas.
       try {
         await tryRun("DELETE FROM tat_asignacion_ordenes");
@@ -657,10 +657,10 @@ router.post("/ordenes/borrar-todas", async (req, res) => {
         console.warn("[borrar-todas] error limpiando asignaciones activas:", eAsig.message);
       }
 
-      return res.json({ message: "Todas las Ã³rdenes han sido eliminadas", eliminadas });
+      return res.json({ message: "Todas las órdenes han sido eliminadas", eliminadas });
     } catch (e) {
       console.error("[borrar-todas] error final:", e && e.message);
-      return res.status(500).json({ error: "Error al eliminar Ã³rdenes: " + (e && e.message ? e.message : "desconocido") });
+      return res.status(500).json({ error: "Error al eliminar órdenes: " + (e && e.message ? e.message : "desconocido") });
     }
   });
 });
@@ -692,7 +692,7 @@ router.post("/ordenes/:id/entrega", (req, res) => {
         if (isNaN(despachado) || despachado < 0) despachado = current.cantidad;
 
         // Cantidad entregada: dos modos.
-        //  - Si llega "faltante" (lo que nunca llegÃ³): entregado = despachado - faltante
+        //  - Si llega "faltante" (lo que nunca llegó): entregado = despachado - faltante
         //  - Si llega "cantidad_entregada" directa: se usa tal cual
         let entregada;
         if (it.faltante !== undefined) {
@@ -705,7 +705,7 @@ router.post("/ordenes/:id/entrega", (req, res) => {
           if (isNaN(entregada) || entregada < 0) entregada = 0;
         }
 
-        // No permitir entregar mÃ¡s de lo despachado
+        // No permitir entregar más de lo despachado
         if (entregada > despachado) entregada = despachado;
 
         stmt.run([despachado, entregada, itemId, id]);
@@ -845,7 +845,7 @@ router.post("/ordenes/:id/sin-novedad", (req, res) => {
   });
 });
 
-// Listar Ã³rdenes asignadas pendientes de entrega completa
+// Listar órdenes asignadas pendientes de entrega completa
 router.get("/ordenes-pendientes-entrega", (req, res) => {
   const query = `
     SELECT o.*,
@@ -868,9 +868,9 @@ router.get("/ordenes-pendientes-entrega", (req, res) => {
   });
 });
 
-/* ============ VEHÃCULOS ============ */
+/* ============ VEHÍCULOS ============ */
 
-// Listar vehÃ­culos
+// Listar vehículos
 router.get("/vehiculos", (req, res) => {
   const { buscar, todos } = req.query;
   let query = `SELECT v.*, t.cedula AS tripulacion_cedula,
@@ -902,16 +902,16 @@ router.get("/vehiculos", (req, res) => {
   });
 });
 
-// Obtener un vehÃ­culo
+// Obtener un vehículo
 router.get("/vehiculos/:id", (req, res) => {
   db.get("SELECT * FROM tat_vehiculos WHERE id = ?", [req.params.id], (err, row) => {
     if (err) return res.status(500).json({ error: "Error del servidor" });
-    if (!row) return res.status(404).json({ error: "VehÃ­culo no encontrado" });
+    if (!row) return res.status(404).json({ error: "Vehículo no encontrado" });
     res.json(row);
   });
 });
 
-// Crear vehÃ­culo
+// Crear vehículo
 router.post("/vehiculos", (req, res) => {
   const { placa, conductor, disponibilidad } = req.body;
   if (!placa || !conductor) return res.status(400).json({ error: "Placa y conductor son requeridos" });
@@ -920,32 +920,32 @@ router.post("/vehiculos", (req, res) => {
     "INSERT INTO tat_vehiculos (placa, conductor, disponibilidad) VALUES (?, ?, ?)",
     [placa.trim().toUpperCase(), conductor.trim(), disponibilidad || ""],
     function (err) {
-      if (err) return res.status(500).json({ error: "Error al crear vehÃ­culo" });
-      res.json({ message: "VehÃ­culo creado", id: this.lastID });
+      if (err) return res.status(500).json({ error: "Error al crear vehículo" });
+      res.json({ message: "Vehículo creado", id: this.lastID });
     }
   );
 });
 
-// Editar vehÃ­culo
+// Editar vehículo
 router.put("/vehiculos/:id", (req, res) => {
   const { id } = req.params;
   const { placa, conductor, disponibilidad, activo, tripulacion_id } = req.body;
 
   db.get("SELECT * FROM tat_vehiculos WHERE id = ?", [id], (err, veh) => {
     if (err) return res.status(500).json({ error: "Error del servidor" });
-    if (!veh) return res.status(404).json({ error: "VehÃ­culo no encontrado" });
+    if (!veh) return res.status(404).json({ error: "Vehículo no encontrado" });
 
-    // ValidaciÃ³n: no permitir marcar como "Disponible" si no hay conductor
+    // Validación: no permitir marcar como "Disponible" si no hay conductor
     if (disponibilidad === "Disponible") {
       const tendraTripulante = tripulacion_id !== undefined
         ? (tripulacion_id !== null && tripulacion_id !== "")
         : !!veh.tripulacion_id;
       if (!tendraTripulante) {
-        return res.status(400).json({ error: "Asigne un conductor antes de marcar el vehÃ­culo como disponible" });
+        return res.status(400).json({ error: "Asigne un conductor antes de marcar el vehículo como disponible" });
       }
     }
 
-    // Si llega tripulacion_id, obtener el nombre desde tripulaciÃ³n para guardar en conductor
+    // Si llega tripulacion_id, obtener el nombre desde tripulación para guardar en conductor
     const aplicar = (conductorFinal, tidFinal) => {
       // Si queda sin tripulante, forzar disponibilidad = "" (no puede estar disponible sin conductor)
       const sinConductor = !tidFinal;
@@ -963,25 +963,25 @@ router.put("/vehiculos/:id", (req, res) => {
           id,
         ],
         function (err) {
-          if (err) return res.status(500).json({ error: "Error al actualizar vehÃ­culo" });
-          res.json({ message: "VehÃ­culo actualizado" });
+          if (err) return res.status(500).json({ error: "Error al actualizar vehículo" });
+          res.json({ message: "Vehículo actualizado" });
         }
       );
     };
 
     if (tripulacion_id !== undefined) {
       if (tripulacion_id === null || tripulacion_id === "") {
-        // Quitar tripulante: limpiar tambiÃ©n el texto conductor heredado
+        // Quitar tripulante: limpiar también el texto conductor heredado
         aplicar(conductor !== undefined ? (conductor || "") : "", null);
       } else {
-        // Validar que el conductor no estÃ© ya asignado a otro vehÃ­culo activo
+        // Validar que el conductor no esté ya asignado a otro vehículo activo
         db.get(
           "SELECT id, placa FROM tat_vehiculos WHERE tripulacion_id = ? AND id <> ? AND activo = 1",
           [tripulacion_id, id],
           (eDup, dup) => {
             if (eDup) return res.status(500).json({ error: "Error del servidor" });
             if (dup) {
-              return res.status(400).json({ error: "Este conductor ya estÃ¡ asignado al vehÃ­culo " + dup.placa });
+              return res.status(400).json({ error: "Este conductor ya está asignado al vehículo " + dup.placa });
             }
             db.get("SELECT nombres, apellidos FROM tat_tripulacion WHERE id = ?", [tripulacion_id], (e, t) => {
               if (e || !t) return res.status(400).json({ error: "Tripulante no encontrado" });
@@ -997,16 +997,16 @@ router.put("/vehiculos/:id", (req, res) => {
   });
 });
 
-// Desactivar vehÃ­culo
+// Desactivar vehículo
 router.delete("/vehiculos/:id", (req, res) => {
   db.run("UPDATE tat_vehiculos SET activo = 0 WHERE id = ?", [req.params.id], function (err) {
-    if (err) return res.status(500).json({ error: "Error al desactivar vehÃ­culo" });
-    res.json({ message: "VehÃ­culo desactivado" });
+    if (err) return res.status(500).json({ error: "Error al desactivar vehículo" });
+    res.json({ message: "Vehículo desactivado" });
   });
 });
 
-// ==================== TRIPULACIÃ“N ====================
-// Lista de tripulaciÃ³n
+// ==================== TRIPULACIÓN ====================
+// Lista de tripulación
 router.get("/tripulacion", (req, res) => {
   db.all(
     `SELECT id, cedula, COALESCE(nombres,'') AS nombres, COALESCE(apellidos,'') AS apellidos,
@@ -1016,13 +1016,13 @@ router.get("/tripulacion", (req, res) => {
       ORDER BY nombres COLLATE NOCASE, apellidos COLLATE NOCASE`,
     [],
     (err, rows) => {
-      if (err) return res.status(500).json({ error: "Error al obtener tripulaciÃ³n" });
+      if (err) return res.status(500).json({ error: "Error al obtener tripulación" });
       res.json(rows);
     }
   );
 });
 
-// Helper: verificar contraseÃ±a de administrador
+// Helper: verificar contraseña de administrador
 function verificarAdmin(password, cb) {
   if (!password) return cb(false);
   db.get("SELECT id FROM usuarios WHERE rol = 'administrador' AND password = ?", [password], (err, user) => {
@@ -1034,11 +1034,11 @@ function verificarAdmin(password, cb) {
 router.post("/tripulacion", (req, res) => {
   const { cedula, nombres, apellidos, telefono, rol, tipo, password } = req.body;
   verificarAdmin(password, (ok) => {
-    if (!ok) return res.status(401).json({ error: "ContraseÃ±a de administrador incorrecta" });
+    if (!ok) return res.status(401).json({ error: "Contraseña de administrador incorrecta" });
     const rolFinal = rol === "Auxiliar de ruta" ? "Auxiliar de ruta" : "Conductor";
-    // Conductores requieren cÃ©dula; auxiliares pueden no tenerla
+    // Conductores requieren cédula; auxiliares pueden no tenerla
     if (rolFinal === "Conductor" && (!cedula || !String(cedula).trim())) {
-      return res.status(400).json({ error: "CÃ©dula requerida" });
+      return res.status(400).json({ error: "Cédula requerida" });
     }
     if (!nombres && !apellidos) return res.status(400).json({ error: "Nombre requerido" });
     const nom = (nombres || "").trim();
@@ -1050,7 +1050,7 @@ router.post("/tripulacion", (req, res) => {
       [cedFinal, nom, ape, (telefono || "").trim(), rolFinal, (nom + " " + ape).trim(), (tipo || "").trim()],
       function (err) {
         if (err) {
-          if (String(err.message).includes("UNIQUE")) return res.status(400).json({ error: "Ya existe un tripulante con esa cÃ©dula" });
+          if (String(err.message).includes("UNIQUE")) return res.status(400).json({ error: "Ya existe un tripulante con esa cédula" });
           return res.status(500).json({ error: "Error al crear tripulante" });
         }
         res.json({ id: this.lastID, message: "Tripulante creado" });
@@ -1062,7 +1062,7 @@ router.post("/tripulacion", (req, res) => {
 // Actualizar tripulante
 router.put("/tripulacion/:id", (req, res) => {
   const { cedula, nombres, apellidos, telefono, rol, tipo, password, soloRol } = req.body;
-  // Si solo se cambia el rol no se exige contraseÃ±a (cambio rÃ¡pido)
+  // Si solo se cambia el rol no se exige contraseña (cambio rápido)
   const continuar = () => {
     const rolFinal = rol === "Auxiliar de ruta" ? "Auxiliar de ruta" : "Conductor";
     const nom = (nombres || "").trim();
@@ -1075,16 +1075,16 @@ router.put("/tripulacion/:id", (req, res) => {
       [cedFinal, nom, ape, (telefono || "").trim(), rolFinal, (nom + " " + ape).trim(), (tipo || "").trim(), req.params.id],
       function (err) {
         if (err) {
-          if (String(err.message).includes("UNIQUE")) return res.status(400).json({ error: "Ya existe un tripulante con esa cÃ©dula" });
-          return res.status(500).json({ error: "Error al actualizar tripulaciÃ³n" });
+          if (String(err.message).includes("UNIQUE")) return res.status(400).json({ error: "Ya existe un tripulante con esa cédula" });
+          return res.status(500).json({ error: "Error al actualizar tripulación" });
         }
-        res.json({ message: "TripulaciÃ³n actualizada" });
+        res.json({ message: "Tripulación actualizada" });
       }
     );
   };
   if (soloRol) return continuar();
   verificarAdmin(password, (ok) => {
-    if (!ok) return res.status(401).json({ error: "ContraseÃ±a de administrador incorrecta" });
+    if (!ok) return res.status(401).json({ error: "Contraseña de administrador incorrecta" });
     continuar();
   });
 });
@@ -1093,7 +1093,7 @@ router.put("/tripulacion/:id", (req, res) => {
 router.delete("/tripulacion/:id", (req, res) => {
   const password = req.body?.password || req.query?.password || req.headers["x-admin-password"];
   verificarAdmin(password, (ok) => {
-    if (!ok) return res.status(401).json({ error: "ContraseÃ±a de administrador incorrecta" });
+    if (!ok) return res.status(401).json({ error: "Contraseña de administrador incorrecta" });
     db.run("DELETE FROM tat_tripulacion WHERE id = ?", [req.params.id], function (err) {
       if (err) return res.status(500).json({ error: "Error al eliminar tripulante" });
       res.json({ message: "Tripulante eliminado" });
@@ -1101,16 +1101,16 @@ router.delete("/tripulacion/:id", (req, res) => {
   });
 });
 
-// Carga masiva de vehÃ­culos desde Excel
+// Carga masiva de vehículos desde Excel
 router.post("/vehiculos/carga-masiva", upload.single("archivo"), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: "No se recibiÃ³ ningÃºn archivo" });
+  if (!req.file) return res.status(400).json({ error: "No se recibió ningún archivo" });
 
   try {
     const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const raw = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
 
-    if (!raw || raw.length < 2) return res.status(400).json({ error: "El archivo estÃ¡ vacÃ­o" });
+    if (!raw || raw.length < 2) return res.status(400).json({ error: "El archivo está vacío" });
 
     const dataRows = raw.slice(1); // Saltar encabezado
     let insertados = 0;
@@ -1118,17 +1118,17 @@ router.post("/vehiculos/carga-masiva", upload.single("archivo"), (req, res) => {
     let errores = [];
     let pendientes = 0;
 
-    // Solo aceptar filas con placa vÃ¡lida (alfanumÃ©rica con al menos un dÃ­gito) y conductor.
+    // Solo aceptar filas con placa válida (alfanumérica con al menos un dígito) y conductor.
     // Esto evita que se cuelen encabezados/textos (p. ej. "HORA", "PLACA") al subir otra plantilla por error.
     const esPlacaValida = (p) => {
       const s = String(p || "").trim().toUpperCase();
       if (s.length < 4 || s.length > 10) return false;
-      if (!/^[A-Z0-9-]+$/.test(s)) return false; // solo letras, nÃºmeros y guion
-      if (!/[0-9]/.test(s)) return false; // debe tener al menos un dÃ­gito
+      if (!/^[A-Z0-9-]+$/.test(s)) return false; // solo letras, números y guion
+      if (!/[0-9]/.test(s)) return false; // debe tener al menos un dígito
       if (!/[A-Z]/.test(s)) return false; // debe tener al menos una letra
       return true;
     };
-    const ENCABEZADOS = new Set(["PLACA", "HORA", "FECHA", "VEHICULO", "VEHÃCULO", "CONDUCTOR", "ORDEN", "CLIENTE", "DESTINO", "PRODUCTO", "CANTIDAD"]);
+    const ENCABEZADOS = new Set(["PLACA", "HORA", "FECHA", "VEHICULO", "VEHÍCULO", "CONDUCTOR", "ORDEN", "CLIENTE", "DESTINO", "PRODUCTO", "CANTIDAD"]);
     const filasValidas = dataRows.filter(r => {
       const placa = String(r[1] || "").trim().toUpperCase();
       const conductor = String(r[2] || "").trim();
@@ -1138,7 +1138,7 @@ router.post("/vehiculos/carga-masiva", upload.single("archivo"), (req, res) => {
     });
     pendientes = filasValidas.length;
 
-    if (pendientes === 0) return res.json({ message: "No se encontraron vehÃ­culos vÃ¡lidos", insertados: 0 });
+    if (pendientes === 0) return res.json({ message: "No se encontraron vehículos válidos", insertados: 0 });
 
     filasValidas.forEach((fila, i) => {
       const placa = String(fila[1] || "").trim().toUpperCase();
@@ -1174,12 +1174,21 @@ router.post("/vehiculos/carga-masiva", upload.single("archivo"), (req, res) => {
   }
 });
 
-/* ============ CLIENTES AGROPECUARIOS ============ */
+/* ============ CLIENTES (TERCEROS) ============ */
+
+// Resuelve el nombre de tabla según el grupo (?grupo=inversiones|tat).
+// Por defecto: tat.
+function tablaClientes(grupo) {
+  return String(grupo || "").toLowerCase() === "inversiones"
+    ? "tat_clientes_inversiones"
+    : "tat_clientes_tat";
+}
 
 // Listar clientes
 router.get("/clientes", (req, res) => {
-  const { buscar, todos } = req.query;
-  let query = "SELECT * FROM tat_clientes";
+  const { buscar, todos, grupo } = req.query;
+  const tabla = tablaClientes(grupo);
+  let query = "SELECT * FROM " + tabla;
   const params = [];
 
   if (todos !== "1") {
@@ -1203,7 +1212,8 @@ router.get("/clientes", (req, res) => {
 
 // Obtener un cliente
 router.get("/clientes/:id", (req, res) => {
-  db.get("SELECT * FROM tat_clientes WHERE id = ?", [req.params.id], (err, row) => {
+  const tabla = tablaClientes(req.query.grupo);
+  db.get("SELECT * FROM " + tabla + " WHERE id = ?", [req.params.id], (err, row) => {
     if (err) return res.status(500).json({ error: "Error del servidor" });
     if (!row) return res.status(404).json({ error: "Cliente no encontrado" });
     res.json(row);
@@ -1212,11 +1222,12 @@ router.get("/clientes/:id", (req, res) => {
 
 // Crear cliente
 router.post("/clientes", (req, res) => {
-  const { codigo, codigo_concatenado, nombre, direccion, barrio, ciudad, departamento, telefono } = req.body;
+  const { codigo, codigo_concatenado, nombre, direccion, barrio, ciudad, departamento, telefono, grupo } = req.body;
   if (!nombre) return res.status(400).json({ error: "El nombre es requerido" });
+  const tabla = tablaClientes(grupo);
 
   db.run(
-    "INSERT INTO tat_clientes (codigo, codigo_concatenado, nombre, direccion, barrio, ciudad, departamento, telefono) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    "INSERT INTO " + tabla + " (codigo, codigo_concatenado, nombre, direccion, barrio, ciudad, departamento, telefono) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
     [codigo || null, codigo_concatenado || "", nombre.trim(), direccion || "", barrio || "", ciudad || "", departamento || "", telefono || ""],
     function (err) {
       if (err) return res.status(500).json({ error: "Error al crear cliente" });
@@ -1228,14 +1239,15 @@ router.post("/clientes", (req, res) => {
 // Editar cliente
 router.put("/clientes/:id", (req, res) => {
   const { id } = req.params;
-  const { codigo, codigo_concatenado, nombre, direccion, barrio, ciudad, departamento, telefono, activo } = req.body;
+  const { codigo, codigo_concatenado, nombre, direccion, barrio, ciudad, departamento, telefono, activo, grupo } = req.body;
+  const tabla = tablaClientes(grupo);
 
-  db.get("SELECT * FROM tat_clientes WHERE id = ?", [id], (err, cli) => {
+  db.get("SELECT * FROM " + tabla + " WHERE id = ?", [id], (err, cli) => {
     if (err) return res.status(500).json({ error: "Error del servidor" });
     if (!cli) return res.status(404).json({ error: "Cliente no encontrado" });
 
     db.run(
-      "UPDATE tat_clientes SET codigo=?, codigo_concatenado=?, nombre=?, direccion=?, barrio=?, ciudad=?, departamento=?, telefono=?, activo=? WHERE id=?",
+      "UPDATE " + tabla + " SET codigo=?, codigo_concatenado=?, nombre=?, direccion=?, barrio=?, ciudad=?, departamento=?, telefono=?, activo=? WHERE id=?",
       [
         codigo !== undefined ? codigo : cli.codigo,
         codigo_concatenado !== undefined ? codigo_concatenado : cli.codigo_concatenado,
@@ -1258,93 +1270,84 @@ router.put("/clientes/:id", (req, res) => {
 
 // Desactivar cliente
 router.delete("/clientes/:id", (req, res) => {
-  db.run("UPDATE tat_clientes SET activo = 0 WHERE id = ?", [req.params.id], function (err) {
+  const tabla = tablaClientes(req.query.grupo);
+  db.run("UPDATE " + tabla + " SET activo = 0 WHERE id = ?", [req.params.id], function (err) {
     if (err) return res.status(500).json({ error: "Error al desactivar cliente" });
     res.json({ message: "Cliente desactivado" });
   });
 });
 
 // Carga masiva de clientes desde Excel
-router.post("/clientes/carga-masiva", upload.single("archivo"), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: "No se recibiÃ³ ningÃºn archivo" });
+router.post("/clientes/carga-masiva", upload.single("archivo"), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: "No se recibió ningún archivo" });
+  const tabla = tablaClientes(req.body.grupo);
 
   try {
     const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const raw = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
 
-    if (!raw || raw.length < 2) return res.status(400).json({ error: "El archivo estÃ¡ vacÃ­o" });
+    if (!raw || raw.length < 2) return res.status(400).json({ error: "El archivo está vacío" });
 
     const dataRows = raw.slice(1);
-    let insertados = 0;
-    let actualizados = 0;
-    let errores = [];
-    let pendientes = 0;
 
-    const filasValidas = dataRows.filter(r => String(r[3] || "").trim());
-    pendientes = filasValidas.length;
+    // Estructura: A=Código, B=Razón social, C=Dirección 1, D=Teléfono
+    const filas = dataRows
+      .filter((r) => String(r[1] || "").trim())
+      .map((r) => ({
+        codigo: parseInt(r[0]) || null,
+        codigo_concatenado: String(r[0] || "").trim(),
+        nombre: String(r[1] || "").trim(),
+        direccion: String(r[2] || "").trim(),
+        telefono: String(r[3] || "").trim(),
+      }));
 
-    if (pendientes === 0) return res.json({ message: "No se encontraron clientes vÃ¡lidos", insertados: 0 });
+    if (filas.length === 0) return res.json({ message: "No se encontraron clientes válidos", insertados: 0 });
 
-    filasValidas.forEach((fila, i) => {
-      const codigo = parseInt(fila[2]) || null;
-      const codigo_concatenado = String(fila[1] || "").trim();
-      const nombre = String(fila[3] || "").trim();
-      const direccion = String(fila[4] || "").trim();
-      const barrio = String(fila[5] || "").trim();
-      const ciudad = String(fila[6] || "").trim();
-      const departamento = String(fila[7] || "").trim();
-      const telefono = String(fila[8] || "").trim();
-
-      if (codigo) {
-        db.get("SELECT id FROM tat_clientes WHERE codigo = ? AND codigo_concatenado = ?", [codigo, codigo_concatenado], (err, existe) => {
-          if (existe) {
-            db.run("UPDATE tat_clientes SET nombre=?, direccion=?, barrio=?, ciudad=?, departamento=?, telefono=?, activo=1 WHERE id=?",
-              [nombre, direccion, barrio, ciudad, departamento, telefono, existe.id], (err2) => {
-                if (err2) errores.push("Fila " + (i + 2) + ": " + err2.message);
-                else actualizados++;
-                pendientes--;
-                if (pendientes === 0) enviarRespuesta();
-              });
-          } else {
-            insertarCliente();
-          }
+    const run = (sql, params) =>
+      new Promise((resolve, reject) => {
+        db.run(sql, params, function (err) {
+          if (err) reject(err);
+          else resolve(this);
         });
-      } else {
-        insertarCliente();
-      }
+      });
 
-      function insertarCliente() {
-        db.run("INSERT INTO tat_clientes (codigo, codigo_concatenado, nombre, direccion, barrio, ciudad, departamento, telefono) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-          [codigo, codigo_concatenado, nombre, direccion, barrio, ciudad, departamento, telefono], (err2) => {
-            if (err2) errores.push("Fila " + (i + 2) + ": " + err2.message);
-            else insertados++;
-            pendientes--;
-            if (pendientes === 0) enviarRespuesta();
-          });
-      }
-    });
+    // Lista maestra: reemplaza todo el grupo (limpia duplicados) y recarga
+    // en lotes para evitar miles de round-trips contra la BD.
+    await run("DELETE FROM " + tabla, []);
 
-    function enviarRespuesta() {
-      res.json({ message: "Carga completada", insertados, actualizados, errores: errores.length, detalleErrores: errores.slice(0, 15) });
+    const BATCH = 500;
+    let insertados = 0;
+    for (let i = 0; i < filas.length; i += BATCH) {
+      const lote = filas.slice(i, i + BATCH);
+      const placeholders = lote.map(() => "(?, ?, ?, ?, ?)").join(", ");
+      const params = [];
+      lote.forEach((f) => params.push(f.codigo, f.codigo_concatenado, f.nombre, f.direccion, f.telefono));
+      await run(
+        "INSERT INTO " + tabla + " (codigo, codigo_concatenado, nombre, direccion, telefono) VALUES " + placeholders,
+        params
+      );
+      insertados += lote.length;
     }
+
+    res.json({ message: "Carga completada", insertados, actualizados: 0, errores: 0, detalleErrores: [] });
   } catch (e) {
     res.status(500).json({ error: "Error al procesar archivo: " + e.message });
   }
 });
 
-/* ============ CARGA MASIVA DE Ã“RDENES DESDE EXCEL ============ */
+/* ============ CARGA MASIVA DE ÓRDENES DESDE EXCEL ============ */
 
 // Verificar clientes del Excel antes de cargar
 router.post("/ordenes/verificar-excel", upload.single("archivo"), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: "No se recibiÃ³ ningÃºn archivo" });
+  if (!req.file) return res.status(400).json({ error: "No se recibió ningún archivo" });
 
   try {
     const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const raw = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
 
-    if (!raw || raw.length < 3) return res.status(400).json({ error: "El archivo estÃ¡ vacÃ­o o no tiene datos" });
+    if (!raw || raw.length < 3) return res.status(400).json({ error: "El archivo está vacío o no tiene datos" });
 
     const dataRows = raw.slice(2);
     const clientesMap = new Map(); // concatenado -> nombre
@@ -1361,11 +1364,11 @@ router.post("/ordenes/verificar-excel", upload.single("archivo"), (req, res) => 
 
     if (clientesUnicos.length === 0) return res.json({ nuevos: [], existentes: [] });
 
-    // Buscar cuÃ¡les existen en tat_clientes (por nombre o codigo_concatenado)
+    // Buscar cuáles existen en cualquiera de los grupos (por nombre o codigo_concatenado)
     const placeholders = clientesUnicos.map(() => "?").join(",");
     const allPlaceholders = [...clientesUnicos, ...clientesUnicos];
     db.all(
-      "SELECT DISTINCT nombre, codigo_concatenado FROM tat_clientes WHERE (nombre IN (" + placeholders + ") OR codigo_concatenado IN (" + placeholders + ")) AND activo = 1",
+      "SELECT DISTINCT nombre, codigo_concatenado FROM tat_clientes_all WHERE (nombre IN (" + placeholders + ") OR codigo_concatenado IN (" + placeholders + ")) AND activo = 1",
       allPlaceholders,
       (err, rows) => {
         if (err) return res.status(500).json({ error: "Error del servidor" });
@@ -1379,7 +1382,7 @@ router.post("/ordenes/verificar-excel", upload.single("archivo"), (req, res) => 
           .filter(c => !existentes.has(c))
           .map(concatenado => ({ nombre: clientesMap.get(concatenado), concatenado }));
 
-        // Extraer Ã³rdenes Ãºnicas para selecciÃ³n de tipo
+        // Extraer órdenes únicas para selección de tipo
         const ordenesUnicas = [];
         const ordenesVistas = new Set();
         dataRows.forEach(fila => {
@@ -1401,7 +1404,7 @@ router.post("/ordenes/verificar-excel", upload.single("archivo"), (req, res) => 
 });
 
 router.post("/ordenes/carga-excel", upload.single("archivo"), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: "No se recibiÃ³ ningÃºn archivo" });
+  if (!req.file) return res.status(400).json({ error: "No se recibió ningún archivo" });
 
   // Recibir tipo global (B o P)
   const tipoGlobal = (req.body.tipo || "B").toUpperCase() === "P" ? "P" : "B";
@@ -1414,14 +1417,14 @@ router.post("/ordenes/carga-excel", upload.single("archivo"), (req, res) => {
     // Leer como array de arrays (sin headers)
     const raw = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
 
-    if (!raw || raw.length < 3) return res.status(400).json({ error: "El archivo estÃ¡ vacÃ­o o no tiene datos" });
+    if (!raw || raw.length < 3) return res.status(400).json({ error: "El archivo está vacío o no tiene datos" });
 
-    // Fila 1 = tÃ­tulo, Fila 2 = encabezados, Fila 3+ = datos
+    // Fila 1 = título, Fila 2 = encabezados, Fila 3+ = datos
     // Solo se toman: 2=No.ORDEN, 3=CLIENTE, 4=DESTINO, 13=CANT.
 
     // Agrupar filas por No. ORDEN sumando cantidades
     const ordenesMap = {};
-    const dataRows = raw.slice(2); // Saltar tÃ­tulo y encabezados
+    const dataRows = raw.slice(2); // Saltar título y encabezados
 
     dataRows.forEach((fila, i) => {
       if (!fila || fila.length < 5) return;
@@ -1459,17 +1462,17 @@ router.post("/ordenes/carga-excel", upload.single("archivo"), (req, res) => {
     let omitidas = [];
 
     if (ordenesArr.length === 0) {
-      return res.json({ message: "No se encontraron Ã³rdenes para procesar", creadas: 0, errores: 0, totalFilas: dataRows.length });
+      return res.json({ message: "No se encontraron órdenes para procesar", creadas: 0, errores: 0, totalFilas: dataRows.length });
     }
 
-    // Validar que el cliente (codigo_concatenado o nombre) exista en tat_clientes.
-    // Las Ã³rdenes cuyo cliente NO estÃ© creado se omiten.
+    // Validar que el cliente (codigo_concatenado o nombre) exista en cualquiera de los grupos.
+    // Las órdenes cuyo cliente NO esté creado se omiten.
     const clientesUnicos = [...new Set(ordenesArr.map(o => o.cliente).filter(Boolean))];
     const placeholders = clientesUnicos.map(() => "?").join(",");
     const params = [...clientesUnicos, ...clientesUnicos];
 
     db.all(
-      "SELECT DISTINCT nombre, codigo_concatenado FROM tat_clientes WHERE activo = 1 AND (codigo_concatenado IN (" + placeholders + ") OR nombre IN (" + placeholders + "))",
+      "SELECT DISTINCT nombre, codigo_concatenado FROM tat_clientes_all WHERE activo = 1 AND (codigo_concatenado IN (" + placeholders + ") OR nombre IN (" + placeholders + "))",
       params,
       (errC, rowsC) => {
         if (errC) return res.status(500).json({ error: "Error validando clientes: " + errC.message });
@@ -1487,7 +1490,7 @@ router.post("/ordenes/carga-excel", upload.single("archivo"), (req, res) => {
 
         if (ordenesValidas.length === 0) {
           return res.json({
-            message: "No se creÃ³ ninguna orden: ningÃºn cliente estÃ¡ registrado",
+            message: "No se creó ninguna orden: ningún cliente está registrado",
             totalFilas: dataRows.length,
             ordenesCreadas: 0,
             errores: 0,
@@ -1524,7 +1527,7 @@ router.post("/ordenes/carga-excel", upload.single("archivo"), (req, res) => {
                 return;
               }
               // Insertar un item por cada producto de la orden (nombre tal cual del Excel)
-              // cantidad_entregada arranca en 0: la orden solo estÃ¡ asignada, aÃºn no entregada.
+              // cantidad_entregada arranca en 0: la orden solo está asignada, aún no entregada.
               let itemsPend = itemsEntries.length;
               itemsEntries.forEach(([prodNombre, cant]) => {
                 db.run(
@@ -1561,7 +1564,7 @@ router.post("/ordenes/carga-excel", upload.single("archivo"), (req, res) => {
   }
 });
 
-/* ============ ASIGNACIÃ“N DE VEHÃCULOS ============ */
+/* ============ ASIGNACIÓN DE VEHÍCULOS ============ */
 
 // Listar asignaciones ACTIVAS (no exportadas)
 router.get("/asignaciones", (req, res) => {
@@ -1581,7 +1584,7 @@ router.get("/asignaciones", (req, res) => {
                 o.total
          FROM tat_asignacion_ordenes ao
          LEFT JOIN tat_ordenes o ON o.id = ao.orden_id
-         LEFT JOIN tat_clientes c
+         LEFT JOIN tat_clientes_all c
            ON c.activo = 1
           AND (c.codigo_concatenado = o.distribuidor_nombre OR c.nombre = o.distribuidor_nombre)
          WHERE ao.asignacion_id = ?`,
@@ -1596,23 +1599,23 @@ router.get("/asignaciones", (req, res) => {
   });
 });
 
-// Crear asignaciÃ³n (recibe vehiculo_id y array de orden_ids)
+// Crear asignación (recibe vehiculo_id y array de orden_ids)
 router.post("/asignaciones", (req, res) => {
   const { vehiculo_id, orden_ids, observaciones } = req.body;
 
-  if (!vehiculo_id) return res.status(400).json({ error: "Debe seleccionar un vehÃ­culo" });
+  if (!vehiculo_id) return res.status(400).json({ error: "Debe seleccionar un vehículo" });
   if (!orden_ids || !orden_ids.length) return res.status(400).json({ error: "Debe seleccionar al menos una orden" });
 
   db.get("SELECT * FROM tat_vehiculos WHERE id = ? AND activo = 1", [vehiculo_id], (err, vehiculo) => {
     if (err) return res.status(500).json({ error: "Error del servidor" });
-    if (!vehiculo) return res.status(404).json({ error: "VehÃ­culo no encontrado" });
+    if (!vehiculo) return res.status(404).json({ error: "Vehículo no encontrado" });
 
     const fecha = new Date().toISOString();
     db.run(
       "INSERT INTO tat_asignaciones (vehiculo_id, vehiculo_placa, vehiculo_conductor, fecha, observaciones) VALUES (?, ?, ?, ?, ?)",
       [vehiculo_id, vehiculo.placa, vehiculo.conductor, fecha, observaciones || ""],
       function (err2) {
-        if (err2) return res.status(500).json({ error: "Error al crear asignaciÃ³n" });
+        if (err2) return res.status(500).json({ error: "Error al crear asignación" });
 
         const asignacionId = this.lastID;
         let insertados = 0;
@@ -1625,7 +1628,7 @@ router.post("/asignaciones", (req, res) => {
             (err3) => {
               if (err3) errores++; else insertados++;
               if (insertados + errores === orden_ids.length) {
-                res.json({ message: "AsignaciÃ³n creada", id: asignacionId, ordenes: insertados });
+                res.json({ message: "Asignación creada", id: asignacionId, ordenes: insertados });
               }
             }
           );
@@ -1635,22 +1638,22 @@ router.post("/asignaciones", (req, res) => {
   });
 });
 
-// Eliminar asignaciÃ³n (devuelve Ã³rdenes a pendientes)
+// Eliminar asignación (devuelve órdenes a pendientes)
 router.delete("/asignaciones/:id", (req, res) => {
   const { id } = req.params;
   db.run("DELETE FROM tat_asignacion_ordenes WHERE asignacion_id = ?", [id], (err) => {
     if (err) return res.status(500).json({ error: "Error del servidor" });
     db.run("DELETE FROM tat_asignaciones WHERE id = ?", [id], function (err2) {
       if (err2) return res.status(500).json({ error: "Error del servidor" });
-      res.json({ message: "AsignaciÃ³n eliminada, Ã³rdenes devueltas" });
+      res.json({ message: "Asignación eliminada, órdenes devueltas" });
     });
   });
 });
 
-// Limpiar asignaciones ACTIVA que no tengan Ã³rdenes EXISTENTES asociadas
-// (incluye casos en que tat_asignacion_ordenes apunta a Ã³rdenes ya eliminadas)
+// Limpiar asignaciones ACTIVA que no tengan órdenes EXISTENTES asociadas
+// (incluye casos en que tat_asignacion_ordenes apunta a órdenes ya eliminadas)
 router.post("/asignaciones/limpiar-vacias", (req, res) => {
-  // Primero, borrar referencias huÃ©rfanas en tat_asignacion_ordenes
+  // Primero, borrar referencias huérfanas en tat_asignacion_ordenes
   const limpiarHuerfanas = `
     DELETE FROM tat_asignacion_ordenes
     WHERE orden_id NOT IN (SELECT id FROM tat_ordenes)
@@ -1658,7 +1661,7 @@ router.post("/asignaciones/limpiar-vacias", (req, res) => {
   db.run(limpiarHuerfanas, [], (eH) => {
     if (eH) {
       console.error("[limpiar-vacias] huerfanas:", eH.message);
-      return res.status(500).json({ error: "Error limpiando referencias huÃ©rfanas: " + eH.message });
+      return res.status(500).json({ error: "Error limpiando referencias huérfanas: " + eH.message });
     }
     // Luego borrar asignaciones ACTIVA que ya no tienen ninguna orden
     const sql = `
@@ -1669,19 +1672,19 @@ router.post("/asignaciones/limpiar-vacias", (req, res) => {
     db.run(sql, [], function (err) {
       if (err) {
         console.error("[limpiar-vacias] error:", err.message);
-        return res.status(500).json({ error: "Error al limpiar asignaciones vacÃ­as: " + err.message });
+        return res.status(500).json({ error: "Error al limpiar asignaciones vacías: " + err.message });
       }
-      res.json({ message: "Asignaciones vacÃ­as eliminadas", eliminadas: this.changes || 0 });
+      res.json({ message: "Asignaciones vacías eliminadas", eliminadas: this.changes || 0 });
     });
   });
 });
 
-// Desasignar una orden individual (quitarla de la asignaciÃ³n)
+// Desasignar una orden individual (quitarla de la asignación)
 router.delete("/asignaciones/:asignacionId/orden/:ordenId", (req, res) => {
   const { asignacionId, ordenId } = req.params;
   db.run("DELETE FROM tat_asignacion_ordenes WHERE asignacion_id = ? AND orden_id = ?", [asignacionId, ordenId], function (err) {
     if (err) return res.status(500).json({ error: "Error del servidor" });
-    // Si la asignaciÃ³n queda sin Ã³rdenes, eliminarla
+    // Si la asignación queda sin órdenes, eliminarla
     db.get("SELECT COUNT(*) as total FROM tat_asignacion_ordenes WHERE asignacion_id = ?", [asignacionId], (err2, row) => {
       if (!err2 && row && row.total === 0) {
         db.run("DELETE FROM tat_asignaciones WHERE id = ?", [asignacionId]);
@@ -1705,7 +1708,7 @@ router.get("/asignaciones/exportar-excel", (req, res) => {
                 o.total
          FROM tat_asignacion_ordenes ao
          LEFT JOIN tat_ordenes o ON o.id = ao.orden_id
-         LEFT JOIN tat_clientes c
+         LEFT JOIN tat_clientes_all c
            ON c.activo = 1
           AND (c.codigo_concatenado = o.distribuidor_nombre OR c.nombre = o.distribuidor_nombre)
          WHERE ao.asignacion_id = ?`,
@@ -1722,7 +1725,7 @@ router.get("/asignaciones/exportar-excel", (req, res) => {
               "UPDATE tat_asignaciones SET estado='EXPORTADA', fecha_exportacion=?, observacion_servicio=COALESCE(observacion_servicio,'Sin Novedad') WHERE id IN (" + placeholders + ")",
               [ahora, ...ids],
               () => {
-                // Inicializar observacion_servicio = 'Sin Novedad' en las Ã³rdenes exportadas (si no la tienen)
+                // Inicializar observacion_servicio = 'Sin Novedad' en las órdenes exportadas (si no la tienen)
                 db.run(
                   "UPDATE tat_ordenes SET observacion_servicio = COALESCE(observacion_servicio,'Sin Novedad') WHERE id IN (SELECT orden_id FROM tat_asignacion_ordenes WHERE asignacion_id IN (" + placeholders + "))",
                   ids,
@@ -1759,7 +1762,7 @@ router.get("/asignaciones/historial", (req, res) => {
     FROM tat_asignaciones a
     INNER JOIN tat_asignacion_ordenes ao ON ao.asignacion_id = a.id
     INNER JOIN tat_ordenes o ON o.id = ao.orden_id
-    LEFT JOIN tat_clientes c
+    LEFT JOIN tat_clientes_all c
       ON (c.codigo_concatenado = o.distribuidor_nombre OR c.nombre = o.distribuidor_nombre)
     WHERE a.estado = 'EXPORTADA'
   `;
@@ -1773,7 +1776,7 @@ router.get("/asignaciones/historial", (req, res) => {
   });
 });
 
-// Historial de exportaciones AGRUPADO (un registro por lote/exportaciÃ³n)
+// Historial de exportaciones AGRUPADO (un registro por lote/exportación)
 // Cada lote = todas las asignaciones que comparten la misma fecha_exportacion
 router.get("/asignaciones/historial-grupos", (req, res) => {
   const { desde, hasta } = req.query;
@@ -1796,7 +1799,7 @@ router.get("/asignaciones/historial-grupos", (req, res) => {
   db.all(q, params, (err, rows) => {
     if (err) {
       console.error("[historial-grupos]", err.message);
-      // Fallback: agrupar manualmente si string_agg no estÃ¡ disponible
+      // Fallback: agrupar manualmente si string_agg no está disponible
       return db.all(
         `SELECT a.id, a.vehiculo_placa, COALESCE(a.fecha_exportacion, a.fecha) AS fecha_exportacion
          FROM tat_asignaciones a WHERE a.estado = 'EXPORTADA'
@@ -1838,7 +1841,7 @@ router.get("/asignaciones/historial/exportar-excel", (req, res) => {
     (err, asignaciones) => {
       if (err) return res.status(500).json({ error: "Error del servidor: " + err.message });
       if (!asignaciones || !asignaciones.length) {
-        return res.status(404).json({ error: "No se encontrÃ³ el lote exportado" });
+        return res.status(404).json({ error: "No se encontró el lote exportado" });
       }
       let pendientes = asignaciones.length;
       asignaciones.forEach(a => {
@@ -1848,7 +1851,7 @@ router.get("/asignaciones/historial/exportar-excel", (req, res) => {
                   o.total
            FROM tat_asignacion_ordenes ao
            LEFT JOIN tat_ordenes o ON o.id = ao.orden_id
-           LEFT JOIN tat_clientes c
+           LEFT JOIN tat_clientes_all c
              ON c.activo = 1
             AND (c.codigo_concatenado = o.distribuidor_nombre OR c.nombre = o.distribuidor_nombre)
            WHERE ao.asignacion_id = ?`,
@@ -1864,7 +1867,7 @@ router.get("/asignaciones/historial/exportar-excel", (req, res) => {
   );
 });
 
-// Detalle de un lote exportado (para ediciÃ³n) por fecha_exportacion
+// Detalle de un lote exportado (para edición) por fecha_exportacion
 router.get("/asignaciones/lote", (req, res) => {
   const { fecha_exportacion } = req.query;
   if (!fecha_exportacion) return res.status(400).json({ error: "fecha_exportacion es requerida" });
@@ -1873,7 +1876,7 @@ router.get("/asignaciones/lote", (req, res) => {
     [fecha_exportacion],
     (err, asignaciones) => {
       if (err) return res.status(500).json({ error: "Error del servidor: " + err.message });
-      if (!asignaciones || !asignaciones.length) return res.status(404).json({ error: "No se encontrÃ³ el lote" });
+      if (!asignaciones || !asignaciones.length) return res.status(404).json({ error: "No se encontró el lote" });
       let pendientes = asignaciones.length;
       asignaciones.forEach(a => {
         db.all(
@@ -1894,7 +1897,7 @@ router.get("/asignaciones/lote", (req, res) => {
   );
 });
 
-// Actualizar placa/conductor de una asignaciÃ³n
+// Actualizar placa/conductor de una asignación
 router.put("/asignaciones/:id/lote", (req, res) => {
   const { id } = req.params;
   const { vehiculo_placa, vehiculo_conductor } = req.body || {};
@@ -1906,8 +1909,8 @@ router.put("/asignaciones/:id/lote", (req, res) => {
   params.push(id);
   db.run("UPDATE tat_asignaciones SET " + sets.join(", ") + " WHERE id = ?", params, function (err) {
     if (err) return res.status(500).json({ error: "Error del servidor" });
-    if (this.changes === 0) return res.status(404).json({ error: "AsignaciÃ³n no encontrada" });
-    res.json({ message: "AsignaciÃ³n actualizada" });
+    if (this.changes === 0) return res.status(404).json({ error: "Asignación no encontrada" });
+    res.json({ message: "Asignación actualizada" });
   });
 });
 
@@ -1915,7 +1918,7 @@ router.put("/asignaciones/:id/lote", (req, res) => {
 router.put("/ordenes/:id/total", (req, res) => {
   const { id } = req.params;
   const total = Number(req.body && req.body.total);
-  if (!isFinite(total) || total < 0) return res.status(400).json({ error: "Total invÃ¡lido" });
+  if (!isFinite(total) || total < 0) return res.status(400).json({ error: "Total inválido" });
   db.run("UPDATE tat_ordenes SET total = ? WHERE id = ?", [total, id], function (err) {
     if (err) return res.status(500).json({ error: "Error del servidor" });
     if (this.changes === 0) return res.status(404).json({ error: "Orden no encontrada" });
@@ -1930,19 +1933,19 @@ router.put("/asignaciones/:id/observacion", (req, res) => {
   const obs = (observacion || "Sin Novedad").toString().trim() || "Sin Novedad";
   db.run("UPDATE tat_asignaciones SET observacion_servicio = ? WHERE id = ?", [obs, id], function (err) {
     if (err) return res.status(500).json({ error: "Error del servidor" });
-    if (this.changes === 0) return res.status(404).json({ error: "AsignaciÃ³n no encontrada" });
-    res.json({ message: "ObservaciÃ³n actualizada", observacion: obs });
+    if (this.changes === 0) return res.status(404).json({ error: "Asignación no encontrada" });
+    res.json({ message: "Observación actualizada", observacion: obs });
   });
 });
 
-// Asignar/actualizar Auxiliar de Ruta de una asignaciÃ³n
+// Asignar/actualizar Auxiliar de Ruta de una asignación
 router.put("/asignaciones/:id/auxiliar", (req, res) => {
   const { id } = req.params;
   const { auxiliar } = req.body || {};
   const aux = (auxiliar || "").toString().trim();
   db.run("UPDATE tat_asignaciones SET auxiliar = ? WHERE id = ?", [aux, id], function (err) {
     if (err) return res.status(500).json({ error: "Error del servidor" });
-    if (this.changes === 0) return res.status(404).json({ error: "AsignaciÃ³n no encontrada" });
+    if (this.changes === 0) return res.status(404).json({ error: "Asignación no encontrada" });
     res.json({ message: "Auxiliar actualizado", auxiliar: aux });
   });
 });
@@ -1955,7 +1958,7 @@ router.put("/ordenes/:id/observacion", (req, res) => {
   db.run("UPDATE tat_ordenes SET observacion_servicio = ? WHERE id = ?", [obs, id], function (err) {
     if (err) return res.status(500).json({ error: "Error del servidor" });
     if (this.changes === 0) return res.status(404).json({ error: "Orden no encontrada" });
-    res.json({ message: "ObservaciÃ³n actualizada", observacion: obs });
+    res.json({ message: "Observación actualizada", observacion: obs });
   });
 });
 
@@ -1995,7 +1998,7 @@ function generarExcel(asignaciones, res, fechaArchivo) {
   const placeholders = nombres.map(() => "?").join(",");
   const allPlaceholders = [...nombres, ...nombres];
   db.all(
-    "SELECT * FROM tat_clientes WHERE (nombre IN (" + placeholders + ") OR codigo_concatenado IN (" + placeholders + ")) AND activo = 1",
+    "SELECT * FROM tat_clientes_all WHERE (nombre IN (" + placeholders + ") OR codigo_concatenado IN (" + placeholders + ")) AND activo = 1",
     allPlaceholders,
     (err, clientes) => {
       const clienteMap = {};
@@ -2012,20 +2015,20 @@ function enviarExcel(asignaciones, clienteMap, res, fechaArchivo) {
   // Encabezados del formato Free Order
   const headers = [
     "Factura", "Kilos", "Unidades_2", "Unidades_3", "Prioridad",
-    "CÃ³digo de DirecciÃ³n*", "Nombre DirecciÃ³n", "Nombre Cliente", "Tipo",
-    "DirecciÃ³n 1*", "Referencias", "DescripciÃ³n", "Comuna", "Provincia",
-    "RegiÃ³n", "PaÃ­s*", "CÃ³digo Postal", "Latitud", "Longitud",
+    "Código de Dirección*", "Nombre Dirección", "Nombre Cliente", "Tipo",
+    "Dirección 1*", "Referencias", "Descripción", "Comuna", "Provincia",
+    "Región", "País*", "Código Postal", "Latitud", "Longitud",
     "Tiempo de Servicio", "Inicio Ventana 1", "Fin Ventana 1",
-    "CaracterÃ­sticas", "AsignaciÃ³n VehÃ­culo", "Telefono de Contacto",
-    "Email de Contacto", "Unidades del ArtÃ­culo", "CÃ³digo del ArtÃ­culo",
-    "DescripciÃ³n del ArtÃ­culo", "Exclusividad", "Posicion", "Proveedor",
-    "Inicio ventana 2", "Fin Ventana 2", "CÃ³digo Cliente", "Nombre de Contacto",
-    "CÃ³digo Alternativo", "Mail aprobar ruta", "Mail iniciar ruta",
-    "Mail en camino a direccion", "Mail entrega finalizada", "CÃ³digo de ruta",
-    "NÃºmero de viaje", "Tipo Unidad", "Texto 1", "Texto 2", "valor",
+    "Características", "Asignación Vehículo", "Telefono de Contacto",
+    "Email de Contacto", "Unidades del Artículo", "Código del Artículo",
+    "Descripción del Artículo", "Exclusividad", "Posicion", "Proveedor",
+    "Inicio ventana 2", "Fin Ventana 2", "Código Cliente", "Nombre de Contacto",
+    "Código Alternativo", "Mail aprobar ruta", "Mail iniciar ruta",
+    "Mail en camino a direccion", "Mail entrega finalizada", "Código de ruta",
+    "Número de viaje", "Tipo Unidad", "Texto 1", "Texto 2", "valor",
     "Texto 4", "Texto 5", "Texto 6", "Texto 7", "Texto 8", "Texto 9",
-    "Texto 10", "Texto 11", "NÃºmero 1", "NÃºmero 2", "NÃºmero 3", "NÃºmero 4",
-    "Correo Conductor", "Costo AsignaciÃ³n", "Fecha Maxima de Entrega"
+    "Texto 10", "Texto 11", "Número 1", "Número 2", "Número 3", "Número 4",
+    "Correo Conductor", "Costo Asignación", "Fecha Maxima de Entrega"
   ];
 
   const rows = [headers];
@@ -2039,44 +2042,44 @@ function enviarExcel(asignaciones, clienteMap, res, fechaArchivo) {
         "",                                             // Unidades_2
         "",                                             // Unidades_3
         "",                                             // Prioridad
-        cli.codigo || "",                               // CÃ³digo de DirecciÃ³n
-        cli.nombre || o.distribuidor_nombre || "",       // Nombre DirecciÃ³n
+        cli.codigo || "",                               // Código de Dirección
+        cli.nombre || o.distribuidor_nombre || "",       // Nombre Dirección
         cli.nombre || o.distribuidor_nombre || "",       // Nombre Cliente
         "",                                             // Tipo
-        cli.direccion || "",                             // DirecciÃ³n 1
+        cli.direccion || "",                             // Dirección 1
         "",                                             // Referencias
-        "",                                             // DescripciÃ³n
+        "",                                             // Descripción
         cli.barrio || "",                               // Comuna
         cli.ciudad || "",                               // Provincia
-        cli.departamento || "",                          // RegiÃ³n
-        "Colombia",                                     // PaÃ­s
-        "",                                             // CÃ³digo Postal
+        cli.departamento || "",                          // Región
+        "Colombia",                                     // País
+        "",                                             // Código Postal
         "",                                             // Latitud
         "",                                             // Longitud
         "",                                             // Tiempo de Servicio
         "",                                             // Inicio Ventana 1
         "",                                             // Fin Ventana 1
-        "",                                             // CaracterÃ­sticas
-        a.vehiculo_placa || "",                          // AsignaciÃ³n VehÃ­culo
+        "",                                             // Características
+        a.vehiculo_placa || "",                          // Asignación Vehículo
         cli.telefono || "",                              // Telefono de Contacto
         cli.email || "",                                 // Z  Email de Contacto
-        "",                                              // AA Unidades del ArtÃ­culo
-        "",                                              // AB CÃ³digo del ArtÃ­culo
-        "",                                              // AC DescripciÃ³n del ArtÃ­culo
+        "",                                              // AA Unidades del Artículo
+        "",                                              // AB Código del Artículo
+        "",                                              // AC Descripción del Artículo
         "",                                              // AD Exclusividad
         "",                                              // AE Posicion
         "",                                              // AF Proveedor
         "",                                              // AG Inicio ventana 2
         "",                                              // AH Fin Ventana 2
-        "",                                              // AI CÃ³digo Cliente
+        "",                                              // AI Código Cliente
         "",                                              // AJ Nombre de Contacto
-        cli.codigo_concatenado || "",                    // AK CÃ³digo Alternativo
+        cli.codigo_concatenado || "",                    // AK Código Alternativo
         "",                                              // AL Mail aprobar ruta
         "",                                              // AM Mail iniciar ruta
         "",                                              // AN Mail en camino a direccion
         "",                                              // AO Mail entrega finalizada
-        "",                                              // AP CÃ³digo de ruta
-        "",                                              // AQ NÃºmero de viaje
+        "",                                              // AP Código de ruta
+        "",                                              // AQ Número de viaje
         "",                                              // AR Tipo Unidad
         "",                                              // AS Texto 1
         "",                                              // AT Texto 2
@@ -2089,12 +2092,12 @@ function enviarExcel(asignaciones, clienteMap, res, fechaArchivo) {
         "",                                              // BA Texto 9
         "",                                              // BB Texto 10
         "",                                              // BC Texto 11
-        "",                                              // BD NÃºmero 1
-        "",                                              // BE NÃºmero 2
-        "",                                              // BF NÃºmero 3
-        "",                                              // BG NÃºmero 4
+        "",                                              // BD Número 1
+        "",                                              // BE Número 2
+        "",                                              // BF Número 3
+        "",                                              // BG Número 4
         "",                                              // BH Correo Conductor
-        "",                                              // BI Costo AsignaciÃ³n
+        "",                                              // BI Costo Asignación
         ""                                               // BJ Fecha Maxima de Entrega
       ]);
     });
@@ -2115,7 +2118,7 @@ function enviarExcel(asignaciones, clienteMap, res, fechaArchivo) {
   res.send(buffer);
 }
 
-// Consecutivo global de plantilla D.L â€” llave primaria Ãºnica en tat_plantillas_dl
+// Consecutivo global de plantilla D.L — llave primaria única en tat_plantillas_dl
 router.post("/plantillas/next-consecutivo", (req, res) => {
   const {
     placa = "", conductor = "", auxiliar = "", fecha_despacho = "", origen = "",
@@ -2211,7 +2214,7 @@ router.put("/plantillas/:consecutivo", (req, res) => {
   });
 });
 
-// Eliminar una orden de una plantilla y devolverla a la cola de Ã³rdenes por asignar
+// Eliminar una orden de una plantilla y devolverla a la cola de órdenes por asignar
 router.delete("/plantillas/:consecutivo/orden", (req, res) => {
   const { consecutivo } = req.params;
   const ordenId = (req.body && (req.body.orden_id != null ? req.body.orden_id : undefined));
@@ -2241,7 +2244,7 @@ router.delete("/plantillas/:consecutivo/orden", (req, res) => {
       function (e2) {
         if (e2) return res.status(500).json({ error: e2.message });
 
-        // Liberar la orden: quitarla de cualquier asignaciÃ³n para que vuelva a estar disponible
+        // Liberar la orden: quitarla de cualquier asignación para que vuelva a estar disponible
         const liberar = (oid) => db.run("DELETE FROM tat_asignacion_ordenes WHERE orden_id = ?", [oid], () => {
           res.json({ message: "Orden eliminada y liberada", total_kilos: totalKilos, total_documentos: totalDoctos });
         });
