@@ -1275,43 +1275,105 @@ router.post("/clientes/carga-masiva", upload.single("archivo"), (req, res) => {
 
     if (!raw || raw.length < 2) return res.status(400).json({ error: "El archivo está vacío" });
 
+    const normalizeHeader = (value) => String(value || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").replace(/[^a-z0-9 _-]/g, "");
+    const headers = raw[0].map(normalizeHeader);
+    console.log("[UPLOAD] Raw headers:", raw[0]);
+    console.log("[UPLOAD] Normalized headers:", headers);
+    
+    const findHeader = (...names) => {
+      // Primero intenta coincidencias exactas
+      for (let name of names) {
+        const idx = headers.findIndex(h => h === name);
+        if (idx >= 0) return idx;
+      }
+      // Luego intenta contains (partial match)
+      for (let name of names) {
+        const idx = headers.findIndex(h => h.includes(name));
+        if (idx >= 0) return idx;
+      }
+      return -1;
+    };
+    
+    const idxCodigoConcatenado = findHeader("codigo concatenado", "codigo_concatenado", "codigoconcatenado");
+    const idxCodigo = findHeader("codigo");
+    const idxNombre = findHeader("nombre", "cliente", "razon social");
+    console.log("[UPLOAD] idxCodigoConcatenado:", idxCodigoConcatenado, "idxCodigo:", idxCodigo, "idxNombre:", idxNombre);
+    
+    if (idxCodigoConcatenado < 0) {
+      console.log("[UPLOAD] WARNING: Código Concatenado no encontrado! Headers disponibles:", headers);
+    }
+    const idxDireccion = findHeader("direccion", "dirección", "direccion cliente", "domicilio");
+    const idxBarrio = findHeader("barrio", "sector");
+    const idxCiudad = findHeader("ciudad");
+    const idxDepartamento = findHeader("departamento", "departamento/estado", "estado");
+    const idxTelefono = findHeader("telefono", "teléfono", "celular", "contacto");
+
     const dataRows = raw.slice(1);
     let insertados = 0;
     let actualizados = 0;
     let errores = [];
     let pendientes = 0;
 
-    const filasValidas = dataRows.filter(r => String(r[3] || "").trim());
+    const filasValidas = dataRows.filter(r => String(r[idxNombre] || r[3] || "").trim());
     pendientes = filasValidas.length;
 
     if (pendientes === 0) return res.json({ message: "No se encontraron clientes válidos", insertados: 0 });
 
     filasValidas.forEach((fila, i) => {
-      const codigo = parseInt(fila[2]) || null;
-      const codigo_concatenado = String(fila[1] || "").trim();
-      const nombre = String(fila[3] || "").trim();
-      const direccion = String(fila[4] || "").trim();
-      const barrio = String(fila[5] || "").trim();
-      const ciudad = String(fila[6] || "").trim();
-      const departamento = String(fila[7] || "").trim();
-      const telefono = String(fila[8] || "").trim();
-
-      if (codigo) {
-        db.get("SELECT id FROM agro_clientes WHERE codigo = ? AND codigo_concatenado = ?", [codigo, codigo_concatenado], (err, existe) => {
-          if (existe) {
-            db.run("UPDATE agro_clientes SET nombre=?, direccion=?, barrio=?, ciudad=?, departamento=?, telefono=?, activo=1 WHERE id=?",
-              [nombre, direccion, barrio, ciudad, departamento, telefono, existe.id], (err2) => {
-                if (err2) errores.push("Fila " + (i + 2) + ": " + err2.message);
-                else actualizados++;
-                pendientes--;
-                if (pendientes === 0) enviarRespuesta();
-              });
-          } else {
-            insertarCliente();
-          }
-        });
+      let codigoRaw;
+      let codigoConcRaw;
+      
+      // Capturar CÓDIGO
+      if (idxCodigo >= 0) {
+        codigoRaw = fila[idxCodigo];
       } else {
-        insertarCliente();
+        // Fallback: buscar columna que tenga dígitos con guión (patrón: 890107487-544)
+        codigoRaw = fila.find(v => String(v || "").match(/^\d{9,}-/)) || fila[2];
+      }
+      
+      // Capturar CÓDIGO CONCATENADO
+      if (idxCodigoConcatenado >= 0) {
+        codigoConcRaw = fila[idxCodigoConcatenado];
+      } else {
+        // Fallback: buscar columna que NO sea número puro (pero tenga contenido real)
+        codigoConcRaw = fila.find((v, idx) => {
+          const s = String(v || "").trim();
+          return s && s !== "-" && s !== "---" && !/^\d+$/.test(s);
+        }) || fila[1];
+      }
+      
+      const codigo = parseInt(String(codigoRaw || "").replace(/[^0-9]/g, "")) || null;
+      const codigo_concatenado = String(codigoConcRaw || "").trim();
+      if (i === 0) console.log("[UPLOAD] First row - codigoRaw:", codigoRaw, "codigoConcRaw:", codigoConcRaw, "→ codigo_concatenado:", codigo_concatenado);
+      const nombre = String(idxNombre >= 0 ? fila[idxNombre] : fila[3] || "").trim();
+      const direccion = String(idxDireccion >= 0 ? fila[idxDireccion] : fila[4] || "").trim();
+      const barrio = String(idxBarrio >= 0 ? fila[idxBarrio] : fila[5] || "").trim();
+      const ciudad = String(idxCiudad >= 0 ? fila[idxCiudad] : fila[6] || "").trim();
+      const departamento = String(idxDepartamento >= 0 ? fila[idxDepartamento] : fila[7] || "").trim();
+      const telefono = String(idxTelefono >= 0 ? fila[idxTelefono] : fila[8] || "").trim();
+
+      if (nombre) {
+        if (codigo) {
+          db.get("SELECT id FROM agro_clientes WHERE codigo = ? AND codigo_concatenado = ?", [codigo, codigo_concatenado], (err, existe) => {
+            if (existe) {
+              db.run("UPDATE agro_clientes SET nombre=?, direccion=?, barrio=?, ciudad=?, departamento=?, telefono=?, activo=1 WHERE id=?",
+                [nombre, direccion, barrio, ciudad, departamento, telefono, existe.id], (err2) => {
+                  if (err2) errores.push("Fila " + (i + 2) + ": " + err2.message);
+                  else actualizados++;
+                  pendientes--;
+                  if (pendientes === 0) enviarRespuesta();
+                });
+            } else {
+              insertarCliente();
+            }
+          });
+        } else {
+          insertarCliente();
+        }
+      } else {
+        errores.push("Fila " + (i + 2) + ": nombre vacío");
+        pendientes--;
+        if (pendientes === 0) enviarRespuesta();
       }
 
       function insertarCliente() {
