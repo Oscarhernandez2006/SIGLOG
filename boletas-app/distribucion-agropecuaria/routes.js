@@ -1343,9 +1343,17 @@ router.post("/clientes/carga-masiva", upload.single("archivo"), (req, res) => {
       }
       
       const codigo = String(codigoRaw || "").trim() || null;
-      const codigo_concatenado = String(codigoConcRaw || "").trim();
-      if (i === 0) console.log("[UPLOAD] First row - codigoRaw:", codigoRaw, "codigoConcRaw:", codigoConcRaw, "→ codigo_concatenado:", codigo_concatenado);
+      let codigo_concatenado = String(codigoConcRaw || "").trim();
+      // Tratar marcadores de vacio (—, -, –) como vacio
+      if (/^[—–-]+$/.test(codigo_concatenado)) codigo_concatenado = "";
       const nombre = String(idxNombre >= 0 ? fila[idxNombre] : fila[3] || "").trim();
+      // Si el Codigo Concatenado viene vacio, generarlo: Nombre + "-" + sufijo del codigo
+      if (!codigo_concatenado && nombre) {
+        const cod = String(codigoRaw || "").trim();
+        const sufijo = cod.includes("-") ? cod.substring(cod.lastIndexOf("-") + 1) : cod;
+        codigo_concatenado = sufijo ? `${nombre}-${sufijo}` : nombre;
+      }
+      if (i === 0) console.log("[UPLOAD] First row - codigoRaw:", codigoRaw, "codigoConcRaw:", codigoConcRaw, "→ codigo_concatenado:", codigo_concatenado);
       const direccion = String(idxDireccion >= 0 ? fila[idxDireccion] : fila[4] || "").trim();
       const barrio = String(idxBarrio >= 0 ? fila[idxBarrio] : fila[5] || "").trim();
       const ciudad = String(idxCiudad >= 0 ? fila[idxCiudad] : fila[6] || "").trim();
