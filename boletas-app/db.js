@@ -800,7 +800,7 @@ db.serialize(() => {
   db.run(`
     CREATE TABLE IF NOT EXISTS agro_clientes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      codigo BIGINT,
+      codigo TEXT,
       codigo_concatenado TEXT,
       nombre TEXT NOT NULL,
       direccion TEXT,
@@ -811,7 +811,7 @@ db.serialize(() => {
       activo INTEGER DEFAULT 1
     )
   `);
-  db.run(`ALTER TABLE agro_clientes ALTER COLUMN codigo TYPE BIGINT`, () => {});
+  db.run(`ALTER TABLE agro_clientes ALTER COLUMN codigo TYPE TEXT USING codigo::text`, () => {});
 
   // Asignación de vehículos a órdenes
   db.run(`

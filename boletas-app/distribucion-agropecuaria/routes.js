@@ -1342,7 +1342,7 @@ router.post("/clientes/carga-masiva", upload.single("archivo"), (req, res) => {
         }) || fila[1];
       }
       
-      const codigo = parseInt(String(codigoRaw || "").replace(/[^0-9]/g, "")) || null;
+      const codigo = String(codigoRaw || "").trim() || null;
       const codigo_concatenado = String(codigoConcRaw || "").trim();
       if (i === 0) console.log("[UPLOAD] First row - codigoRaw:", codigoRaw, "codigoConcRaw:", codigoConcRaw, "→ codigo_concatenado:", codigo_concatenado);
       const nombre = String(idxNombre >= 0 ? fila[idxNombre] : fila[3] || "").trim();
