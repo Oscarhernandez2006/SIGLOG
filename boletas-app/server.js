@@ -354,6 +354,10 @@ function verifySsoToken(token) {
 app.get("/sso", (req, res) => {
   const username = verifySsoToken(req.query.token);
   if (!username) return res.redirect("/login.html");
+  // Página destino tras el SSO (deep-link desde el menú de rutas_web).
+  // Solo se permiten rutas internas seguras; si no, al dashboard.
+  let next = String(req.query.next || "/dashboard.html");
+  if (!next.startsWith("/") || next.startsWith("//")) next = "/dashboard.html";
   db.get("SELECT * FROM usuarios WHERE username = ?", [username], (err, user) => {
     if (err || !user) return res.redirect("/login.html");
     const u = {
@@ -377,7 +381,7 @@ app.get("/sso", (req, res) => {
       "localStorage.setItem('userPermisos'," + JSON.stringify(u.permisos) + ");" +
       "localStorage.setItem('userModulos'," + JSON.stringify(u.modulos) + ");" +
       "localStorage.setItem('userSubmodulos'," + JSON.stringify(u.submodulos) + ");" +
-      "}catch(e){}location.replace('/dashboard.html');})();</script>"
+      "}catch(e){}location.replace(" + JSON.stringify(next) + ");})();</script>"
     );
   });
 });
