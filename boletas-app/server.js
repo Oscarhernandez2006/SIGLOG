@@ -29,6 +29,30 @@ app.use((req, res, next) => {
   next();
 });
 
+// ── Acceso SOLO vía rutas_web (SSO). Si SSO_ONLY está activo, el login directo
+// de SIGLOG queda deshabilitado: el formulario no se sirve y /login rechaza.
+// El SSO usa /sso (no toca /login), así que sigue funcionando. Reversible
+// quitando la variable de entorno SSO_ONLY.
+const SSO_ONLY = ["1", "true", "yes"].includes(String(process.env.SSO_ONLY || "").toLowerCase());
+app.use((req, res, next) => {
+  if (!SSO_ONLY) return next();
+  const p = req.path;
+  if (req.method === "POST" && p === "/login") {
+    return res.status(403).json({ error: "Acceso deshabilitado. Ingresa a SIGLOG desde rutas_web." });
+  }
+  if (req.method === "GET" && (p === "/" || p === "/login.html")) {
+    res.set("Cache-Control", "no-store");
+    return res.status(200).send(
+      '<!doctype html><meta charset="utf-8"><title>SIGLOG</title>' +
+      '<body style="font-family:system-ui,-apple-system,sans-serif;text-align:center;padding:48px 16px;color:#374151">' +
+      '<h2 style="margin:0 0 8px">SIGLOG</h2>' +
+      '<p>El acceso a SIGLOG es únicamente desde <b>rutas_web</b>.</p>' +
+      '<p><a href="https://routeplanner.grupo-santacruz.com" style="color:#16a34a;font-weight:600;text-decoration:none">Ir a rutas_web →</a></p>'
+    );
+  }
+  next();
+});
+
 app.use(express.static(path.join(__dirname, "public")));
 
 /*Inicio estadísticas*/
