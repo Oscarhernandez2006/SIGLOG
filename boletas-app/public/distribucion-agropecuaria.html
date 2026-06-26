@@ -191,8 +191,9 @@
 <div class="toast" id="toast"></div>
 
 <div class="container">
-  <!-- Tabs -->
-  <div class="tabs">
+  <!-- Tabs (ocultas: la navegación ahora vive en el menú lateral de rutas_web;
+       los botones siguen en el DOM para que el deep-link ?tab= los active) -->
+  <div class="tabs" style="display:none">
     <button class="tab active" data-tab="vehiculos">Vehículos</button>
     <button class="tab" data-tab="ordenes">Órdenes</button>
     <button class="tab" data-tab="asignaciones">Asignaciones</button>
