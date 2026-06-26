@@ -303,6 +303,61 @@ app.post("/login", (req, res) => {
 });
 /*Fin inidicador de error*/
 
+// ── SSO: ingreso automático desde rutas_web (token firmado HMAC) ─────────────
+// rutas_web embebe SIGLOG en un iframe y abre /sso?token=... El token lleva el
+// username (cédula) firmado con SSO_SECRET (mismo valor en ambas apps). Si es
+// válido y el usuario existe, se puebla el localStorage igual que el login y se
+// entra; si no, cae al login normal. Token de vida corta (~30s).
+const crypto = require("crypto");
+
+function verifySsoToken(token) {
+  const secret = process.env.SSO_SECRET;
+  if (!secret || !token || token.indexOf(".") < 0) return null;
+  const [payload, sig] = token.split(".");
+  const expected = crypto.createHmac("sha256", secret).update(payload)
+    .digest("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const a = Buffer.from(sig), b = Buffer.from(expected);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  let data;
+  try {
+    const json = Buffer.from(payload.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8");
+    data = JSON.parse(json);
+  } catch (e) { return null; }
+  if (!data || !data.exp || data.exp < Math.floor(Date.now() / 1000)) return null;
+  return String(data.u || "");
+}
+
+app.get("/sso", (req, res) => {
+  const username = verifySsoToken(req.query.token);
+  if (!username) return res.redirect("/login.html");
+  db.get("SELECT * FROM usuarios WHERE username = ?", [username], (err, user) => {
+    if (err || !user) return res.redirect("/login.html");
+    const u = {
+      username: user.username,
+      rol: user.rol || "administrador",
+      nombres: user.nombres || "",
+      apellidos: user.apellidos || "",
+      permisos: user.permisos || "canjear,generar,informes,reimprimir,validar",
+      modulos: user.modulos || "bono,pedidos,agropecuaria",
+      submodulos: user.submodulos || "",
+    };
+    res.set("Content-Type", "text/html; charset=utf-8");
+    res.set("Cache-Control", "no-store");
+    res.send(
+      '<!doctype html><meta charset="utf-8"><title>SIGLOG</title>' +
+      '<body style="font-family:system-ui;color:#666">Entrando a SIGLOG…<script>(function(){try{' +
+      "localStorage.setItem('username'," + JSON.stringify(u.username) + ");" +
+      "localStorage.setItem('userRol'," + JSON.stringify(u.rol) + ");" +
+      "localStorage.setItem('userNombres'," + JSON.stringify(u.nombres) + ");" +
+      "localStorage.setItem('userApellidos'," + JSON.stringify(u.apellidos) + ");" +
+      "localStorage.setItem('userPermisos'," + JSON.stringify(u.permisos) + ");" +
+      "localStorage.setItem('userModulos'," + JSON.stringify(u.modulos) + ");" +
+      "localStorage.setItem('userSubmodulos'," + JSON.stringify(u.submodulos) + ");" +
+      "}catch(e){}location.replace('/dashboard.html');})();</script>"
+    );
+  });
+});
+
 
 
 /*inicio cuerpo de datos boletas*/
