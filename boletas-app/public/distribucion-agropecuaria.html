@@ -5208,5 +5208,16 @@ function _generarPlantillaTransportadorHTML(opts) {
   try { w.focus(); } catch(_) {}
 }
 </script>
+<script>
+  // Deep-link: abre la pestaña indicada en ?tab= (lo usa el menú de rutas_web).
+  window.addEventListener('load', function () {
+    try {
+      var t = new URLSearchParams(location.search).get('tab');
+      if (!t) return;
+      var btn = document.querySelector('.tabs .tab[data-tab="' + t + '"]');
+      if (btn) btn.click();
+    } catch (e) {}
+  });
+</script>
 </body>
 </html>
