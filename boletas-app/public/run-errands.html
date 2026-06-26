@@ -166,7 +166,7 @@
 
 <div class="container" style="padding-top:0;">
   <!-- Tabs -->
-  <div class="tabs" style="position:sticky;top:60px;z-index:30;overflow:visible;">
+  <div class="tabs" style="display:none;position:sticky;top:60px;z-index:30;overflow:visible;">
     <button class="tab active" data-tab="resumen">Dashboard</button>
     <button class="tab" data-tab="pedidos">Pedidos</button>
     <button class="tab" data-tab="clientes">Clientes</button>
@@ -2010,6 +2010,16 @@ ${p.observaciones ? `<div style="font-size:11px;"><strong>Obs:</strong> ${esc(p.
   cargarPedidos();
   cargarClientes();
   cargarDashboard();
+</script>
+<script>
+  window.addEventListener('load', function () {
+    try {
+      var t = new URLSearchParams(location.search).get('tab');
+      if (!t) return;
+      var btn = document.querySelector('.tabs .tab[data-tab="' + t + '"]');
+      if (btn) btn.click();
+    } catch (e) {}
+  });
 </script>
 </body>
 </html>

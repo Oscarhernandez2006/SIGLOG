@@ -191,8 +191,8 @@
 <div class="toast" id="toast"></div>
 
 <div class="container">
-  <!-- Tabs -->
-  <div class="tabs">
+  <!-- Tabs (ocultas: navegación en el menú lateral de rutas_web) -->
+  <div class="tabs" style="display:none">
     <button class="tab active" data-tab="vehiculos">Vehículos</button>
     <button class="tab" data-tab="ordenes">Órdenes</button>
     <button class="tab" data-tab="asignaciones">Asignaciones</button>
@@ -5233,6 +5233,16 @@ function _generarPlantillaTransportadorHTML(opts) {
   w.document.close();
   try { w.focus(); } catch(_) {}
 }
+</script>
+<script>
+  window.addEventListener('load', function () {
+    try {
+      var t = new URLSearchParams(location.search).get('tab');
+      if (!t) return;
+      var btn = document.querySelector('.tabs .tab[data-tab="' + t + '"]');
+      if (btn) btn.click();
+    } catch (e) {}
+  });
 </script>
 </body>
 </html>
