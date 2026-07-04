@@ -1104,6 +1104,181 @@ db.serialize(() => {
   db.run(`ALTER TABLE tat_plantillas_dl ADD COLUMN fecha_hora_llegada TEXT DEFAULT ''`, () => {});
   db.run(`ALTER TABLE tat_plantillas_dl ADD COLUMN editado INTEGER DEFAULT 0`, () => {});
 
+
+  // ============ DISTRIBUCIÓN INVERSIONES ============
+  // Módulo independiente clonado de Distribución TaT: tablas propias inv_*,
+  // EXCEPTO clientes: comparte tat_clientes_inversiones (grupo Inversiones).
+  // Las tablas nuevas ya incluyen las columnas añadidas por ALTER en tat_*.
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS inv_productos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      referencia TEXT,
+      nombre TEXT NOT NULL,
+      descripcion TEXT,
+      categoria TEXT,
+      precio REAL NOT NULL,
+      unidad_medida TEXT DEFAULT 'UNIDAD',
+      stock INTEGER DEFAULT 0,
+      activo INTEGER DEFAULT 1
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS inv_rutas (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nombre TEXT NOT NULL,
+      recorrido TEXT,
+      ciudad TEXT,
+      kls_recorridos REAL DEFAULT 0,
+      tiempo TEXT,
+      horas REAL DEFAULT 0,
+      activo INTEGER DEFAULT 1
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS inv_distribuidores (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nombre TEXT NOT NULL,
+      cedula_nit TEXT,
+      telefono TEXT,
+      direccion TEXT,
+      ciudad TEXT,
+      zona TEXT,
+      email TEXT,
+      observaciones TEXT,
+      activo INTEGER DEFAULT 1,
+      fecha_registro TEXT
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS inv_ordenes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      numero_orden TEXT,
+      distribuidor_id INTEGER,
+      distribuidor_nombre TEXT NOT NULL,
+      fecha TEXT NOT NULL,
+      estado TEXT DEFAULT 'PENDIENTE',
+      total REAL DEFAULT 0,
+      observaciones TEXT,
+      observacion_servicio TEXT DEFAULT 'Sin Novedad',
+      novedades TEXT,
+      responsabilidades TEXT,
+      detalles TEXT,
+      doc_fisico INTEGER DEFAULT 0,
+      entrega_registrada INTEGER DEFAULT 0,
+      FOREIGN KEY (distribuidor_id) REFERENCES inv_distribuidores(id)
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS inv_orden_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      orden_id INTEGER NOT NULL,
+      producto_nombre TEXT NOT NULL,
+      cantidad DOUBLE PRECISION NOT NULL DEFAULT 1,
+      precio_unitario REAL NOT NULL,
+      subtotal REAL NOT NULL,
+      cantidad_entregada DOUBLE PRECISION DEFAULT 0,
+      FOREIGN KEY (orden_id) REFERENCES inv_ordenes(id) ON DELETE CASCADE
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS inv_vehiculos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      placa TEXT NOT NULL,
+      conductor TEXT NOT NULL,
+      disponibilidad TEXT DEFAULT '',
+      activo INTEGER DEFAULT 1,
+      tripulacion_id INTEGER
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS inv_tripulacion (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nombre TEXT,
+      cedula TEXT DEFAULT '',
+      telefono TEXT DEFAULT '',
+      rol TEXT DEFAULT 'Conductor',
+      nombres TEXT DEFAULT '',
+      apellidos TEXT DEFAULT '',
+      tipo TEXT DEFAULT ''
+    )
+  `);
+  db.run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_inv_tripulacion_cedula ON inv_tripulacion(cedula)`, (err) => {});
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS inv_asignaciones (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      vehiculo_id INTEGER NOT NULL,
+      vehiculo_placa TEXT,
+      vehiculo_conductor TEXT,
+      fecha TEXT NOT NULL,
+      observaciones TEXT,
+      estado TEXT DEFAULT 'ACTIVA',
+      observacion_servicio TEXT DEFAULT 'Sin Novedad',
+      fecha_exportacion TEXT,
+      auxiliar TEXT DEFAULT '',
+      FOREIGN KEY (vehiculo_id) REFERENCES inv_vehiculos(id)
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS inv_asignacion_ordenes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      asignacion_id INTEGER NOT NULL,
+      orden_id INTEGER NOT NULL,
+      FOREIGN KEY (asignacion_id) REFERENCES inv_asignaciones(id) ON DELETE CASCADE,
+      FOREIGN KEY (orden_id) REFERENCES inv_ordenes(id)
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS inv_contadores (
+      nombre TEXT PRIMARY KEY,
+      valor INTEGER NOT NULL DEFAULT 0
+    )
+  `, () => {
+    db.run(`INSERT OR IGNORE INTO inv_contadores (nombre, valor) VALUES ('plantilla_dl', 0)`);
+  });
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS inv_plantillas_dl (
+      consecutivo INTEGER PRIMARY KEY AUTOINCREMENT,
+      placa TEXT NOT NULL,
+      conductor TEXT,
+      auxiliar TEXT DEFAULT '',
+      fecha_despacho TEXT,
+      origen TEXT,
+      hora_salida TEXT,
+      ruta TEXT,
+      total_documentos INTEGER DEFAULT 0,
+      total_kilos REAL DEFAULT 0,
+      ordenes_json TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      kms_recorridos TEXT DEFAULT '',
+      tiempo_recorrido TEXT DEFAULT '',
+      municipios_recorre TEXT DEFAULT '',
+      fecha_hora_llegada TEXT DEFAULT '',
+      editado INTEGER DEFAULT 0
+    )
+  `);
+
+  // Vista de clientes del módulo Inversiones (misma forma que tat_clientes_all
+  // para que las consultas clonadas funcionen sin cambios).
+  db.run(`DROP VIEW IF EXISTS inv_clientes_all`, () => {});
+  db.run(`
+    CREATE VIEW inv_clientes_all AS
+      SELECT 'inversiones' AS grupo, codigo, codigo_concatenado, nombre,
+             direccion, barrio, ciudad, departamento, telefono, activo
+        FROM tat_clientes_inversiones
+  `, () => {});
+
+
 });
 
 module.exports = db;

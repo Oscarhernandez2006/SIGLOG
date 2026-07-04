@@ -14,6 +14,9 @@ const distribucionAgroRoutes = require("./distribucion-agropecuaria/routes");
 // Módulo distribución TaT (Tienda a Tienda)
 const distribucionTatRoutes = require("./distribucion-tat/routes");
 
+// Rutas del módulo Distribución Inversiones
+const distribucionInvRoutes = require("./distribucion-inversiones/routes");
+
 // Módulo Run Errands
 const runErrandsRoutes = require("./run-errands/routes");
 
@@ -205,7 +208,7 @@ app.post("/usuarios", (req, res) => {
   const rolFinal = rol || 'usuario';
   const permisosFinal = permisos || 'canjear,generar,informes,reimprimir,validar';
   const modulosFinal = rolFinal === 'administrador'
-    ? 'bono,pedidos,agropecuaria,run-errands,tat'
+    ? 'bono,pedidos,agropecuaria,run-errands,tat,inversiones'
     : (modulos || '').trim();
   const submodulosFinal = rolFinal === 'administrador' ? '' : (submodulos || '').trim();
 
@@ -247,7 +250,7 @@ app.put("/usuarios/:id", (req, res) => {
     if (modulos !== undefined) {
       const rolFinal = rol || user.rol;
       const modulosFinal = rolFinal === 'administrador'
-        ? 'bono,pedidos,agropecuaria,run-errands,tat'
+        ? 'bono,pedidos,agropecuaria,run-errands,tat,inversiones'
         : String(modulos).trim();
       if (!modulosFinal) return res.status(400).json({ error: "Debe asignar al menos un módulo al usuario" });
       updates.push("modulos = ?"); params.push(modulosFinal);
@@ -670,6 +673,9 @@ app.use("/api/toma-pedidos", tomaPedidosRoutes);
 app.use("/api/distribucion-agropecuaria", distribucionAgroRoutes);
 
 app.use("/api/distribucion-tat", distribucionTatRoutes);
+
+// API del módulo Distribución Inversiones
+app.use("/api/distribucion-inversiones", distribucionInvRoutes);
 
 // Montar rutas del módulo Run Errands
 app.use("/api/run-errands", runErrandsRoutes);
